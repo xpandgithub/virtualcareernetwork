@@ -1,0 +1,249 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_block_info().
+ */
+
+ function vcnshareduser_help($path, $arg) {
+  if ($path == 'admin/help#vcnshareduser') {
+    return t('Share the user from drupal 6 to drupal 7.');
+  }
+}
+
+/**
+ * Implementation of hook_init()
+ */
+ 
+function vcnshareduser_init() {
+  vcnshareduser_get_shared_user_info();
+  
+  vcn_set_message();
+}
+
+/**
+ * Custom function to get the drupal 6 user info to be used in drupal 7
+ */
+ 
+function vcnshareduser_get_shared_user_info() {
+  global $_COOKIE;
+
+  $username = $name = '';
+  $drupalId = '';
+  $uid = '';
+  $notebookCount = 0;
+  $isUserLoggedIn = false;
+  $is_drupal_username = false;
+  $roles = '';
+  
+  if (isset($_COOKIE)) {
+
+    $drupal6_database = vcn_db_drupal6_settings();
+    $rest_database = vcn_db_rest_settings();
+    
+    try {
+      Database::addConnectionInfo('drupal6', 'default', $drupal6_database);
+      Database::addConnectionInfo('hvcp', 'default', $rest_database);
+ 
+      db_set_active('drupal6');
+
+      $previousTimestamp = mktime(0, 0, 0, 0, 1, 2000);
+    
+      foreach ($_COOKIE as $key => $value) {
+        if (substr($key, 0, 4) == 'SESS') {
+          $query = db_select('sessions', 's');
+          $table_alias = $query->innerJoin('users', 'u', 'u.uid = s.uid', array());
+          $query->fields('s', array('timestamp'));
+          $query->fields($table_alias, array('name', 'uid', 'mail'));
+          $query->condition('sid', $value);
+          $row = $query->execute()
+          	           ->fetchAssoc();
+
+          $timestamp = $row['timestamp'];
+          
+          // There seemed to be a timing issue when signing in from D7 to D6 where the
+          // session timestamp for authenticated user was one second behind the 
+          // unauthenticated user causing the code to think the user isn't logged in.
+          // So added a ten second buffer to authenticated users which should take
+          // care of this specific case.  The timestamp is only used here to find the
+          // latest session.
+          if ($row['uid'] > 0) {
+          	$timestamp = strtotime("+10 seconds", $row['timestamp']);
+          }
+          
+          // DEBUG INFO
+          //echo '<p>name='.$row['name'];
+          //echo '<br>uid='.$row['uid'];
+          //echo '<br>origtimestampdate='.date("D M j G:i:s T Y", $row['timestamp']);
+          //echo '<br>origtimestamp='.$row['timestamp'];
+          //echo '<br>prevtimestamp='.$previousTimestamp;
+          //echo '<br>prevtimestampDate='.date("D M j G:i:s T Y", $previousTimestamp);
+          //echo '<br>newtimestamp=' . $timestamp;
+          
+          // find the latest timestamp
+          if ($timestamp > $previousTimestamp) {
+            if ($row['name']) {
+			        $username = $name = $row['name'];
+			        $is_drupal_username = True;
+			      }
+			      if ($row['mail']) {
+			      	$drupal_mail = $row['mail'];
+			      }
+			      $previousTimestamp = $timestamp;
+						
+			      if ($row['uid'] > 0) {
+			        $drupalId = $row['uid'];
+			        $isUserLoggedIn = True;
+              
+              // determine all the roles the user is set to
+              $query = db_select('users_roles', 's');
+              $query->addExpression('GROUP_CONCAT(rid)', 'roles');
+              $query->condition('uid', $drupalId);
+              $row = $query->execute()
+                           ->fetchAssoc();
+              $roles = $row['roles'];
+              
+			      } else {
+			        $drupalId = $value;
+			        $isUserLoggedIn = False;
+			      }
+          }
+        	
+          //echo '<br>drupalId!='.$drupalId.'<br><br>';
+
+          
+          
+        }
+      }
+    } catch (Exception $e) {
+	    // just log the error but do nothing so that we just return a blank username
+	    db_set_active(); // set back to the default db
+	    watchdog('vcnshareduser', 'Exception attempting to get drupal user info: @error', array('@error' => $e), WATCHDOG_ERROR);
+    }
+			
+    // get provider id
+	  $provider_id = 0;
+	  try {
+	    db_set_active('drupal6');
+	    if ($drupalId) {
+        $query = db_select('profile_values', 'pv');
+	      $query->fields('pv', array('value'));
+	      $query->condition('fid', '1'); // field id 1 = provider
+	      $query->condition('uid', $drupalId);
+	      $result = $query->execute();
+				
+	      $provider_id = $result->fetchfield();
+	      //print "PROVIDER ID for " . $drupalId . " IS " . $provider_id . "<br />";
+      }
+    } catch (Exception $e) {
+      // just log the error but do nothing so that we just return a blank username
+      db_set_active(); // set back to the default db
+      watchdog('vcnshareduser', 'Exception attempting to get provider id: @error', array('@error' => $e), WATCHDOG_ERROR);
+    }
+
+    // get cma username
+    try {
+      if ($drupalId) {
+      	db_set_active('hvcp');
+
+      	$query = db_select('vcn_cma_user', 'v');
+      	$query->fields('v', array('first_name', 'last_name', 'user_id', 'zipcode', 'email_address'));
+      	$query->condition('user_session_id', $drupalId);
+      	$row = $query->execute()
+        	           ->fetchAssoc();
+
+		    $uid = $row['user_id'];
+
+      	if (strlen($row['first_name'])) {
+          $username = $row['first_name'];
+          $name = vcn_custom_aes_decrypt($row['first_name'])." ".vcn_custom_aes_decrypt($row['last_name']);
+          $is_drupal_username = False;
+      	}
+      	
+      	if ($row['zipcode']) {
+      		$logged_in_user_default_zipcode = $row['zipcode'];
+      	}
+      	
+      	if ($row['email_address']) {
+      		$vcn_user_email = $row['email_address'];
+      	}
+      	
+      }
+    } catch (Exception $e) {
+	    // just log the error but do nothing so that we just return a blank username
+	    db_set_active(); // set back to the default db
+	    watchdog('vcnshareduser', 'Exception attempting to get cma user: @error', array('@error' => $e), WATCHDOG_ERROR);
+    }
+
+	  // get notebook
+    try {
+	    if ($uid) { 
+	    	
+	    	$industry_id = vcn_get_industry();
+	    	
+		    db_set_active('hvcp');
+
+		    $query = db_select('vcn_cma_user_notebook', 'n');
+		    $query->fields('n');
+		    $query->condition('active_yn', 'Y');
+		    $query->condition('user_id', $uid);
+		    $query->condition('industry_id', $industry_id);
+		    $result = $query->execute();
+				
+		    $notebookCount = $result->rowCount();
+		    
+		    $query = db_select('vcn_cma_user_course', 'n');
+		    $query->fields('n');		   
+		    $query->condition('user_id', $uid);
+		    $result = $query->execute();
+		    
+		    $notebookCount += $result->rowCount();
+	    }
+    } catch (Exception $e) {
+	    // just log the error but do nothing so that we just return a blank username
+	    db_set_active(); // set back to the default db
+	    watchdog('vcnshareduser', 'Exception attempting to get hvcp user notebook: @error', array('@error' => $e), WATCHDOG_ERROR);
+    }
+  }
+
+  db_set_active(); // set back to the default db
+
+  $GLOBALS['d6_uid'] = $drupalId;
+  $GLOBALS['d6_name'] = $username;
+  $GLOBALS['vcn_user_name'] = $name;
+  $GLOBALS['d6_roles'] = $roles;
+  $GLOBALS['drupal_mail'] = isset($drupal_mail) ? $drupal_mail : NULL;
+  $GLOBALS['vcn_notebook_item_count'] = $notebookCount;
+  $GLOBALS['vcn_user_id'] = $uid;
+  $GLOBALS['is_user_logged_in'] = $isUserLoggedIn;
+  $GLOBALS['user_provider_id'] = $provider_id;
+  $GLOBALS['logged_in_user_default_zipcode'] = isset($logged_in_user_default_zipcode) ? $logged_in_user_default_zipcode : NULL;
+  $GLOBALS['vcn_user_email'] = isset($vcn_user_email) ? $vcn_user_email : NULL;
+  $GLOBALS['is_drupal_username'] = $is_drupal_username; // flag to indicate if username is coming from Drupal or CMA
+  
+}
+
+// temporary function to display messages after redirecting from drupal6 until we move user to drupal7.
+function vcn_set_message(){
+  if(isset($_GET["msg"]) && $_GET["msg"] != "") {
+  	
+  	if($_GET["msg"] == "PPRD"){
+  		drupal_set_message('Your information has been sent to VCN.org to be authorized.  If you are authorized you will receive an E-mail with your login information.');
+  	}
+  	
+  }
+}

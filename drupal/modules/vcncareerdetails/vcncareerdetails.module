@@ -1,0 +1,338 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php 
+/**
+ * Implementation of hook_help().
+ */
+function vcncareerdetails_help($path, $arg) {
+	if ($path == 'admin/help#vcncareerdetails') {
+		return t('Functionality related to VCN Career Details.');
+	}
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_template(&$variables) {	
+	
+	// To get resources tab data in advance to hide tab if no resources are there.
+	module_load_include('inc', 'vcngeneral', '/includes/vcngeneral');
+	$onetcode = $variables['onetcode'];
+	
+	$resources_list = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getresources', array('onetcode' => $onetcode), 'xml', 'post');
+	$variables['resources'] = isset($resources_list->resourceslist) ? vcn_get_occupation_resources($resources_list->resourceslist) : NULL;
+	
+	$financial_aid = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getfinancialaid', array('onetcode' => $onetcode), 'xml', 'post');
+	$variables['fincancialaid_resources'] = isset($financial_aid->financialaidlist) ? vcn_get_financialaid_resources($financial_aid->financialaidlist) : NULL;
+	// End of resources tab data check
+	
+	vcn_careerdetails_include_variables($variables);
+	drupal_add_js(drupal_get_path('module', 'vcncareerdetails') .'/js/vcncareerdetails.js', 'file');
+	
+  	$variables['image_base_path'] = vcn_image_path();
+      
+	$vcn_tabs = vcn_careerdetails_get_tabs_list($variables);  
+	$selectedTabIndex = $variables['tabid'];	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);	
+	
+	$variables['selected_tab_key_index'] = array_search($selectedTabIndex, $variables['vcn_tabs_keys']);
+
+	$variables['targeted_career_count'] = 0;	 
+	if($variables['userid'] > 0) {
+		$vcnuser_get_notebook_items = vcnuser_get_notebook_items($variables['userid'], 'OCCUPATION', 1);
+		$variables['targeted_career_count'] = count($vcnuser_get_notebook_items->item) > 0 ? 1 : 0;
+	}
+	
+	vcn_careerdetail_user_state($variables);	// Set user state cookie and variables to return to search for more careers ( uses $variables['tabid'])
+		
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_or_targeted_notebookitem($variables['userid'], 'OCCUPATION', $variables['onetcode']);// 1 = saved, 2 = targeted, 0 = none
+	
+	vcn_careerdetails_common_bar($variables);
+	
+	drupal_set_title(t($variables['careertitle']));
+	
+	$theme_params = array();
+	$theme_params['onetcode'] = $variables['onetcode'];
+	$theme_params['tabid'] = $variables['tabid'];
+	$theme_params['zipcode'] = $variables['zipcode'];
+	$theme_params['careertitle'] = $variables['careertitle'];
+	
+	if($variables['tabid'] == "overview" || $variables['tabid'] == "on-the-job" || $variables['tabid'] == "education-training"){
+		$theme_params['career_data'] = $variables['career_data'];
+	}
+	
+	if($variables['tabid'] == "salary-outlook"){
+		
+		$theme_params['period_year'] = $variables['period_year'];
+		$theme_params['state'] = $variables['state'];
+		
+		if ($variables['zipcode'] > 0) {
+			$theme_params['zipcode_wages'] = $variables['zipcode_wages'];
+			$theme_params['zipcode_jobtrends'] = $variables['zipcode_jobtrends'];
+			
+			$theme_params['annual_salary_for_zipcode'] = $variables['annual_salary_for_zipcode'];
+			$theme_params['hourly_wages_for_zipcode'] = $variables['hourly_wages_for_zipcode'];
+			
+			$theme_params['annual_salary_for_state'] = $variables['annual_salary_for_state'];
+			$theme_params['hourly_wages_for_state'] = $variables['hourly_wages_for_state'];
+		}else {		
+			$theme_params['national_wages'] = $variables['national_wages'];
+			$theme_params['national_jobtrends'] = $variables['national_jobtrends'];
+		}
+		
+		$theme_params['annual_salary_for_national'] = $variables['annual_salary_for_national'];
+		$theme_params['hourly_wages_for_national'] = $variables['hourly_wages_for_national'];
+		
+	}
+	
+	if($variables['tabid'] == "resources"){
+		$theme_params['resources'] = $variables['resources'];
+		$theme_params['fincancialaid_resources'] = $variables['fincancialaid_resources'];
+	}
+	
+	$variables['careerdetails_tab_content'] = theme('vcn_careerdetails_'.str_replace("-", "_", $variables['tabid']).'_template', $theme_params);
+	
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/overview
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_overview_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+
+	vcn_careerdetails_overview($variables);
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/salary-outlook
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_salary_outlook_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+	
+	// Add external Google JS file to be used for Google Charts API
+	drupal_add_js('https://www.google.com/jsapi', 'external');
+	drupal_add_js(drupal_get_path('theme', 'vcnstark') .'/js/vcn_google_charts.js', 'file');	
+		
+	if ($variables['zipcode'] > 0) {
+		$zipcode = $variables['zipcode'];
+		
+		$zipcode_wages = $variables['zipcode_wages'];
+		$zipcode_jobtrends = $variables['zipcode_jobtrends'];
+			
+		$annual_salary_for_zipcode = $variables['annual_salary_for_zipcode'];
+		$hourly_wages_for_zipcode = $variables['hourly_wages_for_zipcode'];
+			
+		$annual_salary_for_state = $variables['annual_salary_for_state'];
+		$hourly_wages_for_state = $variables['hourly_wages_for_state'];
+	}else {
+		$national_wages = $variables['national_wages'];
+		$national_jobtrends = $variables['national_jobtrends'];
+	}
+	
+	$annual_salary_for_national = $variables['annual_salary_for_national'];
+	$hourly_wages_for_national = $variables['hourly_wages_for_national'];
+
+	
+	
+	// values for national specific
+	$variables['annual_salary_pct10_for_national'] = $annual_salary_for_national['pct10'];
+	$variables['annual_salary_pct25_for_national'] = $annual_salary_for_national['pct25'];
+	$variables['annual_salary_median_for_national'] = $annual_salary_for_national['median'];
+	$variables['annual_salary_pct75_for_national'] = $annual_salary_for_national['pct75'];
+	$variables['annual_salary_pct90_for_national'] = $annual_salary_for_national['pct90'];
+	
+	$variables['hourly_wages_pct10_for_national'] = $hourly_wages_for_national['pct10'];
+	$variables['hourly_wages_pct25_for_national'] = $hourly_wages_for_national['pct25'];
+	$variables['hourly_wages_median_for_national'] = $hourly_wages_for_national['median'];
+	$variables['hourly_wages_pct75_for_national'] = $hourly_wages_for_national['pct75'];
+	$variables['hourly_wages_pct90_for_national'] = $hourly_wages_for_national['pct90'];
+	
+	$variables['num_present_jobs_for_national'] = isset($zipcode) ?
+	(isset($zipcode_jobtrends->nationaldata->item->estimatedemployment[0]) ? (int)$zipcode_jobtrends->nationaldata->item->estimatedemployment[0] : NULL) :
+	(isset($national_jobtrends->nationaldata->item->estimatedemployment[0]) ? (int)$national_jobtrends->nationaldata->item->estimatedemployment[0] : NULL);
+	
+	$variables['num_projected_jobs_for_national'] = isset($zipcode) ?
+	(isset($zipcode_jobtrends->nationaldata->item->projectedemployment[0]) ? (int)$zipcode_jobtrends->nationaldata->item->projectedemployment[0] : NULL) :
+	(isset($national_jobtrends->nationaldata->item->projectedemployment[0]) ? (int)$national_jobtrends->nationaldata->item->projectedemployment[0] : NULL);
+			
+	$variables['percent_job_growth_value_for_national'] = isset($zipcode) ?
+	(isset($zipcode_jobtrends->nationaldata->item->percentjobchange[0]) ? vcn_generic_number_formatter((float)$zipcode_jobtrends->nationaldata->item->percentjobchange[0], 0, '') : NULL) :
+	(isset($national_jobtrends->nationaldata->item->percentjobchange[0]) ? vcn_generic_number_formatter((float)$national_jobtrends->nationaldata->item->percentjobchange[0], 0, '') : NULL);
+	
+	$variables['num_job_openings_for_national'] = isset($zipcode) ?
+	(isset($zipcode_jobtrends->nationaldata->item->jobopenings[0]) ? (int)$zipcode_jobtrends->nationaldata->item->jobopenings[0] : NULL) :
+	(isset($national_jobtrends->nationaldata->item->jobopenings[0]) ? (int)$national_jobtrends->nationaldata->item->jobopenings[0] : NULL);
+	
+		
+	// values for zipcode specific
+	if (isset($zipcode) && $zipcode > 0) {
+		$variables['annual_salary_pct10_for_zipcode'] = $annual_salary_for_zipcode['pct10'];
+		$variables['annual_salary_pct25_for_zipcode'] = $annual_salary_for_zipcode['pct25'];
+		$variables['annual_salary_median_for_zipcode'] = $annual_salary_for_zipcode['median'];
+		$variables['annual_salary_pct75_for_zipcode'] = $annual_salary_for_zipcode['pct75'];
+		$variables['annual_salary_pct90_for_zipcode'] = $annual_salary_for_zipcode['pct90'];
+	
+		$variables['hourly_wages_pct10_for_zipcode'] = $hourly_wages_for_zipcode['pct10'];
+		$variables['hourly_wages_pct25_for_zipcode'] = $hourly_wages_for_zipcode['pct25'];
+		$variables['hourly_wages_median_for_zipcode'] = $hourly_wages_for_zipcode['median'];
+		$variables['hourly_wages_pct75_for_zipcode'] = $hourly_wages_for_zipcode['pct75'];
+		$variables['hourly_wages_pct90_for_zipcode'] = $hourly_wages_for_zipcode['pct90'];
+			
+		$variables['annual_salary_pct10_for_state'] = $annual_salary_for_state['pct10'];
+		$variables['annual_salary_pct25_for_state'] = $annual_salary_for_state['pct25'];
+		$variables['annual_salary_median_for_state'] = $annual_salary_for_state['median'];
+		$variables['annual_salary_pct75_for_state'] = $annual_salary_for_state['pct75'];
+		$variables['annual_salary_pct90_for_state'] = $annual_salary_for_state['pct90'];
+			
+		$variables['hourly_wages_pct10_for_state'] = $hourly_wages_for_state['pct10'];
+		$variables['hourly_wages_pct25_for_state'] = $hourly_wages_for_state['pct25'];
+		$variables['hourly_wages_median_for_state'] = $hourly_wages_for_state['median'];
+		$variables['hourly_wages_pct75_for_state'] = $hourly_wages_for_state['pct75'];
+		$variables['hourly_wages_pct90_for_state'] = $hourly_wages_for_state['pct90'];
+			
+		$variables['metro'] = isset($zipcode_wages->metrodata->item->areaname[0]) ? (string)$zipcode_wages->metrodata->item->areaname[0] : '';
+	
+		$variables['num_present_jobs_for_zipcode'] = isset($zipcode_jobtrends->statedata->item->estimatedemployment[0]) ? (int)$zipcode_jobtrends->statedata->item->estimatedemployment[0] : NULL;
+		$variables['num_projected_jobs_for_zipcode'] = isset($zipcode_jobtrends->statedata->item->projectedemployment[0]) ? (int)$zipcode_jobtrends->statedata->item->projectedemployment[0] : NULL;
+		$variables['percent_job_growth_value_for_zipcode'] = isset($zipcode_jobtrends->statedata->item->percentjobchange[0]) ? vcn_generic_number_formatter((float)$zipcode_jobtrends->statedata->item->percentjobchange[0], 0, '') : NULL;
+		$variables['num_job_openings_for_zipcode'] = isset($zipcode_jobtrends->statedata->item->projectedemployment[0]) ? (int)$zipcode_jobtrends->statedata->item->jobopenings[0] : NULL;
+	}
+	
+	
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/on-the-job
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_on_the_job_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+	
+	$career_data = $variables['career_data'];
+	$onetcode = $variables['onetcode'];
+	
+	$variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];
+	$variables['day_in_life_url_flag'] = !empty($career_data->careerdata->dayinlifeurlflag[0]) ? (string)$career_data->careerdata->dayinlifeurlflag[0] : NULL;	
+	if (isset($variables['day_in_life_url_flag']) && $variables['day_in_life_url_flag'] == '1' && !empty($career_data->careerdata->dayinlifeurl[0])) {		
+		$variables['day_in_life_url'] = (string)$career_data->careerdata->dayinlifeurl[0];		
+	}
+	
+	$career_interview_data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-interview-data', array('onetcode' => $onetcode), 'xml', 'post');
+	
+	if (!empty($career_interview_data->careerinterview->item)) {
+		$career_interview_data_array = vcn_get_career_interview_data_array($career_interview_data->careerinterview->item);			
+		//$variables['interview_description'] = !empty($career_interview_data_array['main_interview'][0]['interviewurldescription']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurldescription'] : NULL;
+		$variables['interview_url'] = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
+		$variables['additional_interview_array'] = !empty($career_interview_data_array['additional_interview']) ? $career_interview_data_array['additional_interview'] : NULL;
+	}		
+		
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/education-training
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_education_training_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+	
+	// Add external Google JS file to be used for Google Charts API
+	drupal_add_js('https://www.google.com/jsapi', 'external');	
+	drupal_add_js(drupal_get_path('theme', 'vcnstark') .'/js/vcn_google_charts.js', 'file');
+	
+	$career_data = $variables['career_data'];
+	$onetcode = $variables['onetcode'];	
+	
+	$education_distribution = vcn_rest_wrapper('vcnoccupationsvc', 'vcneducation', 'get-education-distribution', array('onetcode' => $onetcode), 'xml', 'post');
+	if (!empty($education_distribution->educationdistribution->item)) {
+		$education_and_training_graph_values = vcn_get_education_training_values($education_distribution->educationdistribution->item);
+	}
+	
+	$variables['first_highest_education_value'] = isset($education_and_training_graph_values[0]['data_value']) ? $education_and_training_graph_values[0]['data_value'] : NULL;
+	$variables['first_highest_education_name'] = isset($education_and_training_graph_values[0]['education']) ? $education_and_training_graph_values[0]['education'] : NULL;
+	$variables['second_highest_education_value'] = isset($education_and_training_graph_values[1]['data_value']) ? $education_and_training_graph_values[1]['data_value'] : NULL;
+	$variables['second_highest_education_name'] = isset($education_and_training_graph_values[1]['education']) ? $education_and_training_graph_values[1]['education'] : NULL;
+	$variables['third_highest_education_value'] = isset($education_and_training_graph_values[2]['data_value']) ? $education_and_training_graph_values[2]['data_value'] : NULL;
+	$variables['third_highest_education_name'] = isset($education_and_training_graph_values[2]['education']) ? $education_and_training_graph_values[2]['education'] : NULL;
+	$variables['fourth_highest_education_value'] = isset($education_and_training_graph_values[3]['data_value']) ? $education_and_training_graph_values[3]['data_value'] : NULL;
+	$variables['fourth_highest_education_name'] = isset($education_and_training_graph_values[3]['education']) ? $education_and_training_graph_values[3]['education'] : NULL;
+	$variables['fifth_highest_education_value'] = isset($education_and_training_graph_values[4]['data_value']) ? $education_and_training_graph_values[4]['data_value'] : NULL;
+	$variables['fifth_highest_education_name'] = isset($education_and_training_graph_values[4]['education']) ? $education_and_training_graph_values[4]['education'] : NULL;
+	$variables['sixth_highest_education_value'] = isset($education_and_training_graph_values[5]['data_value']) ? $education_and_training_graph_values[5]['data_value'] : NULL;
+	$variables['sixth_highest_education_name'] = isset($education_and_training_graph_values[5]['education']) ? $education_and_training_graph_values[5]['education'] : NULL;
+	$variables['seventh_highest_education_value'] = isset($education_and_training_graph_values[6]['data_value']) ? $education_and_training_graph_values[6]['data_value'] : NULL;
+	$variables['seventh_highest_education_name'] = isset($education_and_training_graph_values[6]['education']) ? $education_and_training_graph_values[6]['education'] : NULL;
+  
+	$education_and_training_graph_source = vcn_text_into_paragraphs((string)$career_data->careerdata->edugraphsrcdesc[0]);
+	$variables['education_and_training_graph_source'] = $education_and_training_graph_source['regular_text_array'][0];
+	
+	$academic_requirement = vcn_text_into_paragraphs((string)$career_data->careerdata->academicrequirement[0]);
+	
+	$academic_requirement_regular_text = NULL;
+	if (!empty($academic_requirement['regular_text_array'])) {
+		$academic_requirement_regular_text = "";
+		foreach ($academic_requirement['regular_text_array'] as $value) {
+			$academic_requirement_regular_text .=  $value;
+		}
+		$variables['academic_requirement_regular_text'] = $academic_requirement_regular_text;
+	}
+	
+	
+	$academic_requirement_hidden_text = NULL;
+	if (!empty($academic_requirement['hidden_text_array'])) {
+		$academic_requirement_hidden_text = "";
+		foreach ($academic_requirement['hidden_text_array'] as $value) {
+			$academic_requirement_hidden_text .=  $value;
+		}
+		$variables['academic_requirement_hidden_text'] = $academic_requirement_hidden_text;
+	}		
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/skills-tools
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_skills_tools_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+	
+	$onetcode = $variables['onetcode'];	
+	
+	$skills_tools_tech = vcn_rest_wrapper('vcnoccupationsvc', 'vcnskillstoolstech', 'get-skills-tools-tech', array('onetcode' => $onetcode), 'xml', 'post');
+	
+	$variables['skills_list'] = isset($skills_tools_tech->skills) ? vcn_generate_html_list($skills_tools_tech->skills->item, 10, true) : "No information available";
+	$variables['tools_list'] = isset($skills_tools_tech->tools) ? vcn_generate_html_list($skills_tools_tech->tools->item, 10, true) : "No information available";
+	$variables['technology_list'] = isset($skills_tools_tech->technology) ? vcn_generate_html_list($skills_tools_tech->technology->item, 10, true) : "No information available";
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers/%/resources
+ */
+function vcncareerdetails_preprocess_vcn_careerdetails_resources_template(&$variables) {
+	vcn_careerdetails_include_variables($variables);
+	
+	// Code moved to "vcncareerdetails_preprocess_vcn_careerdetails_template" to hide tab if there are no resources.
+	/*$onetcode = $variables['onetcode'];	
+	
+	$resources_list = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getresources', array('onetcode' => $onetcode), 'xml', 'post');
+	$variables['resources'] = isset($resources_list->resourceslist) ? vcn_get_occupation_resources($resources_list->resourceslist) : NULL;
+	
+	$financial_aid = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getfinancialaid', array('onetcode' => $onetcode), 'xml', 'post');
+	$variables['fincancialaid_resources'] = isset($financial_aid->financialaidlist) ? vcn_get_financialaid_resources($financial_aid->financialaidlist) : NULL;	
+	*/
+}

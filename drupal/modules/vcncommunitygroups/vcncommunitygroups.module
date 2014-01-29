@@ -1,0 +1,51 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcncommunitygroups_help($path, $arg) {
+	if ($path == 'admin/help#vcncommunitygroups') {
+		return t('Functionality related to VCN Community groups.');
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /community/groups (Community groups)
+ */
+function vcncommunitygroups_preprocess_vcn_communitygroups_template(&$variables) {
+ 
+	/* REST Call */
+	if (empty($variables['industry'])) {
+		$variables['industry'] = vcn_get_industry();
+	}
+	
+	// Partner Sites = 1, Career Exploration = 1, healthcare =  3, National Associations related to HealthCare = 4
+	// Federal Resources = 5, Community Group = 6, Videos = 7
+	
+	 $variables['category'] = 6;	 
+	
+	// get the list of Resources //'order' => ''
+	$params = array('industry' => $variables['industry'], 'category' => $variables['category']);
+	$content = vcn_rest_wrapper('vcnresourcessvc', 'vcnresources', 'list', $params);
+	$communitygroupslist = $content->resourceslist;
+	$variables['communitygroupslist'] = $communitygroupslist;
+	
+	/* End REST Call */
+
+}

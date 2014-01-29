@@ -1,0 +1,1279 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function vcngeneral_help($path, $arg) {
+  if ($path == 'admin/help#vcngeneral') {
+    return t('General purpose functions for VCN.');
+  }
+}
+
+/**
+ * Implementation of hook_init()
+ */
+
+function vcngeneral_init() {
+	
+	global $base_url;
+	
+	$cat2site = vcn_determine_vcn_or_category2();
+	if ($cat2site == 'goodwill') {
+		$base_url = $GLOBALS['vcn_config_http_or_https'] . '://' . $GLOBALS['goodwill_config_base_url'] . substr($GLOBALS['vcn_config_default_base_path_drupal7'], 0, -1);
+	} else if ($cat2site == 'ser') {
+		$base_url = $GLOBALS['vcn_config_http_or_https'] . '://' . $GLOBALS['ser_config_base_url'] . substr($GLOBALS['vcn_config_default_base_path_drupal7'], 0, -1);
+	} else if ($cat2site == 'iajvs') {
+		$base_url = $GLOBALS['vcn_config_http_or_https'] . '://' . $GLOBALS['iajvs_config_base_url'] . substr($GLOBALS['vcn_config_default_base_path_drupal7'], 0, -1);
+	}
+	
+}
+
+/**
+ * hook_preprocess_theme for Advanced Career Tools
+ */
+
+function vcngeneral_preprocess_vcn_account_setup_box(&$variables) {	
+	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+
+	$user = vcn_get_user_info();	
+	$variables['isLoggedInUser'] = $user['is_user_logged_in'];
+	
+	if (strpos($_SERVER['REQUEST_URI'], 'cma/target-career') !== false) {
+		$variables['on_explorecareers_page'] = true;
+	} else {
+		$variables['on_explorecareers_page'] = false;
+	}
+	
+}
+
+// site config
+
+function vcn_get_rest_apikey() {
+	if (!$GLOBALS['vcn_config_rest_api_key']) {
+		die('No Rest api key set');
+	}
+  return $GLOBALS['vcn_config_rest_api_key'];
+}
+
+function vcn_get_rest_secret() {
+	if (!$GLOBALS['vcn_config_rest_secret']) {
+		die('No Rest secret set');
+	}
+  return $GLOBALS['vcn_config_rest_secret'];
+}
+
+function vcn_get_rest_server() {
+	if (!$GLOBALS['vcn_config_rest_server_name']) {
+		die('No Rest server name set');
+	}
+	$rs = 'http://' . $GLOBALS['vcn_config_rest_server_name'] . '/rest/public/';
+  return $rs;
+}
+
+function vcn_connect_to_db() {
+    //print "DB SERVER IS " . $GLOBALS['vcn_config_db_server_name'];
+	$dbserver = $GLOBALS['vcn_config_db_server_name'];
+	
+	$conn = mysql_connect($dbserver, 'hvcp', '')
+	or die("Error making database connection: ".mysql_error());
+	$db = mysql_select_db('hvcp',$conn)
+	or die("Error selecting database: ".mysql_error());
+
+	return $conn;
+}
+
+// various paths
+
+function vcn_theme_path() {
+  return base_path() . "sites/all/themes/vcnstark/";
+}
+
+function vcn_image_path() {
+	return base_path() . "sites/all/themes/vcnstark/images/vcn/";
+}
+
+function vcn_industry_image_path() {
+	return base_path()."sites/all/themes/vcnstark/images/industry/".$GLOBALS['vcn_config_default_industry_code']."/";
+}
+
+function vcn_video_path() {
+	return base_path() . "sites/all/themes/vcnstark/videos/";
+}
+
+function vcn_drupal6_base_path() {
+	return $GLOBALS['vcn_config_default_base_path_drupal6'];
+}
+
+function vcn_drupal7_base_path() {
+	return $GLOBALS['vcn_config_default_base_path_drupal7'];
+}
+
+function vcn_moodle_base_path() {
+	return $GLOBALS['vcn_config_default_base_path_moodle'];
+}
+
+function vcn_provider_portal_base_path() {
+	return $GLOBALS['vcn_config_default_base_path_provider_portal'];
+}
+
+function vcn_get_industry() {	
+	if (isset($_GET['industry']) && strlen($_GET['industry']) && $_GET['industry'] > 0) {
+		return $_GET['industry'];
+	}
+	return $GLOBALS['vcn_config_default_industry_id'];	
+}
+
+function vcn_get_industry_name() {
+	return $GLOBALS['vcn_config_default_industry_name'];
+}
+
+function vcn_get_industry_code() {
+	return $GLOBALS['vcn_config_default_industry_code'];
+}
+
+function vcn_get_industry_info($industry = 0) {
+
+	if($industry == 0){
+		$industry = vcn_get_industry();
+	}
+	
+	/* REST Call */
+	$params = array('industry' => $industry);
+	$content = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-industry-info', $params);
+	$industryinfo = $content->industryinfo;
+	/* End REST Call */
+	
+	return $industryinfo;
+	
+}
+
+function vcn_is_healthcare_industry($industryId=null) {
+  $is_healthcare = false;
+  
+  if (!$industryId) {
+    $industryId = vcn_get_industry();
+  }
+  
+  if ($industryId === '1') {
+    $is_healthcare = true;
+  }
+  
+  return $is_healthcare;
+}
+
+function vcn_validate_logged_in_user(){
+	$user = vcn_get_user_info();
+	$variables['userid'] = $user['vcn_user_id'];
+	$variables['is_user_logged_in'] = $user['is_user_logged_in'];
+
+	if(!$variables['is_user_logged_in']) {
+		//drupal_set_message('You are not authorized to access this page. ', 'error');
+		drupal_access_denied();
+		die(); // To stop execution for theme processors.
+	}
+}
+
+function vcn_is_provider_user(){
+	$is_provider_user = ($GLOBALS['user_provider_id'] > 0) ? true : false;
+	return $is_provider_user;
+}
+
+function vcn_is_user_logged_in() {
+	$user = vcn_get_user_info();
+	$is_user_logged_in = ($user['is_user_logged_in'] > 0) ? true : false;
+	return $is_user_logged_in;
+}
+
+function vcn_db_drupal6_settings() {
+	$db_settings = array('database' => $GLOBALS['vcn_config_drupal6_db_name'],
+											 'username' => $GLOBALS['vcn_config_drupal6_db_username'],
+											 'password' => $GLOBALS['vcn_config_drupal6_db_password'],
+											 'host' => $GLOBALS['vcn_config_drupal6_db_server_name'],
+											 'driver' => 'mysql',
+								 );
+
+	return $db_settings;
+}
+
+function vcn_db_rest_settings() {
+  $db_settings = array('database' => $GLOBALS['vcn_config_db_name'],
+                       'username' => $GLOBALS['vcn_config_db_username'],
+                       'password' => $GLOBALS['vcn_config_db_password'],
+                       'host' => $GLOBALS['vcn_config_db_server_name'],
+                       'driver' => 'mysql',
+                 );
+
+	return $db_settings;
+}
+
+function vcn_get_cipcode_year() {
+  return 2010;
+}
+
+function vcn_get_video_url($value) {
+  $url = '';
+  
+  if (stristr($value, '.flv')) {
+    $url = vcn_video_path() . 'careers/' . $value;
+  } else if (stristr($value, 'youtube.com')) {
+    $url = $value;
+  } else {
+    $url = $value;
+  }
+  
+  return $url;
+}
+
+function vcn_set_cookie($cname, $cvalue = "", $expire = "0", $path = "/", $domain = "") {
+	if($domain == "") {
+		setcookie($cname, $cvalue, $expire, $path);
+	}else {
+		setcookie($cname, $cvalue, $expire, $path, $domain);
+	}	
+	return true; 
+}
+
+function vcn_is_video_external_page($value) {
+  $isExternal = true;
+  
+  if (stristr($value, '.flv')) {
+    $isExternal = false;
+  }
+  
+  return $isExternal;
+}
+
+function vcn_build_link_window_opener($url, $text = 'link', $display=true, $isExternal=true, $title='', $class='extlink', $display_image=true, $target="") {
+	
+	if (strlen($title) < 1) {
+		$externalText = '';
+		if ($isExternal) {
+			$externalText = 'External link: ';
+		}
+		$title = $externalText . $url;
+	}
+	
+	if ($isExternal) { // add http:// only for external links, not for relative links.
+		if (stristr($url, 'http') === FALSE) {
+			$url = 'http://' . $url;
+		}
+	}
+	
+	if($target != "") {
+		$target = 'target="'.$target.'"';
+	}
+	
+	if ($isExternal) {
+		$sHtml = '<a href="'.$url.'" '.$target.' class="'.$class.'" title="'.$title.'" >'.$text.' <img src="'.vcn_image_path().'buttons/popout3.png" alt="pop out link icon" title="'.$externalText.$url.'" style="vertical-align:middle; border:none;" /></a>';
+	} else {
+		$sHtml = '<a href="'.$url.'" '.$target.' class="'.$class.'" title="'.$title.'">'.$text.'</a>';
+	}
+	
+
+	if ($display) {
+		echo $sHtml;
+	}
+
+	return $sHtml;
+}
+
+// This function is used to display a block of text from the database that has line breaks in it.  The output will
+// preserve those line breaks so that we shuoldn't have to add any html to the data itself for formatting.
+function vcn_display_formatted_text($text) {
+	$sHtml = '<pre style="font: inherit; white-space:pre-line;">';
+
+	// just in case there are html paragraph tags in the data (which need to be removed if there are)
+	$text = str_replace('<P>', '', $text);
+	$text = str_replace('</P>', '', $text);
+	$text = str_replace('<p>', '', $text);
+	$text = str_replace('</p>', '', $text);
+
+	$sHtml .= $text;
+
+	$sHtml .= '</pre>';
+
+	return $sHtml;
+}
+
+function vcn_convert_urls_to_links( $input, $text='' ) {
+
+	$wordsArr = explode( " ", $input );
+	
+	$alteredWordsArr = array();
+
+	if ( !empty( $wordsArr ) ) {
+		foreach ( $wordsArr as $word ) {
+			$urlMatch = vcn_find_urls( $word );
+			
+			$newText = $word;
+			
+			if ( !empty( $urlMatch ) ) {
+				foreach ( $urlMatch as $url ) {
+				  $title = $url;
+			    if($text){
+				    $title = $text;				
+			    }
+					$link = vcn_build_link_window_opener( $url, $title, false );
+					$newText = str_replace( $url, $link, $word );
+				}
+			}
+			
+			array_push( $alteredWordsArr, $newText );
+		}
+		
+		if ( !empty( $alteredWordsArr ) ) {
+			$input = implode( " ", $alteredWordsArr );
+		}
+	}
+	
+	return $input;
+
+}
+
+function vcn_find_urls($text) {
+
+	$scheme = '(http:\/\/|https:\/\/)';
+	$www = 'www\.';
+	$ip =  '\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}';
+	$subdomain = '[-a-z0-9_]+\.';
+	$name = '[a-z][-a-z0-9]+\.';
+	$tld = '[a-z]+(\.[a-z]{2,2})?';
+	$the_rest = '\/?[a-z0-9._\/~#&=;%+?-]+[a-z0-9\/#=?]{1,1}';
+	$pattern = "$scheme?(?(1)($ip|($subdomain)?$name$tld)|($www$name$tld))$the_rest";
+
+	$pattern = '/'.$pattern.'/is';
+
+	$c = preg_match_all( $pattern, $text, $m );
+
+	unset( $text, $scheme, $www, $ip, $subdomain, $name, $tld, $the_rest, $pattern );
+	if ( $c ) {
+		return( $m[0] );
+	}
+
+	return( array() );
+}
+
+
+/**
+ * 
+ * @param float $number
+ * @param int $decimal
+ * @param string $point
+ * @param string $separator
+ * @return string
+ */
+function vcn_generic_number_formatter($number, $decimal = 0, $currency = '$', $point = '.', $separator = ',') {
+ 	return $currency.number_format($number, $decimal, $point, $separator);
+}
+
+/**
+ * Custom sorting functions 
+ * 
+ */
+function vcn_sort_by_career_title($a, $b) {
+	return strcmp($a->title, $b->title);
+}
+
+function vcn_sort_by_career_work_type($a, $b) {
+	return strcmp($a->workTypeCode, $b->workTypeCode);
+}
+
+function vcn_sort_by_career_typical_education($a, $b) {
+	return strcmp($a->typicalEducation, $b->typicalEducation);
+}
+
+// specific logic for the interest profiler to determine whether or not an external
+// client is trying to access the interest profiler.  Need to look at GET variables 
+// as well as within the URL for the "industry" and compare it to the default VCN industry
+function vcn_external_client_calling_interest_profiler() {
+	if (stristr($_SERVER['REQUEST_URI'], '/interest-profiler')) {
+		if (isset($_GET['industry']) && strlen($_GET['industry'])) {
+			if ($_GET['industry'] != $GLOBALS['vcn_config_default_industry_id']) {
+				return true;
+			}
+		}
+	
+		$urlArr = explode('/', $_SERVER['REQUEST_URI']);
+	
+		$index = '';
+		for ($i = 0; $i < count($urlArr); $i++) {
+			if (strtolower($urlArr[$i]) == 'industry') {
+				$index = $i;
+				break;
+			}
+		}
+			
+		if ($index) {
+			if ($urlArr[$index + 1] != $GLOBALS['vcn_config_default_industry_id']) {
+				return true;
+			}
+		}
+				
+		//if (stristr($_SERVER['REQUEST_URI'], 'force') || stristr($_SERVER['REQUEST_URI'], 'lightbox')) {
+		//	return true;
+		//}
+	}
+		
+	return false;
+}
+
+// Function used to determine if the header and footer should be displayed or not.  Ideally
+// this function would call other functions that have specific logic for other special cases
+// to hide the header/footer.
+function vcn_header_footer_should_display() {
+	
+	if (vcn_external_client_calling_interest_profiler() || stristr($_SERVER['REQUEST_URI'], 'xpandforce') || stristr($_SERVER['REQUEST_URI'], 'lightbox')) {
+		return false;
+	}
+	
+	// This is temporary function to hide header footer for getting started top10byxyz popups
+	if (vcn_drupal6_career_guide_D7_popup()) {
+		return false;
+	}
+	
+	return true;
+
+}
+
+function vcn_footer_links_should_display() {
+  
+  if (stristr($_SERVER['REQUEST_URI'], 'provider/') || stristr($_SERVER['REQUEST_URI'], 'osp/')) {
+    return false;
+  }
+  
+  return true;
+}
+
+function vcn_drupal6_career_guide_D7_popup() {
+	
+	if (stristr($_SERVER['REQUEST_URI'],'top10byjobs/careerguide') || stristr($_SERVER['REQUEST_URI'],'top10bygrowth/careerguide') || stristr($_SERVER['REQUEST_URI'],'top10bypay/careerguide') || stristr($_SERVER['REQUEST_URI'],'educationmatch/careerguide')) {
+		return true;
+	}
+	return false;
+
+}
+
+// parameter utility function copied over from D6
+
+function get_clean_url_paired_parameter($param) {
+  $paramValue = null;
+  foreach(arg() as $key => $value) {
+    if ($param == $value) {
+      $paramValue = arg($key+1);
+	  }
+  }
+  return $paramValue;
+}
+
+
+/*
+ * Fucntion to access the node containing editable text by URL Alias of specific node.
+*/
+function vcn_node_text_by_urlalias($url_alias) {
+
+	$cactext = "";
+	$cactext_path = drupal_lookup_path("source",$url_alias);
+	if (!empty($cactext_path)) {
+		$cactext_nid = str_replace("node/","",$cactext_path);
+		$cactext_node = node_load($cactext_nid);
+		if (!empty($cactext_node)) {
+			if(isset($cactext_node->body['und'][0]['value'])) {
+				$cactext = check_markup($cactext_node->body['und'][0]['value'], $cactext_node->body['und'][0]['format']);
+			}else {
+				$cactext = "";
+			}
+		}
+	}
+	
+		
+	if(isset($_GET["debug"])){
+		
+		global $user; //$user->uid //$user->roles
+				
+		$cactext_debug = '<div class="node-text-highlight" >&nbsp;';
+		
+		//Link to edit node : node/nid/edit : If user role is administrator
+		if(array_search("administrator", $user->roles) == true ) {
+			$cactext_debug .= '<a href="'.vcn_drupal7_base_path().'node/'.$cactext_node->nid.'/edit" >EDIT</a><br/><br/>';
+		}
+		$cactext_debug .= $cactext;
+		$cactext_debug .= '</div>';
+		
+		$cactext = $cactext_debug;
+	}
+
+	return $cactext;
+}
+
+function vcn_rest_wrapper($service, $module, $action, $params, $format='xml', $method='post', $cache_data=true) {
+	$cid = $service.'-'.$module.'-'.$action;
+
+	if ($params && $cache_data) {
+		foreach ($params as $key => $value) {
+			if (isset($value)) {
+				$cid .= '-'.$value;
+			}
+		}
+	}
+
+  // add the format to the cid
+  $cid .= $format;
+  
+	$is_cached = ($cache_data) ? cache_get($cid) : false;
+	if(!$is_cached || isset($_GET['debug'])) {
+		$data = false;
+
+		$rest = new vcnWebServices;
+
+		$rest->setSecret(vcn_get_rest_secret());
+		$rest->setBaseurl(vcn_get_rest_server());
+		$rest->setMethod($method);
+
+		$rest->setService($service);
+		$rest->setModule($module);
+		$rest->setAction($action);
+
+		$rest->setRequestKey('apikey', vcn_get_rest_apikey());
+		$rest->setRequestKey('format', $format);
+    
+		if ($params) {
+			foreach ($params as $key => $value) {
+				if (isset($value)) {
+					$rest->setRequestKey($key, $value);
+				}
+			}
+		}
+
+		$content = $rest->call();
+		if ($cache_data) {
+			cache_set($cid, $content);
+		}
+		 
+		if ($format == 'xml') {
+			try {
+				$result = new SimpleXMLElement($content);
+			} catch (Exception $e) {
+				handle_rest_error($cid . ' => ' . $e->getTraceAsString(), $service);
+			}
+		} else {
+			$result = json_decode($content);
+		}
+	} else {
+		$content = cache_get($cid);
+		if ($format == 'xml') {
+			try {
+				$result = new SimpleXMLElement($content->data);
+			} catch (Exception $e) {
+        		handle_rest_error($cid . ' => ' . $e->getTraceAsString(), $service);
+			}
+		} else {
+			$result = json_decode($content->data);
+		}
+	}
+
+	$statusMessage = $result->status->message;
+	$statusText = $result->status->status;
+	$statusCode = $result->status->code;
+	//$params = $result->params;
+
+	if ($statusText == 'success' || $statusCode == 'success') {
+		$data = $result->data ;
+	} else {
+		$data = NULL;
+		error_log(print_r($params, true), 3, ini_get('error_log'));
+    	handle_rest_error($cid . ' => ' . $statusText . ' - ' . $statusCode. ' - ' . $statusMessage, $service);
+	}
+
+	return $data;
+}
+
+function handle_rest_error($error_msg, $service) {
+  $index = rand(100, 1000);
+  
+  $html = '';
+  
+  global $user;
+  
+  // dont show details of error unless debug is on
+  if (isset($_GET['debug']) && array_search("administrator", $user->roles) == true) {
+    $html = ' <a href="javascript:void(0);" onclick="jQuery(\'#msg_err' . $index . '\').css(\'display\', \'inline\');" style="color:blue; font-size:11px;">[show details]</a>' .
+            '<div id="msg_err' . $index . '" style="display:none; color:black; font-size:0.875em;">' .
+            '  <p style="color:black; font-size:11px;"> &nbsp; &nbsp; &nbsp;REST Issue: ' . $error_msg . '</p>' .
+            '</div>'; 
+  }
+  error_log("Rest call failed: ".$error_msg.$service, 3, ini_get('error_log')); // To keep error detail in log file, if we are not able to reproduce it easily.
+  // don't show error unless its a new REST call
+  if (substr($service, 0, 3) == 'vcn') {
+  	drupal_set_message('An error has occurred.  Please try again.'.$html, 'error');
+  }
+}
+
+function vcn_format_phone ($number)
+{
+	$number = preg_replace('/[^\d]/', '', $number);
+	switch (strlen($number))
+	{
+		case '7':
+			return preg_replace("/([0-9]{3})([0-9]{4})/", "$1-$2", $number);
+			break;
+		case '10':
+			return preg_replace("/([0-9]{3})([0-9]{3})([0-9]{4})/", "($1) $2-$3", $number);
+			break;
+		default:
+			return preg_replace("/([0-9]{3})([0-9]{3})([0-9]{4}) ([0-9])/", "($1) $2-$3 $4", $number);
+
+	}
+	return false;
+}
+
+/* VCN Tabs functions
+ * 
+ * vcn_tabs_header($vcn_tabs_list, $vcn_tabs_keys) : Header fucntion
+ * 
+ * $vcn_tabs_keys = array("key1","key2","key3"); // Order by to display
+ * 
+ * $vcn_tabs_list = array();	// Order by to display
+	$vcn_tabs_list[] = array("key1","key1 Title",[optional:image name with extenstion placed at images/tab_images], [optional:url to go to if user clicks tab], [optional:title attribute of tab if diff than tab display name/title]);
+	$vcn_tabs_list[] = array("key2","key2 Title");
+	$vcn_tabs_list[] = array("key3","key3 Title");
+ *
+ */
+function vcn_tabs_header($vcn_tabs_list, $vcn_tabs_keys, $active = "", $is_industry_specific = TRUE, $disable_inactive_tab = FALSE){
+	$vcn_image_path = vcn_image_path();
+	$vcn_industry_image_path = vcn_industry_image_path();
+	$vcn_tabs_keys = implode(",", $vcn_tabs_keys);
+	$hidden_class="";
+	
+	if (!$is_industry_specific) {
+		$vcn_industry_image_path = $vcn_image_path;
+	}
+  
+    $tabsWithImageClass = '';
+    if(isset($vcn_tabs_list[0][2]) && $vcn_tabs_list[0][2] != "") {
+      $tabsWithImageClass = 'vcn-tabs-with-image';
+    }
+  
+ 
+	$vcn_tabs_header = '<div class="vcn-tabs-blueheader ' . $tabsWithImageClass . '">';
+	foreach($vcn_tabs_list as $key => $tabs) {	
+		
+	    $onClickAction = " href=\"javascript:void(0);\" onclick=\"vcn_change_tab('".$tabs[0]."','" .$vcn_tabs_keys."');\" ";
+	    if (isset($tabs[3]) && $tabs[3] != "") {
+	      $onClickAction = ' href="' . $tabs[3] . '" ';
+	    }
+         
+    	$tab_title = (isset($tabs[4]) && $tabs[4] != "") ? $tabs[4] : strip_tags(str_replace(array('<br/>', '<br />'), " ", $tabs[1]));
+     
+    
+		if($active == "" &&  $key == 0 || $active != "" && $tabs[0] == $active) {
+			$vcn_tabs_header .= '<a id="i'.$tabs[0].'link" class="vcn_tabs-links" ' . $onClickAction . ' title="'.$tab_title.'">';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'linkinner">';
+				
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'left" class="vcn-tabs-on-left ' . $tabsWithImageClass . '"></div>';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'middle" class="vcn-tabs-on ' . $tabsWithImageClass . '">';
+			$vcn_tabs_header .= '<div class="sptext noresize ' . $tabsWithImageClass . '">'.$tabs[1].'</div>';			
+			if(isset($tabs[2]) && $tabs[2] != "") {
+				$vcn_tabs_header .= '<div class="spimg ' . $tabsWithImageClass . '"><img alt="'.strip_tags($tabs[1]).'" src="'.$vcn_industry_image_path.'tab_images/'.$tabs[2].'" height="40" /></div>';
+			}			
+			$vcn_tabs_header .= '</div>';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'right" class="vcn-tabs-on-right ' . $tabsWithImageClass . '"></div>';
+			
+			$vcn_tabs_header .= '</div>';
+			$vcn_tabs_header .= '</a>';
+			$vcn_tabs_header .= '<img alt="" src="'.$vcn_image_path.'miscellaneous/transparent.gif" width="3" class="floatleft" />';
+		}else {
+			
+			$onmouseaction = ' onmouseout="vcn_tabs_mouseover(\''.$tabs[0].'\',\'off\');"	onblur="vcn_tabs_mouseover(\''.$tabs[0].'\',\'off\');" onmouseover="vcn_tabs_mouseover(\''.$tabs[0].'\',\'on\');" onfocus="vcn_tabs_mouseover(\''.$tabs[0].'\',\'on\');" ';
+						
+			if($disable_inactive_tab == TRUE) {				
+				$onClickAction = "";
+				$onmouseaction = "";
+				$hidden_class=" element-hidden ";
+			}
+			
+			$vcn_tabs_header .= '<a id="i'.$tabs[0].'link" class="vcn_tabs-links'.$hidden_class.'" ' . $onClickAction . ' title="'.$tab_title.'">';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'linkinner" '.$onmouseaction.' >';
+			
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'left" class="vcn-tabs-off-left ' . $tabsWithImageClass . '"></div>';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'middle" class="vcn-tabs-off ' . $tabsWithImageClass . '">';
+			$vcn_tabs_header .= '<div class="sptext noresize ' . $tabsWithImageClass . '">'.$tabs[1].'</div>';			
+			if(isset($tabs[2]) && $tabs[2] != "") {
+				$vcn_tabs_header .= '<div class="spimg ' . $tabsWithImageClass . '"><img alt="'.strip_tags($tabs[1]).'" src="'.$vcn_industry_image_path.'tab_images/'.$tabs[2].'" height="40" /></div>';
+			}			
+			$vcn_tabs_header .= '</div>';
+			$vcn_tabs_header .= '<div id="i'.$tabs[0].'right" class="vcn-tabs-off-right ' . $tabsWithImageClass . '"></div>';
+			
+			$vcn_tabs_header .= '</div>';
+			$vcn_tabs_header .= '</a>';
+			$vcn_tabs_header .= '<img alt="" src="'.$vcn_image_path.'miscellaneous/transparent.gif" width="3" class="floatleft'.$hidden_class.'" />';				
+		}
+	}
+	$vcn_tabs_header .= '</div>';
+
+	return $vcn_tabs_header;
+}
+
+function vcn_tabs_body_start() {
+	return '<div id="vcn-tabs-blueborder">';
+}
+
+function vcn_tabs_body_end() {
+	return '</div>';
+}
+
+function vcn_tabs_body_id_prefix() {
+	return "tab";
+}
+
+/* VCN Tabs functions END */
+
+function vcn_tab_navigation_bar($total_count, $selected) {
+	$html="";
+	for($i=1;$i<=$total_count;$i++) {
+		if($i == $selected){
+			$html .="<span class='bar-active'>&nbsp;</span>";
+		}else {
+			$html .="<span class='bar-inactive'>&nbsp;</span>";
+		}	
+	}
+	return $html;
+}
+	
+//function vcn_rest_datatable($page, $onetcode = NULL, $zipcode = NULL) {
+function vcn_rest_datatable($params_for_dataTable_rest_call) {
+	$params = array();
+	$page = $params_for_dataTable_rest_call['page'];
+	$params['industry'] = $GLOBALS['vcn_config_default_industry_id'];
+	
+	switch ($page) {
+		case 'rest-dt-getqualified-programs':
+			$onetcode = isset($params_for_dataTable_rest_call['onetcode']) ? $params_for_dataTable_rest_call['onetcode'] : NULL;
+			$zipcode = isset($params_for_dataTable_rest_call['zipcode']) ? $params_for_dataTable_rest_call['zipcode'] : NULL;
+			/* other commonly additional parameters */
+			if(!is_null($onetcode)) {
+				$params['onetcode'] = $onetcode;
+			}
+			if(!is_null($zipcode)) {
+				$params['zipcode'] = $zipcode;
+			}
+			/* end of commonly used parameters, any specific parameters should be added to respective case statement before making the REST CALL */
+			/* add additional parameters here*/
+			if ($zipcode) {
+				$params['distance'] = isset($params_for_dataTable_rest_call['distance']) ? $params_for_dataTable_rest_call['distance'] : $GLOBALS['default_distance'];
+			}
+			if (isset($params_for_dataTable_rest_call['award_level']) && $params_for_dataTable_rest_call['award_level']) {
+				$params['award_level'] = $params_for_dataTable_rest_call['award_level'];
+			}
+			/* end of additional parameters*/
+			break;
+		case 'rest-dt-pla-military-credits':
+			$branch = isset($params_for_dataTable_rest_call['branch']) ? $params_for_dataTable_rest_call['branch'] : NULL;
+			$search_term = isset($params_for_dataTable_rest_call['search_term']) ? $params_for_dataTable_rest_call['search_term'] : NULL;
+			$params['branch'] = $branch;
+			$params['search_term'] = $search_term;
+			break;
+		case 'rest-dt-pla-professional-training':
+		case 'rest-dt-pla-national-exams':
+			$organization = isset($params_for_dataTable_rest_call['organization']) ? $params_for_dataTable_rest_call['organization'] : NULL;
+			$search_term = isset($params_for_dataTable_rest_call['search_term']) ? $params_for_dataTable_rest_call['search_term'] : NULL;
+			$branch_type = isset($params_for_dataTable_rest_call['branch_type']) ? $params_for_dataTable_rest_call['branch_type'] : NULL;
+			$params['organization'] = $organization;
+			$params['search_term'] = $search_term;
+			$params['branch_type'] = $branch_type;
+			break;
+		case 'rest-dt-careergrid':
+			$education_level = isset($params_for_dataTable_rest_call['education_level']) ? $params_for_dataTable_rest_call['education_level'] : NULL;
+			$work_type = isset($params_for_dataTable_rest_call['work_type']) ? $params_for_dataTable_rest_call['work_type'] : NULL;
+			$search_term = isset($params_for_dataTable_rest_call['search_term']) ? $params_for_dataTable_rest_call['search_term'] : NULL;
+			
+			$params['education_level'] = $education_level;
+			$params['work_type'] = $work_type;
+			
+			$zipcode = vcnuser_get_zip();
+			if (!empty($zipcode)) {
+				$params['zipcode'] = $zipcode;
+			}
+			if (!empty($search_term)) {
+				$params['search_term'] = $search_term;
+			}
+			//$params['search_term'] = 'ABCD';
+			break;
+		default:
+			break;
+	}
+
+	//default values for sorting and limit
+	$iDisplayStart = 0;
+	$iDisplayLength = 10; //change accordingly
+	$sOrderColumn = 1;
+	$sSortDir = 'ASC';
+
+	/* setting parameters for Sorting and Limit */
+	if (isset($_GET['iDisplayStart']) && $_GET['iDisplayLength'] != '-1' ) { //http://www.datatables.net/examples/data_sources/server_side.html
+		$iDisplayStart = intval($_GET['iDisplayStart']);
+		$iDisplayLength = intval($_GET['iDisplayLength']);
+	}
+
+	if (isset($_GET['iSortCol_0'])) {
+		$sSortDir = $_GET['sSortDir_0'] === 'asc' ? 'ASC' : 'DESC';
+		$sOrderColumn = intval($_GET['iSortCol_0']);
+	}
+	
+	if (isset($_GET['iSortCol_1'])) { // Additional (2nd) column for sorting param
+		$params['sSortDir_1'] = $_GET['sSortDir_1'] === 'asc' ? 'ASC' : 'DESC';
+		$params['sOrderColumn_1'] = intval($_GET['iSortCol_1']);
+	}
+	if (isset($_GET['iSortingCols'])) {
+		$params['iSortingCols'] = intval($_GET['iSortingCols']);
+	}
+
+	//further sanitization and confirmation, values are not tampered by malicious user for SQL Injection
+	if (is_numeric($iDisplayStart)) {
+		$params['iDisplayStart'] = $iDisplayStart;
+	}
+
+	if (is_numeric($iDisplayLength)) {
+		$params['iDisplayLength'] = $iDisplayLength;
+	}
+
+	if (is_numeric($sOrderColumn)) {
+		$params['sOrderColumn'] = $sOrderColumn;
+	}
+
+	$params['sSortDir'] = $sSortDir;
+	/* end of params for sorting and limit*/
+	
+	$data_for_dataTable = vcn_rest_datatable_get_data($page, $params);
+
+	if (empty($data_for_dataTable)) {
+		$totalRecords = 0;
+		$totalDisplayRecords = 0;
+	} else {
+		$totalRecords = $data_for_dataTable['iTotalRecords'];//$rest_data->num_rows;
+		$totalDisplayRecords = $data_for_dataTable['iTotalRecords'];//$rest_data->num_rows;
+	}
+
+
+	$output = array(
+			"sEcho" => intval($_GET['sEcho']),
+			"iTotalRecords" => $totalRecords,
+			"iTotalDisplayRecords" => $totalDisplayRecords,
+			"aaData" => array()
+	);
+
+ 	if ($totalRecords == 0) {
+ 		$output['aaData'] = array();
+ 	} else {
+ 		$output['aaData'] = $data_for_dataTable['aaData'];
+ 	}
+	echo json_encode($output);
+}
+
+
+function vcn_rest_datatable_get_data($page, $params, $display_na_if_null = FALSE) {
+	
+	$format = 'json';
+	$method = 'post';
+	$cache = FALSE;
+	$need_additional_user_info = FALSE; // this variable is needed to determine if we need user info like uid from D6, for functionality like save and target
+	
+	$params['is_dataTable'] = TRUE;
+	
+	switch ($page) {
+		case 'rest-dt-getqualified-programs':
+			$svc = 'vcntrainingsvc';
+			$module = 'vcnprograms';
+			$action = 'get-programs-by-onetcode';
+			
+			//make sure the sequence in the array $columns_for_order_by is exactly the same as what you want to display on the page in the Datatable, or for sorting the DB query, 
+			//and the variable names match the column names or aliases in DB Query in the REST call
+			//eg: ref function getPrograms from VCNPrograms.php in the REST
+			$columns_for_order_by = array('program_name', 'inst_name', 'education_category_id', 'distance');
+			
+			//these are additional columns which are needed for displaying data in the dataTable or used to create hyperlinks which use parameters like unique id, order of columns in this array is not important
+			$other_additional_columns = array('unitid', 'program_id', 'cipcode', 'onetcode', 'inst_address', 'inst_city', 'inst_state_abbrev', 'inst_zip','inst_general_telephone', 'education_category_name', 'association_id');
+			$need_additional_user_info = TRUE;
+			break;
+		case 'rest-dt-pla-military-credits':
+			$svc = 'vcnplasvc';
+			$module = 'vcnpla';
+			$action = 'list-military-courses';
+			$columns_for_order_by = array('first_title');
+			$other_additional_columns = array('second_title', 'ace_id', 'course_id', 'start_date', 'end_date', 'objective', 'start_date_original', 'end_date_original');
+			$need_additional_user_info = TRUE;
+			break;
+		case 'rest-dt-pla-professional-training':
+		case 'rest-dt-pla-national-exams':
+			$svc = 'vcnplasvc';
+			$module = 'vcnpla';
+			$action = 'list-training-or-exam-courses';
+			$columns_for_order_by = array('first_title');
+			$other_additional_columns = array( 'ace_id', 'second_title', 'start_date', 'end_date', 'start_date_original', 'end_date_original');
+			$need_additional_user_info = TRUE;
+			break;
+		case 'rest-dt-careergrid':
+			$svc = 'vcnoccupationsvc';
+			$module = 'vcncareer';
+			$action = 'get-careers-data-careergrid';
+			$columns_for_order_by = array('title', 'pct25_annual', 'pct25_hourly','education_category_id');
+			$other_additional_columns = array('pct75_annual', 'pct75_hourly', 'onetcode', 'education_category_name', 'detailed_description', 'video_link', 'laytitle', 'zipcode', 'career_ladder_yn');
+			$need_additional_user_info = TRUE;
+			break;
+		default:
+			return array();
+			break;
+	}
+	
+	//consolidated columns array
+	$columns = array_merge($columns_for_order_by, $other_additional_columns);
+	$params['column_display_order_datatable'] = $columns;
+
+	$data = vcn_rest_wrapper($svc, $module, $action, $params, $format, $method, $cache);
+
+	$final_array_for_datatable_json = array();
+	
+	if ($data->num_rows > 0) {
+		foreach($data->result as $value) {
+			$column_value = array();
+			foreach($columns as $v) {
+				$data_val = trim($value->$v);
+				if (($display_na_if_null) && (is_null($data_val) || empty($data_val))) {
+					$data_val = 'N/A';
+				}
+				$column_value[$v] = strip_tags($data_val);
+			}
+			if ($need_additional_user_info) {
+				$column_value['vcn_user_id'] = (int)$GLOBALS['vcn_user_id'];
+				$column_value['is_user_logged_in'] = (int)$GLOBALS['is_user_logged_in'];
+			}
+			$final_array_for_datatable_json['aaData'][] = $column_value;
+		}
+	}
+	
+	$final_array_for_datatable_json['iTotalRecords'] = $data->num_rows;
+	$final_array_for_datatable_json['iTotalDisplayRecords'] = $data->num_rows; // this is just a placeholder as it is required for data table to work, data is set to 10 in the js file
+	
+	return $final_array_for_datatable_json;
+}
+
+function vcn_determine_vcn_subsite() {
+	// determine if this is a vcn subsite (like "osp") or standard vcn
+    $req_uri = $_SERVER['REQUEST_URI'];
+	$uri_exp = explode("/",$req_uri);
+	//print_r($uri_exp);
+	
+	$subsite = 'vcn';		
+	$industry_code =  vcn_get_industry_code();	
+	if($industry_code != ""){
+		$subsite = 'vcn-'.$industry_code;
+	} 
+	
+	if ($uri_exp[2]=='osp') {
+		$subsite = 'osp';
+	} else if ($uri_exp[2]=='osp?q=osp') { // as long as we are doing a D6 redirect to D7, this can happen
+		$subsite = 'osp';
+	} else if ($uri_exp[2]=='forum') { // all forum pages are OSP
+		$subsite = 'osp';
+	} else if ($uri_exp[2]=='provider') { // all provider portal pages 
+		$subsite = 'provider';
+	}
+	return $subsite;
+}
+
+function vcn_determine_vcn_or_category2() {
+	// determine if this is a category 2 client or standard vcn
+	$path = $_SERVER['SERVER_NAME'];
+	$path = explode('.', $path);
+	
+	if (strstr($path[0], 'goodwill')) {
+		$cat2site = 'goodwill';
+	} else if (strstr($path[0], 'ser')) {
+		$cat2site = 'ser';
+	} else if (strstr($path[0], 'iajvs')) {
+		$cat2site = 'iajvs';
+	} else {
+		$cat2site = 'vcn';
+	}
+	return $cat2site;
+}
+
+function vcn_get_user_info() {
+	
+	$user = array();
+	$user['uid'] = $GLOBALS['d6_uid'];
+	$user['name'] = $GLOBALS['d6_name'];
+	$user['vcn_user_name'] = $GLOBALS['vcn_user_name'];
+	$user['mail'] = $GLOBALS['drupal_mail'];
+	$user['vcn_user_id'] = $GLOBALS['vcn_user_id']; // cma_id : for logged in and anonymous user
+	$user['is_user_logged_in'] = $GLOBALS['is_user_logged_in'];
+	
+	return $user;
+}
+
+function vcn_use_cache(&$variables) { 
+	if(!isset($variables['useCache'])) {
+		$variables['useCache'] = true;
+		if (stristr($_SERVER['REQUEST_URI'], 'no-cache')) {
+			$variables['useCache'] = false;
+		}
+	} 
+	return $variables['useCache'];
+}
+
+function vcn_get_careername_from_onetcode($onetcode) {
+  $industry = vcn_get_industry();
+	$data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career', array('onetcode' => $onetcode, 'industry' => $industry), 'json');
+	return $data[0]->title;
+}
+
+
+/**
+ * returns true if zipcode is valid US ZIP Code, false if invalid. need to merge with already existing function in vcngeneral.inc
+ * @param unknown_type $zipcode
+ * @return boolean
+ */
+function vcn_zipcode_validation($zipcode) {
+	/* REST Call */
+
+	$params = array('zipcode' => $zipcode);
+	$zipcode_result = vcn_rest_wrapper('vcnlocationsvc', 'vcnlocation', 'get-location', $params);
+
+	if(!empty($zipcode_result->location)) {
+		return true;
+	} else {
+		return false;
+	}
+
+	/* End REST Call */
+}
+
+function vcn_get_education_category_by_id($education_category_id) {
+	$data = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-education-category', NULL, 'json');
+	foreach ($data->categories as $value) {
+		if ($value->education_category_id == $education_category_id) {
+			return $value->education_category_name;
+		}
+	}
+	return NULL;
+}
+
+
+function vcn_custom_aes_encrypt($text) {
+  //return $text;
+	$text = trim($text);
+	if (empty($text) || is_null($text)) {
+		return $text;
+	}
+	return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, $GLOBALS['vcn_pii_secret_key'], $text, MCRYPT_MODE_CBC, base64_decode($GLOBALS['vcn_pii_secret_iv']))));
+}
+
+function vcn_custom_aes_decrypt($text) {
+  //return $text;
+	$text = trim($text);
+	if (empty($text) || is_null($text)) {
+		return $text;
+	}
+	return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $GLOBALS['vcn_pii_secret_key'], base64_decode($text), MCRYPT_MODE_CBC, base64_decode($GLOBALS['vcn_pii_secret_iv'])));
+}
+
+// this function pulls out the year from the wage table so that we can display it 
+function getWagePeriodYear() {
+  $result = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-wage-period-year', array());
+
+  $year = '';
+  if (isset($result->wages->item[0]->periodyear)) {
+    $year = $result->wages->item[0]->periodyear;
+  }
+  
+  return $year;
+}
+
+function vcn_tell_us_comment_ajax_callback() {	
+
+	$url = $_GET['url'];
+	$email = $_GET['email'];
+	$subject = $_GET['subject'];
+	$subject = str_replace('~', ' ', $subject);
+	$comment = $_GET['comment'];
+	$comment = str_replace('~', ' ', $comment);
+	$created_by = $_GET['by'];
+		 
+	/* REST Call */  
+	// Save comment to DB (table-vcn_comment) 
+	$params = array('page_url' => $url, 'sender_email' => $email, 'subject' => $subject, 'sender_comment' => $comment, 'created_by' => $created_by); 
+	$content = vcn_rest_wrapper('vcncommentsvc', 'vcntelluscomment', 'insert-tell-us-comment', $params, 'xml', 'post', false);
+	$comment_status = (int) $content->feedback[0];
+	
+	// get VCN support's Email Id
+	$params = array('prop_id' => 6); // vcn_support_email = 6
+	$content = vcn_rest_wrapper('vcnpropertiessvc', 'vcnproperties', 'get-properties', $params);
+	$supportemail = (string) $content->properties->item->value;
+	/* End REST Call */
+	
+	// Email header		
+	$header  = 'MIME-Version: 1.0' . "\r\n";
+	$header .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+	$header .= "From: $email \r\n";
+	$header .= "Reply-To: $email \r\n";
+	
+	if (strlen($email) > 0) {		
+		$mail_sent = mail( $supportemail, 'Tell us Comment: '. $subject, $comment, $header );
+	}
+	
+	if($mail_sent == true && $comment_status == 1) {
+		print true;
+	}else {
+		print false;
+	}	
+}
+
+//callback function for vcnuser-onetcode/update/% menu
+function vcn_update_vcnuser_onetcode($onetcode) {
+	vcnuser_set_onetcode_session($onetcode);	
+}
+
+function vcn_get_remote_filesize($url, $user='', $pass='') { 
+  $ch = curl_init($url); 
+  curl_setopt($ch, CURLOPT_HEADER, 0); 
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+  
+  // for stage due to the apache login
+  if (strlen($user) && strlen($pass)) {
+    curl_setopt($ch, CURLOPT_USERPWD, "$user:$pass"); 
+  }
+  
+  $data = curl_exec($ch); 
+  curl_close($ch); 
+  $filename = "temp." . time(); 
+  $fp = fopen($filename, "w+"); 
+  fwrite($fp, $data); 
+  fclose($fp); 
+  $info = getimagesize($filename); 
+  unlink($filename); 
+  return $info; 
+}
+
+//return 1 = saved, 2 = targeted, 0 = none 
+function vcn_is_saved_or_targeted_notebookitem($vcnuserid, $item_type, $item_id, $sub_item_id = '', $secondary_info = '') { //$item_type = 'OCCUPATION'/'PROGRAM'/'CERTIFICATE'/'LICENSE'
+  if($vcnuserid > 0) {	
+	$industry = vcn_get_industry();
+
+	$params = array('userid' => $vcnuserid, 'industry' => $industry, 'itemtype' => $item_type, 'itemid' => $item_id, 'subitemid' => $sub_item_id, 'secondaryinfo' => $secondary_info);
+	$result = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-item-by-itemid', $params, 'xml', 'post', false);
+
+	if(isset($result->item) && $result->item->itemrank == 1){	
+		return 2;
+	}else if(isset($result->item)){
+		return 1;
+	}else{
+		return 0;
+	}
+  }else{
+	return 0;
+  }	
+}
+
+//return 1 = saved, 2 = targeted, 0 = none
+function vcn_is_saved_course($vcnuserid, $course_type, $course_id, $course_start_date, $course_end_date) { //$item_type = 'OCCUPATION'/'PROGRAM'/'CERTIFICATE'/'LICENSE'/'ALL'
+  if($vcnuserid > 0) {
+	$params = array('userid' => $vcnuserid, 'coursetype' => $course_type, 'courseid' => $course_id, 'coursestartdate' => $course_start_date, 'courseenddate' => $course_end_date);
+	$result = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-user-course-by-course-info', $params, 'xml', 'post', false);
+
+	if(isset($result->item) && $result->item->itemrank == 1){
+		return 2;
+	}else if(isset($result->item)){
+		return 1;
+	}else{
+		return 0;
+	}
+  }else{
+	return 0;
+  }
+}
+
+
+/**
+ * Calculates and returns the minimum education required for a career and also returns additional data like typical education for the same career
+ * @param string $onetcode
+ */
+function vcn_calculate_min_edu_for_career($onetcode, $echo_json = TRUE) {
+
+	$params = array('onetcode' => $onetcode, 'industry' => vcn_get_industry());
+	$career_data =  vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-requirements', $params);
+	$min_education_id = (int)$career_data->careerdata->mineducationid[0];
+	if ($min_education_id <= 1) { // this is required because Get Qualified minimum education drop down starts from High School and we are suppressing "Less than High School" option
+		$min_education_id = 2;
+	}
+	$min_education_name = (string)$career_data->careerdata->mineducationname[0];
+	$typical_education_name = (string)$career_data->careerdata->typicaleducation[0];
+	$title = (string)$career_data->careerdata->title[0];
+
+	if (!empty($min_education_id)) {
+		$results = array (
+				'onetcode' => $onetcode,
+				'min_education_id' => $min_education_id,
+				'min_education_name' => $min_education_name,
+				'typical_education_name' => $typical_education_name,
+				'title' => $title
+		);
+	} else {
+		$results = array();
+	}
+
+	if ($echo_json) {
+		echo drupal_json_encode($results);
+	} else {
+		return $results;
+	}
+}
+
+function vcn_counselor_users_dropdown_should_display() {
+  // check if user has counselor role rid=?
+  $is_valid = vcn_user_has_role(9);
+  
+  return $is_valid;
+}
+
+function vcn_user_has_role($roleId) {
+  $has_role = false;
+  
+  if (strlen($GLOBALS['d6_roles'])) {
+    $roles = explode(',', $GLOBALS['d6_roles']);
+    if (in_array((string)$roleId, $roles)) {
+      $has_role = true;
+    }
+  }
+  
+  return $has_role;
+}
+
+/* Takes the Onet code and removes all special character
+ * makes sure that all the characters in the returned string are Alphanumeric
+* used to derive the image name from the onet code
+*/
+function vcn_derive_imagename_from_onetcode($onet_code) {
+	return preg_replace('/[^0-9]/i', '', $onet_code);
+}
+
+//special consideration for AARP, applied to all the industries.
+//We have assigned 99 => 'All' in the Education Goal drop down on Get Qualified user selection form
+// so this function will always return 99
+function vcn_get_all_education_id() {
+	return 99;
+}

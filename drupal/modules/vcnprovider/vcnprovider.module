@@ -1,0 +1,549 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnprovider_help($path, $arg) {
+	if ($path == 'admin/help#vcnprovider') {
+		return t('Functionality related to VCN Provider portal.');
+  }
+}
+
+/**
+ * Implementation of vcnprovider_form (callback function from hook_menu).
+ */
+function vcnprovider_form($form, &$form_state, $unitid) {
+	
+	//$form['#redirect'] = FALSE; // Not working here, set it at submit handler.
+	//$form ['#attributes'] = array ('enctype' => "multipart/form-data" );
+	$form['#theme'][] = 'vcn_providerprofile_edit_by_unitid_template';
+	
+	/*$form['#attached']['js'] = array(
+	 drupal_get_path('theme', 'vcnstark').'/js/vcn_provider.js',
+	);*/
+	
+	$form['#attached'] = array(
+			module_load_include("inc","vcnprovider","includes/vcnprovider"),
+			'js' => array(
+					 drupal_get_path('theme', 'vcnstark').'/js/vcn_provider.js',
+					),
+	);
+	
+	vcn_validate_provider_user();
+	vcn_validate_user_provider_id($unitid);
+	
+	$form['provider_unitid'] = array (
+			'#type' => 'hidden',
+			'#value' => $unitid,
+	);
+	
+	$form['#unitid'] = $unitid;
+	$form['#provider_form_state'] = $form_state;
+	
+	$variables['unitid'] = $unitid;
+	$variables['useCache'] = false ; //adding a no-cache so editing details refreshes the page with new data
+	
+	/* REST Call */
+	$form['#providerdetail'] =  vcn_get_provider_detail($variables);
+	$form['#providerservices'] =  vcn_get_provider_services($variables);
+	$form['#providerentrancetests'] =  vcn_get_provider_entrance_tests($variables);
+	$form['#providerrequiredcourses'] =  vcn_get_provider_required_courses($variables);
+	$form['#providerdegreesoffered'] =  vcn_get_provider_degrees_offered($variables);
+	$form['#providerfaidoffered'] =  vcn_get_provider_faid_offered($variables);
+	/* End REST Call */
+
+	$form['provider_name'] = array(
+			//'#name' => 'files[' . implode('_', $element['#parents']) . ']',
+			'#title' => t('Name:'),
+			'#type' => 'textfield',
+			'#required' => TRUE,
+			'#size' => 80,
+			//'#title_display' => 'invisible', // 'after'
+			//'#maxlength' => 6,			
+			//'#weight' => 0,
+			'#default_value' => (string) $form['#providerdetail']->name,
+			//'#value' => (string) $form['#providerdetail']->name,		
+			//'#access' => $admin,
+			//'#default_value' => isset($aa) ? $aa : 1,
+	);
+	
+	$form['provider_phone'] = array(
+			'#title' => t('Phone:'),
+			'#type' => 'textfield',					
+			'#default_value' => (string) $form['#providerdetail']->phone,
+			'#size' => 18,
+	);
+	
+	$form['provider_logo'] = array(			
+			//'#name' => 'provider_logo_image',
+			'#title' => t('Logo Requirement:(152x152-png/jpg/gif)'),
+			'#type' => 'file',
+			'#title_display' => 'after',
+			'#size' => 9,
+			//"#upload_validators"  => array("file_validate_extensions" => array("png gif jpg")),
+	);
+		
+	$form['provider_addr'] = array(
+			'#title' => t('Street Address:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->addr,
+			'#size' => 80,
+	);
+	
+	$states = vcnStateUtil::getStatesList();
+	
+	$states_options = array();
+	for($s=1;$s<=51;$s++) {
+		$skey = $states[$s]["abbrev"];
+		$states_options[$skey] = $states[$s]["name"];
+		//$states_options[$skey] = $states[$s]["abbrev"]." - ".$states[$s]["name"];
+	}
+	
+	$form['provider_state'] = array(
+			'#type' => 'select',
+			'#title' => t('State:'),
+			'#options' => $states_options,
+			'#default_value' => (string) $form['#providerdetail']->state,			
+	);
+	
+	$form['provider_city'] = array(
+			'#title' => t('City:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->city,
+			'#size' => 25,
+	);
+	
+	$form['provider_zipcode'] = array(
+			'#title' => t('Zipcode:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->zipcode,
+			'#size' => 25,
+	);
+	
+	$form['provider_webaddr'] = array(
+			'#title' => t('School URL:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->webaddr,
+			'#size' => 100,
+	);
+	
+	$form['provider_applurl'] = array(
+			'#title' => t('Application URL:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->applurl,
+			'#size' => 100,
+	);
+	
+	$form['provider_faidurl'] = array(
+			'#title' => t('Financial Aid URL:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->faidurl,
+			'#size' => 100,
+	);
+	
+	$form['provider_missionstatementurl'] = array(
+			'#title' => t('Mission Statement URL:'),
+			'#type' => 'textfield',
+			'#default_value' => (string) $form['#providerdetail']->missionstatementurl,
+			'#size' => 100,
+	);
+	
+	/*$default_formats = array(
+			'value' => '',
+			'format' => filter_default_format(),
+	);*/
+	$form['provider_missionstatement'] = array(
+			'#title' => t('Mission Statement:'),
+			'#type' => 'textarea',
+			//'#type' => 'textarea',
+			'#default_value' => (string) $form['#providerdetail']->missionstatement,
+			//'#size' => 100,
+			//'#resizable' => FALSE,		
+			//'#cols' => 84,
+			//'#rows' => 5,			
+			//'#format' => "user_input", // plain_text filtered_html full_html vcn_text php_code var_dump(filter_formats());
+	);		
+	
+		
+	//$form['actions']['reset'] = array('#markup' => '<input id="reset" type="reset" value="reset" />', '#weight' => 1000);
+
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit Changes'),
+			'#weight' => 10,
+			'#validate' => array('vcnprovider_form_validate'),
+			'#submit' => array('vcnprovider_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcnprovider-submit-button'),
+					'title' => "Submit Changes"
+			),
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /provider/profile/% (School/Provider detail edit page by Unitid)
+ */
+function vcnprovider_preprocess_vcn_providerprofile_edit_by_unitid_template(&$variables) {
+		
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	
+	$form = $variables['form']; 
+	//var_dump($variables['form']['#provider_form_state']["input"]["coursename"]);
+	$variables['unitid'] = $form["#unitid"];	
+	//$variables['useCache'] = false ; //adding a no-cache so editing details refreshes the page with new data
+	
+	$variables['providerdetail'] = $form["#providerdetail"];	
+	$variables['providerservices'] = $form["#providerservices"];
+	$variables['providerentrancetests'] = $form["#providerentrancetests"];
+	$variables['providerrequiredcourses'] = $form["#providerrequiredcourses"];
+	$variables['providerdegreesoffered'] = $form["#providerdegreesoffered"];
+	$variables['providerfaidoffered'] = $form["#providerfaidoffered"];
+		
+	$variables['form_provider_name'] = render($form['provider_name']);
+	$variables['form_provider_logo'] = render($form['provider_logo']);
+	$variables['form_provider_phone'] = render($form['provider_phone']);	
+	$variables['form_provider_addr'] = render($form['provider_addr']);	
+	$variables['form_provider_state'] = render($form['provider_state']);	
+	$variables['form_provider_city'] = render($form['provider_city']);
+	$variables['form_provider_zipcode'] = render($form['provider_zipcode']);
+	
+	$variables['form_provider_webaddr'] = render($form['provider_webaddr']);
+	$variables['form_provider_applurl'] = render($form['provider_applurl']);
+	$variables['form_provider_faidurl'] = render($form['provider_faidurl']);
+	$variables['form_provider_missionstatementurl'] = render($form['provider_missionstatementurl']);
+	$variables['form_provider_missionstatement'] = render($form['provider_missionstatement']);
+	
+	
+	$variables['form_submit'] = render($form['submit']);
+	$variables['form_hidden'] = drupal_render_children($form);
+	
+	// Process rest data to display at template file
+	vcn_provider_profile($variables);
+	
+	// Generate vcn custom tabs
+	vcn_provider_profile_tabs($variables);
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /provider/summary
+ */
+function vcnprovider_preprocess_vcn_provider_summary_template(&$variables) {
+	  
+  $variables['vcn_base_path'] = base_path();
+  $variables['vcn_image_path'] = vcn_image_path();
+  
+  $variables['is_user_provider'] = vcn_validate_provider_user(false);
+  
+  if (isset($variables['unitid']) && strlen($variables['unitid'])) {
+    vcn_validate_user_provider_id($variables['unitid']);
+  }
+  
+	// Process rest data to display at template file
+  if ($variables['is_user_provider']) {
+    vcn_get_provider_summary($variables);
+  }
+  
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /provider/programs
+ */
+function vcnprovider_preprocess_vcn_provider_programs_template(&$variables) {
+	  
+  $variables['vcn_base_path'] = base_path();
+  $variables['vcn_image_path'] = vcn_image_path();
+  
+  $variables['is_user_provider'] = vcn_validate_provider_user();
+  
+  vcn_validate_user_provider_id($variables['unitid']);
+  
+	// Process rest data to display at template file
+  if ($variables['is_user_provider']) {
+    vcn_get_provider_programs($variables);
+  } else {
+    drupal_access_denied();
+  }
+  
+}
+
+
+/**
+ * Implementation of vcnprovider_program_form (callback function from hook_menu).
+ * /provider/%/program/%/cipcode/% (School/Provider program edit page)
+ */
+function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cipcode) {
+	
+	$form['#theme'][] = 'vcn_provider_program_edit_template';	
+
+	$form['#attached'] = array(
+			module_load_include("inc","vcnprovider","includes/vcnprovider"),
+			'js' => array(
+					drupal_get_path('theme', 'vcnstark').'/js/vcn_provider.js',
+			),
+	);
+	
+	vcn_validate_provider_user();
+	vcn_validate_user_provider_id($unitid);
+
+	$form['#unitid'] = $unitid;
+	$form['#programid'] = $programid;
+	$form['#cipcode'] = $cipcode;
+	$form['#cipcodeyear'] = vcn_get_cipcode_year();
+	$form['#provider_form_state'] = $form_state;	
+	$form['#task'] = "edit";
+	if($programid == 0 && $cipcode == 0) {
+		$form['#task'] = "add";
+	}
+
+	$variables['unitid'] = $unitid;
+	$variables['programid'] = $programid;
+	$variables['cipcode'] = $cipcode;
+	$variables['useCache'] = false ; //adding a no-cache so editing details refreshes the page with new data
+	$variables['cipcodeyear'] = $form['#cipcodeyear'];
+	
+	/* REST Call */
+	$details = vcn_get_program_detail_for_provider($variables);
+  
+  $form['#programdetails'] = $details;
+	$form['#programentrancetests'] = vcn_get_program_entrance_tests($variables);
+	$form['#programrequiredcourses'] = vcn_get_program_required_courses($variables);
+	$form['#programrequirededucation'] = vcn_get_program_required_education($variables);
+	$form['#programaccredited'] = vcn_get_program_accredited($variables);
+	$form['#programcurriculumcourses'] = vcn_get_curriculum_required_courses($variables);
+	
+	if($form['#task'] == "edit") {
+    // if the program id is not within the details object then someone might be trying to change the URL ids
+    if (!isset($details->programid)) {
+      drupal_set_message('You do not have access to this information. ', 'error');
+      drupal_access_denied();
+    }
+
+		$form['#providerdetail'] = vcn_get_provider_detail_by_programid($variables);
+		$form['#providerentrancetests'] = vcn_get_provider_entrance_tests_by_programid($variables);
+		$form['#providerrequiredcourses'] = vcn_get_provider_required_courses_by_programid($variables);
+
+	}else {		
+		$form['#providerdetail'] = vcn_get_provider_detail($variables);
+		$form['#providerentrancetests'] = vcn_get_provider_entrance_tests($variables);
+		$form['#providerrequiredcourses'] = vcn_get_provider_required_courses($variables);
+	}
+
+	$form['#cipcodelist'] = vcn_get_cipcode_list($variables);
+	$form['#educatiped'] = vcn_get_edu_cat_iped($variables);
+	
+	/* End REST Call */
+	
+	$form['provider_unitid'] = array (
+			'#type' => 'hidden',
+			'#value' => $unitid,
+			'#attributes' => array('id' => 'provider_unitid'),
+	);
+	
+	$form['program_id'] = array (
+			'#type' => 'hidden',
+			'#value' => $programid,
+			'#attributes' => array('id' => 'program_id'),
+	);
+	
+	$form['program_cipcodeyear'] = array (
+			'#type' => 'hidden',
+			'#value' => $form['#cipcodeyear'],
+			'#attributes' => array('id' => 'program_cipcodeyear'),
+	);	
+	
+	$form['program_task'] = array (
+			'#type' => 'hidden',
+			'#value' => $form['#task'],
+			'#attributes' => array('id' => 'program_task'),
+	);
+	
+	
+	$p_name = "";
+	$p_url = "";
+	$p_length = "";
+	$p_cipcode = "";
+	$p_award_level = "";
+	$p_desc = "";
+	$p_cname = "";
+	$p_cemail = "";
+	$p_cphone = "";
+	
+	if($form['#task'] == "edit") {		
+		//set default values
+		$p_name = (string) $form['#programdetails']->programname;
+		$p_url = (string) $form['#programdetails']->programurl;
+		$p_length = (string) $form['#programdetails']->duration;
+	 	$p_cipcode = (string) $form['#programdetails']->cipcode;
+		$p_award_level = (string) $form['#programdetails']->awlevel;
+		$p_desc = (string) $form['#programdetails']->programdescription;
+		$p_cname = (string) $form['#programdetails']->programcontactname;
+		$p_cemail = (string) $form['#programdetails']->programcontactemail;
+		$p_cphone = (string) $form['#programdetails']->programcontactphone;
+	}		
+	
+	$form['program_name'] = array(			
+			'#title' => t('Name:'),
+			'#type' => 'textfield',
+			'#required' => TRUE,
+			'#size' => 100, //52			
+			'#default_value' => $p_name,
+			//'#value' => (string) $form['#providerdetail']->name,			
+	);
+	
+	$form['program_url'] = array(
+			'#title' => t('URL:'),
+			'#type' => 'textfield',			
+			'#size' => 100,			
+			'#default_value' => $p_url,			
+	);
+
+	$form['program_length'] = array(
+			'#title' => t('Length:'),
+			'#type' => 'textfield',			
+			'#default_value' => $p_length,
+	);	
+	
+	$cip_options = array();
+	if (count($form['#cipcodelist']->item) > 0) {	
+		foreach ($form['#cipcodelist']->item as $cip) {
+			$ckey = (string) $cip->cipcode;
+			$cip_options[$ckey] = (string) $cip->cipcode." - ".(string) $cip->ciptitle;
+		}
+	}
+	$form['program_cipcode'] = array(
+			'#title' => t('Cipcode:'),
+			'#type' => 'select',
+			'#options' => $cip_options,
+			'#default_value' => $p_cipcode,
+	);
+	
+	$edu_cat_iped_options = array();
+	if (count($form['#educatiped']->item) > 0) {
+		foreach ($form['#educatiped']->item as $iped) {
+			$ikey = (string) $iped->ipedlookupcode;
+			$edu_cat_iped_options[$ikey] = (string) $iped->ipedcategoryname;
+		}
+	}
+	
+	$form['program_award_level'] = array(
+			'#title' => t('Award Level:'),
+			'#type' => 'select',
+			'#options' => $edu_cat_iped_options,
+			'#default_value' => $p_award_level,
+	);
+	
+	$form['program_desc'] = array(
+			'#title' => t('Description:'),
+			'#type' => 'textarea',			
+			'#default_value' => $p_desc,			
+	);
+	
+	$form['program_contact_name'] = array(
+			'#title' => t('Contact Name:'),
+			'#type' => 'textfield',
+			'#size' => 25,
+			'#default_value' => $p_cname,
+	);
+	
+	$form['program_contact_email'] = array(
+			'#title' => t('Contact Email:'),
+			'#type' => 'textfield',
+			'#size' => 25,
+			'#default_value' => $p_cemail,
+	);
+	
+	$form['program_contact_phone'] = array(
+			'#title' => t('Contact Phone:'),
+			'#type' => 'textfield',
+			'#size' => 25,
+			'#default_value' => $p_cphone,
+	);
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Submit Changes'),
+			'#weight' => 10,
+			'#validate' => array('vcnprovider_program_form_validate'),
+			'#submit' => array('vcnprovider_program_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcnprogram-submit-button'),
+					'title' => "Submit Changes"
+			),
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /provider/%/program/%/cipcode/% (School/Provider program edit page)
+ */
+function vcnprovider_preprocess_vcn_provider_program_edit_template(&$variables) {
+
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+
+	$form = $variables['form'];	
+
+	$variables['unitid'] = $form["#unitid"];
+	
+	$variables['programdetails'] = $form['#programdetails'];
+	$variables['programentrancetests'] = $form['#programentrancetests'];
+	$variables['programrequiredcourses'] = $form['#programrequiredcourses'];
+	$variables['programrequirededucation'] = $form['#programrequirededucation'];
+	$variables['programaccredited'] = $form['#programaccredited'];
+	$variables['programcurriculumcourses'] = $form['#programcurriculumcourses'];
+	
+	$variables['providerdetail'] = $form['#providerdetail'];
+	$variables['providerentrancetests'] = $form['#providerentrancetests'];
+	$variables['providerrequiredcourses'] = $form['#providerrequiredcourses'];	
+
+	$variables['task'] = "add";
+	$variables['program_title'] = "Program Details";
+	if($form['#task'] == "edit") {
+		$variables['task'] = "edit";
+		$variables['program_title'] = $variables['programdetails']->programname;
+	}
+	
+	$variables['form_program_name'] = render($form['program_name']);
+	$variables['form_program_url'] = render($form['program_url']);
+	$variables['form_program_length'] = render($form['program_length']);	
+	$variables['form_program_cipcode'] = render($form['program_cipcode']);
+	$variables['form_program_award_level'] = render($form['program_award_level']);
+	$variables['form_program_desc'] = render($form['program_desc']);
+	$variables['form_program_contact_name'] = render($form['program_contact_name']);
+	$variables['form_program_contact_email'] = render($form['program_contact_email']);
+	$variables['form_program_contact_phone'] = render($form['program_contact_phone']); 
+	
+	
+	$variables['form_submit'] = render($form['submit']);
+	$variables['form_hidden'] = drupal_render_children($form);
+
+	// Process rest data to display at template file
+	vcn_provider_program($variables);
+
+	// Generate vcn custom tabs
+	vcn_provider_program_tabs($variables);
+}

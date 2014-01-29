@@ -1,0 +1,215 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnrestcustomcms_help($path, $arg) {
+	if ($path == 'admin/help#vcnrestcustomcms') {
+		return t('VCN Tool for SMEs to update the career details data within VCN database');
+  }
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function vcnrestcustomcms_permission() {
+	$perm = array(
+	  'alter REST content' => array(
+      'title' => t('Edit content from REST database (i.e. career details)'),
+	  	'restrict access' => TRUE,
+	  	'warning' => t('Warning: Allowing users to modify REST database content could be detrimental to the site.'),
+	  ),
+	);
+	
+	return $perm;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /restcustomcms (VCN rest custom CMS)
+ */
+function vcnrestcustomcms_preprocess_vcn_rest_custom_cms_template(&$variables) {
+
+  global $user;
+
+  $variables['is_user_admin'] = false;
+  $variables['onetcode'] = '';
+      
+  // the user has to be logged in and contain the "alter REST content" permission to access this page
+  if ($user->uid) {
+    if (!user_access('alter REST content')) {
+      drupal_access_denied();
+      return false;
+    }
+    if ($user->uid == 1) {
+      $variables['is_user_admin'] = true;
+    }
+  } else {
+    drupal_set_message('You must be logged in and have the permissions to access the VCN Career Information Editor page.', 'error');
+    drupal_goto('user/login');
+    return false;
+  }
+  
+	drupal_add_js(drupal_get_path('module', 'vcnrestcustomcms') .'/js/vcnrestcustomcms.js', 'file');
+	
+	// get the main career onet and title list
+	$params = array('industry' => $GLOBALS['vcn_config_default_industry_id'], 'ignoreworktype' => 'true');
+	$listContent = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'listcareers', $params); 
+	$variables['career_list_array'] = $listContent;
+  
+	// get resource category drop down list 
+	$categoryArr = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-occupation-resource-categories', array()); 
+	$variables['category_array'] = $categoryArr;
+	
+	$occ_res_array = array();
+	
+	if ((isset($_POST['onetcode']) && strlen($_POST['onetcode'])) || (isset($_POST['onetcode_manual']) && strlen($_POST['onetcode_manual']))) {
+		
+		$onetcode = $_POST['onetcode'];
+		
+    $ignore_industry = false;
+    if (isset($_POST['onetcode_manual']) && strlen($_POST['onetcode_manual'])) {
+      $onetcode = $_POST['onetcode_manual'];
+      $ignore_industry = true;
+    }
+    
+    $variables['onetcode'] = $onetcode;
+   
+		if (isset($_POST['submitchanges']) && $_POST['submitchanges'] == 'Y') {
+      $params = array('onetcode' => $onetcode, 'description' => $_POST['description'], 'phyrequirements' => $_POST['phyrequirements'], 'medrequirements' => $_POST['medrequirements'], 'dayinlife' => $_POST['dayinlife'], 'edutraining' => $_POST['edutraining']);
+			$xContent = vcn_rest_wrapper('vcnrestcustomcmssvc', 'vcnrestcustomcms', 'update-career-details', $params);
+			vcnrestcustomcms_insert_delete_update($variables);
+		}
+		
+		$params = array('onetcode' => $onetcode);
+		$resContent = vcn_rest_wrapper('vcnoccupationsvc', 'vcnoccupationresource', 'get-occupation-resource', $params, 'xml', 'post', false);
+
+    $occ_res_array = array();
+    $resourcesarr = (array)$resContent->resources;
+   
+    if (count($resourcesarr) > 0) { //$resContent->resources) {
+      foreach ($resourcesarr['item'] as $value) {
+        $resourceid = (string)$value->resourceid;
+        $categoryid = (string)$value->categoryid;
+        $resourcename = (string)$value->resourcename;
+        $resourcelink = (string)$value->resourcelink;
+        $occ_res_array[] = array( 'res_id'=>$resourceid, 'cat_id'=>$categoryid, 'res_name'=>$resourcename, 'res_link'=>$resourcelink);
+      }
+    }
+    
+		$variables['occ_res_array'] = $occ_res_array;
+		
+		// get the main career details
+		$params = array('onetcode' => $onetcode);
+    
+    $params['industry'] = $GLOBALS['vcn_config_default_industry_id'];
+    
+    if ($ignore_industry) {
+      $params['ignore_industry'] = 'Y';
+    }
+
+		$career_data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-requirements', $params, 'xml', 'post', false);
+	
+    $variables['no_data_found'] = true;
+
+		//Career data variables
+    if ($career_data->careerdata) {
+      $variables['no_data_found'] = false;
+      $variables['career_title'] = (string)$career_data->careerdata->title[0];
+      $variables['detailed_description'] = (string)$career_data->careerdata->detaileddescription[0];
+      $variables['physical_requirements'] = (string)$career_data->careerdata->physicalrequirement[0];
+      $variables['health_requirements'] = (string)$career_data->careerdata->healthrequirement[0];
+      $variables['academic_requirement'] = (string)$career_data->careerdata->academicrequirement[0];
+      $variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];
+    }
+	}	
+}
+
+function vcnrestcustomcms_build_career_resources_dropdown($selectedCategoryId, $resourceId, $categoryArr) {
+	$sHtml = '<select id="resourcecategory_' . $resourceId . '" name="resourcecategory_' . $resourceId . '">' . "\n";
+	$categories = (array)$categoryArr->categories;
+	foreach ($categories['item'] as $value) {
+		$isSelected = '';
+		$categoryid = (string)$value->categoryid;
+		$categoryname = (string)$value->categoryname;
+		$selectedCategoryId = (string)$selectedCategoryId;
+		
+		if ($selectedCategoryId === $categoryid) {
+			$isSelected = ' selected="selected" ';
+		}
+		$sHtml .= '<option value="' . $categoryid . '" ' . $isSelected . '>' . $categoryname . '</option>' . "\n";
+	}
+	$sHtml .= '</select>' . "\n";
+	return $sHtml;	
+}
+	
+function vcnrestcustomcms_insert_delete_update(&$variables) {
+
+  if (isset($_POST['submitchanges']) && $_POST['submitchanges'] == 'Y') {
+
+    $resourcesText = '';
+    $resourcesUpdateText = '';
+    $resourcesInsertText = '';
+    $resourcesDeleteText = '';
+    $resourceId = '';
+
+    foreach ($_POST as $key => $value) {
+      if (strstr($key, 'resource')) {
+        $paramParts = explode('_', $key);
+        if (is_array($paramParts) && count($paramParts) > 1) {
+          $index = $paramParts[1];
+          if ($index != $resourceId) {
+            if ($index == 'new') {
+              $index = $paramParts[2];
+              if ($index != $resourceId && isset($_POST['resourcecategory_new_' . $index]) && strlen($_POST['resourcecategory_new_' . $index]) && isset($_POST['resourcename_new_' . $index]) && strlen($_POST['resourcename_new_' . $index]) && isset($_POST['resourcelink_new_' . $index]) && strlen($_POST['resourcelink_new_' . $index])) {
+                //$resourcesInsertText .= " INSERT INTO vcn_occupation_resource ( category_id, onetcode, resource_name, resource_link, resource_link_flag, active_yn, created_time) VALUES (" . $_POST['resourcecategory_new_' . $index] . ", '" . $_POST['onetcode'] . "', '" . $_POST['resourcename_new_' . $index] . "', '" . $_POST['resourcelink_new_' . $index] . "', True, 'Y', Now() ); \n"; 
+
+                $params = array('onetcode' => $variables['onetcode'], 'category_id' => $_POST['resourcecategory_new_' . $index], 'resource_name' => $_POST['resourcename_new_' . $index], 'resource_link' => $_POST['resourcelink_new_' . $index]);
+
+                $insertcontent = vcn_rest_wrapper('vcnrestcustomcmssvc', 'vcnrestcustomcms', 'insert-resource-details', $params);
+
+              }
+            } else if ($index == 'delete' && $_POST['resource_delete_' . $paramParts[2]] == 'true') {
+                $index = $paramParts[2];
+                //$resourcesDeleteText .= " DELETE FROM vcn_occupation_resource WHERE resource_id = '" . $index . "';\n"; 
+
+                $params = array('resource_id' => $index);
+
+                $deletecontent = vcn_rest_wrapper('vcnrestcustomcmssvc', 'vcnrestcustomcms', 'delete-resource-details', $params);
+
+            } else {
+              if ($index != 'delete') {
+                //$resourcesUpdateText .= " UPDATE vcn_occupation_resource SET category_id=" . $_POST['resourcecategory_' . $index] . ", resource_name='" . $_POST['resourcename_' . $index] . "', resource_link='" . $_POST['resourcelink_' . $index] . "', updated_time=Now() WHERE resource_id = '" . $index . "';\n"; 
+
+                $params = array('category_id' => $_POST['resourcecategory_' . $index], 'resource_name' => $_POST['resourcename_' . $index], 'resource_link' => $_POST['resourcelink_' . $index], 'resource_id' => $index);
+
+                $updatecontent = vcn_rest_wrapper('vcnrestcustomcmssvc', 'vcnrestcustomcms', 'update-resource-details', $params);	
+
+              }
+            }
+          }
+          $resourceId = $index;
+        }
+      }
+    }
+    //$resourcesText = htmlentities($resourcesUpdateText) . '<p/>' . htmlentities($resourcesInsertText) . '<p/>' . htmlentities($resourcesDeleteText);
+    //$output = '<p/>' . $resourcesText;
+    //echo '<p/><div style="background-color:#f9e0c0;">' . $output . '</div><hr/><p/>';
+  }
+}
+

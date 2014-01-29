@@ -1,0 +1,58 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+function vcncareergrid_preprocess_vcncareergrid_form(&$variables) {
+	 	
+	$variables['targeted_career_count'] = 0;
+	$user = vcn_get_user_info();
+	if($user['vcn_user_id'] > 0) {
+		$vcnuser_get_notebook_items = vcnuser_get_notebook_items($user['vcn_user_id'], 'OCCUPATION', 1);
+		$variables['targeted_career_count'] = count($vcnuser_get_notebook_items->item) > 0 ? 1 : 0;
+	}
+	
+	$form = $variables['form'];
+	
+	drupal_add_js(drupal_get_path('module', 'vcncareergrid') .'/js/vcncareergrid.js', 'file');
+	drupal_add_js(array('vcncareergrid' => array('education_level' => $form['careergrid_edu_level']['#value'], 
+																							'type_of_work' => $form['careergrid_type_of_work']['#value'], 
+																							'search_term' => trim($form['careergrid_search_box']['#value'])
+																				)
+											), 
+											array('type' => 'setting')
+								);
+	
+	$variables['careergrid_edu_level'] = render($form['careergrid_edu_level']);
+	$variables['careergrid_type_of_work'] = render($form['careergrid_type_of_work']);
+	$variables['careergrid_search_box'] = render($form['careergrid_search_box']);
+	$variables['careergrid_submit'] = render($form['careergrid_submit']);
+	$variables['careergrid_children'] = drupal_render_children($form);
+	
+}
+
+
+/*
+ * We have removed the Action column from Career Grid along with it's buttons.
+ * So we can delete this code if the above mentioned change is final
+ * also we can delete vcn_career_overview_display function in vcncareergrid.inc and careeroverview/onetcode/% from hook_menu
+ */
+
+//  Career overview by onetcode callback function
+/*function vcn_career_overview_by_onetcode($onetcode) {
+
+	module_load_include('inc', 'vcncareergrid', '/includes/vcncareergrid');
+	vcn_career_overview_display($onetcode);
+}*/

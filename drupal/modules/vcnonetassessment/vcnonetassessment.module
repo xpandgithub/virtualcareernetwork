@@ -1,0 +1,329 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/*if (!drupal_session_started() && !isset($_SESSION) && !headers_sent()) {
+  session_start();
+  error_log('session started at onet assessment module - ignored');
+}*/
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnonetassessment_help($path, $arg) {
+	if ($path == 'admin/help#vcnonetassessment') {
+		return t('Functionality related to VCN Onet Assessment (Interest Profiler).');
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * 
+ */
+function vcnonetassessment_preprocess_vcn_onet_assessment_template(&$variables) {
+	
+	if (!drupal_session_started() && !isset($_SESSION) && !headers_sent()) {
+		session_start();
+		error_log('session started at onetassessment module preprocess function');
+	}
+
+	if (!isset($variables['industry'])) {
+		$variables['industry'] = $GLOBALS['vcn_config_default_industry_id'];
+	}
+	
+	if (!isset($variables['limit'])) {
+		$variables['limit'] = 10;
+	}
+	
+	// get the list of assessment questions
+	$params = array();
+	$content = vcn_rest_wrapper('vcnonetassessmentsvc', 'vcnonetassessment', 'questions', $params);
+	
+	$variables['questions'] = $content;
+	
+	$userAnswersArr = array();
+	if (isset($_SESSION['user_answers'])) { 
+	  $userAnswersArr = $_SESSION['user_answers'];
+	} else if ($GLOBALS['is_user_logged_in']) {
+    $params = array('userid' => $GLOBALS['vcn_user_id']);
+    $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-cma-user-assessment-values', $params, 'xml', 'post', false);
+    if (strlen($content->item->assessmentvalues)) {
+      $assessmentArr = json_decode($content->item->assessmentvalues);
+      $userAnswersArr = $assessmentArr->user_answers;   
+    }
+  }
+	$variables['answers'] = $userAnswersArr;
+	
+	$assessmentTypesArr = array(
+	  1 => 'realistic',
+	  2 => 'investigative',
+	  3 => 'artistic',
+	  4 => 'social',
+	  5 => 'enterprising',
+	  6 => 'conventional',
+	);
+	$variables['assessment_types_arr'] = $assessmentTypesArr;
+	
+	$variables['is_using_lightbox'] = false;
+	if (stristr($_SERVER['REQUEST_URI'], 'lightbox')) {
+		$variables['is_using_lightbox'] = true;
+	}
+	
+	$altColorClass = '';
+	if (vcn_external_client_calling_interest_profiler() && !$variables['is_using_lightbox']) {
+		$altColorClass = 'profiler-alternate-color';
+	}
+	$variables['alt_color_class'] = $altColorClass;
+}
+
+function vcnonetassessment_preprocess_vcn_onet_assessment_results_template(&$variables) {
+  
+  module_load_include('inc', 'vcngeneral', '/includes/vcngeneral');
+	module_load_include('inc', 'vcnonetassessment', '/includes/vcnonetassessment');
+  
+	// use the default value if no industry passed in
+	$variables['industry'] = $GLOBALS['vcn_config_default_industry_id'];
+  if (isset($_GET['industry']) && strlen($_GET['industry'])) {
+		$variables['industry'] = $_GET['industry'];
+	}
+	
+	$variables['limit'] = 10;
+	if (isset($_GET['limit']) && strlen($_GET['limit'])) {
+		$variables['limit'] = $_GET['limit'];
+	}
+
+  $variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+  
+  $userScoresArr = vcn_get_onet_assessment_scores(true);
+  
+	$_SESSION['user_answers'] = $userScoresArr['user_answers'];
+	$_SESSION['user_answers_types'] = $userScoresArr['user_answers_types'];
+  
+	$variables['score_realistic'] = $userScoresArr['score_realistic'];
+	$variables['score_investigative'] = $userScoresArr['score_investigative'];
+	$variables['score_artistic'] = $userScoresArr['score_artistic'];
+	$variables['score_social'] = $userScoresArr['score_social'];
+	$variables['score_enterprising'] = $userScoresArr['score_enterprising'];
+	$variables['score_conventional'] = $userScoresArr['score_conventional'];
+	
+	$variables['is_using_lightbox'] = false;
+	if (stristr($_SERVER['REQUEST_URI'], 'lightbox')) {
+		$variables['is_using_lightbox'] = true;
+	}
+	
+	$careers = vcn_get_onet_assessment_career_matches_by_scores($variables['industry'], $variables['score_realistic'], $variables['score_investigative'], $variables['score_artistic'], $variables['score_social'], $variables['score_enterprising'], $variables['score_conventional'], $variables['limit']);
+	
+	$variables['careers'] = $careers;
+	
+  $altColorClass = '';
+	if (vcn_external_client_calling_interest_profiler()) {
+		$altColorClass = 'profiler-alternate-color';
+	}
+	$variables['alt_color_class'] = $altColorClass;
+}
+
+function vcnonetassessment_preprocess_vcn_onet_assessment_details_template(&$variables) {
+
+	module_load_include('inc', 'vcngeneral', '/includes/vcngeneral');
+	drupal_add_js(drupal_get_path('theme', 'vcnstark') .'/js/vcn_google_charts.js', 'file');
+	
+	// Add external Google JS file to be used for Google Charts API
+	drupal_add_js('https://www.google.com/jsapi', 'external');
+	
+	$onetcode = $variables['onetcode'];
+	
+	$params = array('onetcode' => $variables['onetcode']);
+	$career_data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-requirements', array('onetcode' => $variables['onetcode'], 'industry' => 2));
+	
+	$national_wages = vcn_rest_wrapper('vcnoccupationsvc', 'vcnwages', 'detail', array('onetcode' => $variables['onetcode']));
+	$national_jobtrends = vcn_rest_wrapper('vcnoccupationsvc', 'vcnjobtrends', 'detail', array('onetcode' => $variables['onetcode']));
+	
+  if ($national_wages) {
+	  $annual_salary_for_national = vcn_get_annual_salary($national_wages->nationaldata);
+	  $hourly_wages_for_national = vcn_get_hourly_wages($national_wages->nationaldata);
+  }
+        
+	//creating variables $image_name, $image_base_path
+	$variables['image_name'] = 'photo.'.vcn_derive_imagename_from_onetcode($variables['onetcode']).'.jpg';
+	$variables['image_base_path'] = vcn_image_path();
+	
+	// if career image doesn't exist then put in a stock image
+	if (!isset($career_data->careerdata->careerimageyn[0]) || (string)$career_data->careerdata->careerimageyn[0] == 'N') {
+		$variables['image_name'] = 'photo.none.png';
+	}
+	
+    // get the wage period year so we can display it
+  $variables['period_year'] = getWagePeriodYear();
+    
+	$career_title = $career_data->careerdata->title[0];
+	$variables['career_title'] = $career_title;
+	
+	// DATA FOR CAREER DETAILS OVERVIEW TAB
+	$laytitles_array = vcn_rest_wrapper('vcnoccupationsvc', 'vcnlaytitle', 'getactivelaytitlesforoccupation',
+			array('onetcode' => $onetcode, 'industry' => 2, 'restriction' => 'front_end'), 'json');
+	
+	$otherNamesArr = vcn_get_other_names_for_occupation($laytitles_array);
+	
+	$other_names = empty($otherNamesArr['other_names_regular_text_array']) ? '' : implode(", ", $otherNamesArr['other_names_regular_text_array']);
+	$other_names .= empty($otherNamesArr['other_names_hidden_text_array']) ? '' : ', ' . implode(", ", $otherNamesArr['other_names_hidden_text_array']);
+	
+	$variables['other_names'] = $other_names;
+	
+	$detailedDescriptionArr = vcn_text_into_paragraphs((string)$career_data->careerdata->detaileddescription[0]);
+	
+	$detailed_description = "";
+  if (!empty($detailedDescriptionArr['regular_text_array'])) {
+	  foreach ($detailedDescriptionArr['regular_text_array'] as $value) {
+	    $detailed_description .= $value;
+	  }
+	  foreach ($detailedDescriptionArr['hidden_text_array'] as $value) {
+	  	$detailed_description .= $value;
+	  }
+	}
+	
+	$variables['detailed_description'] = $detailed_description;
+	
+	$physicalRequirementsArr = vcn_text_into_paragraphs((string)$career_data->careerdata->physicalrequirement[0]);
+	
+	$physical_requirements = "";
+	if (!empty($physicalRequirementsArr['regular_text_array'])) {
+		foreach ($physicalRequirementsArr['regular_text_array'] as $value) {
+			$physical_requirements .= $value;
+		}
+		foreach ($physicalRequirementsArr['hidden_text_array'] as $value) {
+			$physical_requirements .= $value;
+		}
+	}
+	
+	$variables['physical_requirements'] = $physical_requirements;
+	
+	$healthRequirementsArr = vcn_text_into_paragraphs((string)$career_data->careerdata->healthrequirement[0]);
+	
+	$health_requirements = "";
+	if (!empty($healthRequirementsArr['regular_text_array'])) {
+		foreach ($healthRequirementsArr['regular_text_array'] as $value) {
+			$health_requirements .= $value;
+		}
+		foreach ($healthRequirementsArr['hidden_text_array'] as $value) {
+			$health_requirements .= $value;
+		}
+	}
+	
+	$variables['health_requirements'] = $health_requirements;
+	
+	// DATA FOR CAREER DETAILS SALARY & OUTLOOK TAB
+ 	$variables['annual_salary_pct10_for_national'] = '';
+	$variables['annual_salary_pct25_for_national'] = '';
+	$variables['annual_salary_median_for_national'] = '';
+	$variables['annual_salary_pct75_for_national'] = '';
+	$variables['annual_salary_pct90_for_national'] = '';
+  if (isset($annual_salary_for_national)) {
+	  $variables['annual_salary_pct10_for_national'] = $annual_salary_for_national['pct10'];
+	  $variables['annual_salary_pct25_for_national'] = $annual_salary_for_national['pct25'];
+	  $variables['annual_salary_median_for_national'] = $annual_salary_for_national['median'];
+	  $variables['annual_salary_pct75_for_national'] = $annual_salary_for_national['pct75'];
+	  $variables['annual_salary_pct90_for_national'] = $annual_salary_for_national['pct90'];
+  }
+        
+  $variables['hourly_wages_pct10_for_national'] = '';
+	$variables['hourly_wages_pct25_for_national'] = '';
+	$variables['hourly_wages_median_for_national'] = '';
+	$variables['hourly_wages_pct75_for_national'] = '';
+	$variables['hourly_wages_pct90_for_national'] = '';
+  if (isset($hourly_wages_for_national)) {
+	  $variables['hourly_wages_pct10_for_national'] = $hourly_wages_for_national['pct10'];
+	  $variables['hourly_wages_pct25_for_national'] = $hourly_wages_for_national['pct25'];
+	  $variables['hourly_wages_median_for_national'] = $hourly_wages_for_national['median'];
+	  $variables['hourly_wages_pct75_for_national'] = $hourly_wages_for_national['pct75'];
+	  $variables['hourly_wages_pct90_for_national'] = $hourly_wages_for_national['pct90'];
+  }
+        
+  $variables['num_present_jobs_for_national'] = '';
+  $variables['num_projected_jobs_for_national'] = '';
+  $variables['num_job_openings_for_national'] = '';
+  if (isset($national_jobtrends) && isset($national_jobtrends->nationaldata)) {
+	  $variables['num_present_jobs_for_national'] = (int)$national_jobtrends->nationaldata->item->estimatedemployment[0];
+	  $variables['num_projected_jobs_for_national'] = (int)$national_jobtrends->nationaldata->item->projectedemployment[0];
+	  $variables['num_job_openings_for_national'] = (int)$national_jobtrends->nationaldata->item->jobopenings[0];
+  }
+        
+	// DATA FOR CAREER DETAILS ON THE JOB TAB
+	$variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];
+	$variables['day_in_life_url'] = (string)$career_data->careerdata->dayinlifeurl[0];
+	
+	$career_interview_data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-interview-data', array('onetcode' => $onetcode));
+	if (!empty($career_interview_data->careerinterview->item)) {
+		$career_interview_data_array = vcn_get_interview_data($career_interview_data->careerinterview->item);
+	}
+	
+	$variables['interview_description'] = !empty($career_interview_data_array['main_interview'][0]['interviewurldescription']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurldescription'] : NULL;
+	$variables['interview_url'] = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
+	$variables['additional_interview_array'] = !empty($career_interview_data_array['additional_interview']) ? $career_interview_data_array['additional_interview'] : NULL;
+	
+	// DATA FOR CAREER DETAILS EDUCATION & TRAINING TAB
+	$education_distribution = vcn_rest_wrapper('vcnoccupationsvc', 'vcneducation', 'get-education-distribution', array('onetcode' => $onetcode));
+	if (!empty($education_distribution->educationdistribution->item)) {
+		$education_and_training_graph_values = vcn_get_education_training_values($education_distribution->educationdistribution->item);
+	}
+	
+	$variables['first_highest_education_value'] = isset($education_and_training_graph_values[0]['data_value']) ? $education_and_training_graph_values[0]['data_value'] : NULL;
+	$variables['first_highest_education_name'] = isset($education_and_training_graph_values[0]['education']) ? $education_and_training_graph_values[0]['education'] : NULL;
+	$variables['second_highest_education_value'] = isset($education_and_training_graph_values[1]['data_value']) ? $education_and_training_graph_values[1]['data_value'] : NULL;
+	$variables['second_highest_education_name'] = isset($education_and_training_graph_values[1]['education']) ? $education_and_training_graph_values[1]['education'] : NULL;
+	$variables['third_highest_education_value'] = isset($education_and_training_graph_values[2]['data_value']) ? $education_and_training_graph_values[2]['data_value'] : NULL;
+	$variables['third_highest_education_name'] = isset($education_and_training_graph_values[2]['education']) ? $education_and_training_graph_values[2]['education'] : NULL;
+	
+	
+	$academicRequirementArr = vcn_text_into_paragraphs((string)$career_data->careerdata->academicrequirement[0]);
+	
+  $academic_requirements = "";
+	if (!empty($academicRequirementArr['regular_text_array'])) {
+		foreach ($academicRequirementArr['regular_text_array'] as $value) {
+			$academic_requirements .= '<p>'.$value.'</p>';
+		}
+		foreach ($academicRequirementArr['hidden_text_array'] as $value) {
+			$academic_requirements .= '<p>'.$value.'</p>';
+		}
+	}
+	
+	$variables['academic_requirements'] = $academic_requirements;
+	
+	// DATA FOR CAREER DETAILS SKILLS & TOOLS TAB
+	
+	$skills_tools_tech = vcn_rest_wrapper('vcnoccupationsvc', 'vcnskillstoolstech', 'get-skills-tools-tech', array('onetcode' => $onetcode));
+	
+	$variables['skills_list'] = isset($skills_tools_tech->skills) ? vcn_generate_html_list($skills_tools_tech->skills->item) : "No information available";
+	$variables['tools_list'] = isset($skills_tools_tech->tools) ? vcn_generate_html_list($skills_tools_tech->tools->item) : "No information available";
+	$variables['technology_list'] = isset($skills_tools_tech->technology) ? vcn_generate_html_list($skills_tools_tech->technology->item) : "No information available";
+	
+	// DATA FOR CAREER DETAILS RESOURCES TAB
+	$resources_list = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getresources', array('onetcode' => $onetcode));
+	$variables['resources'] = isset($resources_list->resourceslist) ? vcn_get_occupation_resources($resources_list->resourceslist) : NULL;
+	
+	$financial_aid = vcn_rest_wrapper('vcnoccupationsvc', 'vcnresources', 'getfinancialaid', array('onetcode' => $onetcode));
+	$variables['fincancialaid_resources'] = isset($financial_aid->financialaidlist) ? vcn_get_financialaid_resources($financial_aid->financialaidlist) : NULL;
+	
+	$variables['percent_job_growth_value_for_national'] = NULL;
+	if (isset($national_jobtrends->nationaldata->item->percentjobchange[0])) {
+	  $variables['percent_job_growth_value_for_national'] = vcn_generic_number_formatter((float)$national_jobtrends->nationaldata->item->percentjobchange[0], 0, '');
+	}
+  
+  $altColorClass = '';
+	if (vcn_external_client_calling_interest_profiler()) {
+		$altColorClass = 'profiler-alternate-color';
+	}
+	$variables['alt_color_class'] = $altColorClass;
+}

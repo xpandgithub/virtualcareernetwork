@@ -1,0 +1,897 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implements hook_block_info
+ */
+function vcngetqualified_block_info() {
+	$blocks = array();
+	
+	$blocks['vcn_user_selections'] = array (
+		'info' => t('User selections for Career, Aspired Education Goal and ZIP Code'),
+		'cache' => DRUPAL_NO_CACHE,		
+	);
+	
+	return $blocks;
+	
+}
+
+function vcngetqualified_block_view($delta = '') {
+	$blocks = array();
+	
+	switch($delta) {
+		case 'vcn_user_selections':
+			$blocks['subject'] = '';
+			$blocks['content'] = drupal_get_form('vcn_user_selections_form');
+			break;
+		default:
+			break;		
+	}
+	
+	return $blocks;
+}
+
+
+function vcn_user_selections_form($form, &$form_state) {
+	
+	$find_page = vcn_getqualified_calculate_url_params();
+	
+	$vcnuser = $GLOBALS['vcnuser'];
+	$occlist = vcnuser_get_occupation_list();
+	$edulist = vcnuser_get_education_levels_list();
+	
+	$onetcode_options[''] = t('Select a desired career');
+	foreach ($occlist->careerdata as $occ) {
+		$occtitle = (string)$occ->title;
+		$onetcode = (string)$occ->onetcode;
+		$onetcode_options[$onetcode] = $occtitle;
+	}
+	
+	foreach ($edulist->categories->item as $edu) {
+		$edutitle = (string)$edu->educationcategoryname;
+		$educode = (string)$edu->educationcategoryid;
+		$education_options[$educode] = $edutitle;
+	}
+	$education_options[99] = 'Highest Available';
+	
+	$selected_onetcode = $vcnuser->get_onetcode();
+	$selected_edu_level = $vcnuser->get_awlevel();
+	$zipcode = $vcnuser->get_zip();
+	$distance_options = $vcnuser->get_distance_options();
+	$distance = $vcnuser->get_distance();
+	
+	$form = array();
+	
+	$form['vcn_user_selections_career'] = array(
+		'#type' => 'select',
+		'#title' => t('Desired Career:'),
+		'#options' => $onetcode_options,
+		'#default_value' => $selected_onetcode,
+	);
+	
+	$onetcode_markup = empty($selected_onetcode) ? t('Please select a desired career') : $onetcode_options[$selected_onetcode];
+	$form['vcn_user_selections_career_markup'] = array(
+		'#type' => 'markup',
+		'#markup' => 	'<span class="strong">Desired Career:</span> '.$onetcode_markup,	
+	);
+	
+	$form['vcn_user_selections_edu_level'] = array(
+		'#type' => 'select',
+		'#title' => t('Highest Education Level to Pursue:'),
+		'#options' => $education_options,
+		'#default_value' => empty($selected_onetcode) ? '' : $selected_edu_level, // if onetcode is not selected, do not select any education level even if cookie exists
+	);
+	
+	$education_level_markup = empty($selected_onetcode) ? t('N/A') : (empty($selected_edu_level) ? '' : $education_options[$selected_edu_level]);
+	$form['vcn_user_selections_edu_level_markup'] = array(
+		'#type' => 'markup',
+		'#markup' => 	'<span class="strong">Highest Education Level to Pursue:</span> '.$education_level_markup,
+	);
+	
+	$form['vcn_user_selections_zipcode'] = array(
+		'#title' => t('Preferred Location (ZIP Code):'),
+		'#type' => 'textfield',
+		'#size' => 10,
+		'#maxlength' => 5,
+		'#default_value' => $zipcode,
+	);
+	
+	$zipcode_markup = empty($zipcode) ? 'All ZIP Codes' : $zipcode;
+	$form['vcn_user_selections_zipcode_markup'] = array(
+		'#type' => 'markup',
+		'#markup' => 	'<span class="strong">Preferred Location (ZIP Code):</span> '.$zipcode_markup,	
+	);
+	
+	$form['vcn_user_selections_distance'] = array(
+		'#title' => t('Distance:'),
+		'#type' => 'select',
+		'#options' => $distance_options,
+		'#default_value' => $distance,
+	);
+	
+	//ideally we should clear distance cookie too when ZIP Code is cleared, need to discuss this and revisit
+	$form['vcn_user_selections_distance_markup'] = array(
+		'#type' => 'markup',
+		'#markup' => 	'<span class="strong">Distance:</span> '.$distance.' miles',
+	);
+	
+	$form['vcn_user_selections_page'] = array(
+		'#type' => 'hidden',
+		'#value' => $find_page['page'],		
+	);
+	
+	$form['vcn_user_selections_submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Update'),
+			'#attributes' => array('class' => array('vcn-button', 'vcnuser-submit-button'), 'title' => t('Update')),
+	);
+	
+	//this button is only for jQuery purpose. refer vcn_user_selections.js
+	$form['vcn_user_selections_edit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Edit'),
+		'#attributes' => array('class' => array('vcn-button', 'vcnuser-submit-button'), 'title' => t('Edit')),
+	);
+	
+	return $form;
+	
+}
+
+function vcngetqualified_preprocess_vcn_user_selections_form(&$variables) {
+	
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcn_user_selections.js', 'file');
+	$form = $variables['form'];
+	$variables['vcn_user_selections_career'] = render($form['vcn_user_selections_career']);
+	$variables['vcn_user_selections_career_markup'] = render($form['vcn_user_selections_career_markup']);
+	$variables['vcn_user_selections_edu_level'] = render($form['vcn_user_selections_edu_level']);
+	$variables['vcn_user_selections_edu_level_markup'] = render($form['vcn_user_selections_edu_level_markup']);
+	$variables['vcn_user_selections_zipcode'] = render($form['vcn_user_selections_zipcode']);
+	$variables['vcn_user_selections_zipcode_markup'] = render($form['vcn_user_selections_zipcode_markup']);
+	$variables['vcn_user_selections_distance'] = render($form['vcn_user_selections_distance']);
+	$variables['vcn_user_selections_distance_markup'] = render($form['vcn_user_selections_distance_markup']);
+	$variables['vcn_user_selections_submit'] = render($form['vcn_user_selections_submit']);
+	$variables['vcn_user_selections_edit'] = render($form['vcn_user_selections_edit']);
+	$variables['children'] = drupal_render_children($form);
+	
+}
+
+
+function vcn_get_qualified_nav_bar(&$variables) {
+
+	$drupal_basepath = vcn_drupal7_base_path();
+	$vcn_tabs_list = $variables['vcn_tabs_list'];
+	$vcn_tabs_keys = $variables['vcn_tabs_keys'];
+	$selected_tab_key_index = $variables['selected_tab_key_index'];
+	
+	$targeted_program_count = 0;
+	$user = vcn_get_user_info();	
+	if($user['vcn_user_id'] > 0) {
+		$vcnuser_get_notebook_items = vcnuser_get_notebook_items($user['vcn_user_id'], 'PROGRAM', 0);
+		$targeted_program_count = count($vcnuser_get_notebook_items->item) > 0 ? 1 : 0;
+	}
+
+
+	$nav_bar_html = '<!-- Navigation bar -->
+				      <div class="vcn-navigation-bar allclear">
+				      	<div class="bar-left"><div>&nbsp;</div></div>
+				      	<div class="bar-middle"><div>'.vcn_tab_navigation_bar(count($vcn_tabs_keys), $selected_tab_key_index+1).'</div></div>
+				      	<div class="bar-right">
+				      		<div>';	
+		
+	if(($selected_tab_key_index) < (count($vcn_tabs_keys)-1)) {
+		$nav_bar_html .= '<button title="Next" onclick="location.href=\''.$vcn_tabs_list[$selected_tab_key_index+1][3].'\';" class="vcn-button vcn-next">Next</button>';
+	} else {
+		$nav_bar_html .= '&nbsp;';
+	}
+	 
+	$nav_bar_html .= '
+				      	</div>
+			      	</div>
+			      	<div class="allclear"></div>
+			      </div>
+			    <!-- End of Navigation bar -->';
+	 
+	$disable_class = $click = ""; 
+	$btn_title = "Review Saved Programs";
+	if($targeted_program_count > 0){
+		$click = ' onclick="location.href=\''.$drupal_basepath.'cma/programs\';" ';
+	}else{
+		$disable_class = "vcn-button-disable";
+		$btn_title = "No Program Saved";
+	}
+	
+	$user_nav_bar_html = '<!-- VCN Navigation bar -->
+					      <div class="vcn-user-navigation-bar allclear">
+					      	<div class="nav-bar-left"><div><a title="Back to Choose a Career" href="'.$drupal_basepath.'explorecareers" >Back to Choose a Career</a></div></div>	      	
+					      	<div class="nav-bar-right"><div><button title="'.$btn_title.'"'.$click.' class="vcn-button vcn-red-button '.$disable_class.'">Review Saved Programs</button></div></div>		
+					      	<div class="allclear"></div>		      	
+					      </div>
+					    <!-- End of VCN Navigation bar -->	';
+					
+
+	$variables['nav_bar_html'] = $nav_bar_html;	
+	$variables['user_nav_bar_html'] = $user_nav_bar_html;
+
+	return true;
+}
+
+
+function vcngetqualified_preprocess_vcn_getqualified(&$variables) {
+	// Generate vcn custom tabs 
+	$variables['user_onetcode'] = vcnuser_get_onetcode();
+	$variables['user_career_name'] = vcnuser_get_career_name();
+	$variables['user_awlevel'] = vcnuser_get_awlevel();
+	$variables['user_edulevel'] = vcnuser_get_edulevel();
+	$variables['user_zip'] = vcnuser_get_zip();
+	$variables['user_distance'] = vcnuser_get_distance();
+	$variables['user_st'] = vcnuser_get_st();
+  
+  $variables['vcn_d7_path'] = vcn_drupal7_base_path();
+  $variables['vcn_image_path'] = vcn_image_path();
+  
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['how_to_get_qualified_vocabulary'] = vcn_node_text_by_urlalias("how-to-get-qualified-vocabulary");
+	
+	$variables['vcn_user_selections'] = module_invoke('vcngetqualified', 'block_view', 'vcn_user_selections');
+	
+	vcn_get_qualified_tabs($variables);	
+	vcn_get_qualified_nav_bar($variables);
+	
+}
+
+
+
+
+/**
+ * Implementation of hook_preprocess_theme for Get Qualified Requirements
+ * @param unknown_type $variables
+ */
+function vcngetqualified_preprocess_vcn_getqualified_requirements(&$variables) {
+
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_requirements.js', 'file');	
+
+	$requirements_data = vcn_getqualified_get_requirements_data();
+	$variables['onetcode_set'] = $requirements_data['onetcode_set'];
+
+	if ($requirements_data['onetcode_set']) { // if onetcode is provided then only assign the additional variables
+		$variables['onetcode'] = $requirements_data['onetcode'];
+		$variables['zipcode'] = $requirements_data['zipcode'];
+		$variables['career_title'] = $requirements_data['career_title'];
+		$variables['state'] = $requirements_data['state'];
+
+		if ($requirements_data['zipcode']) {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$requirements_data['onetcode'].'/overview/'.$requirements_data['zipcode'];
+		} else {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$requirements_data['onetcode'];
+		}
+
+			
+		$variables['physical_health_requirements'] = $requirements_data['physical_health_requirements'] !="" ? $requirements_data['physical_health_requirements'] : "<p>No specific requirements have been identified.</p>";
+		
+		$variables['legal_nationwide_requirements'] = $requirements_data['legal_nationwide_requirements'] !="" ? $requirements_data['legal_nationwide_requirements'] : "No specific Legal requirements have been identified.";
+		//$legal_state_specific_requirement = $requirements_data['legal_state_specific_requirement'] !="" ? $requirements_data['legal_state_specific_requirement'] : "No specific Legal requirements have been identified in your state.";
+		//$variables['legal_state_specific_requirement'] = isset($requirements_data['zipcode']) ? $legal_state_specific_requirement : 'Please enter your <b>Preferred Location (ZIP Code)</b> to view the legal requirements for this occupation.';
+		
+		$variables['legal_state_specific_requirements_regular_text'] = $requirements_data['legal_state_specific_requirements_regular_text'];
+		$variables['legal_state_specific_requirements_hidden_text'] = $requirements_data['legal_state_specific_requirements_hidden_text'];
+		$variables['legal_state_specific_requirements_associated_url'] = $requirements_data['legal_state_specific_requirements_associated_url'];
+		
+		$variables['typical_education'] = $requirements_data['typical_education'];
+		$variables['preceding_career_title'] = $requirements_data['preceding_career_title'];
+		$variables['preceding_career_onetcode'] = $requirements_data['preceding_career_onetcode'];
+		
+	}
+	
+	$variables['vcn_user_selections'] = module_invoke('vcngetqualified', 'block_view', 'vcn_user_selections');
+	
+	vcn_get_qualified_tabs($variables);
+	vcn_get_qualified_nav_bar($variables);
+}
+
+
+
+/**
+ * Implementation of hook_preprocess_theme for Get Qualified Certifications
+ * @param unknown_type $variables
+ */
+function vcngetqualified_preprocess_vcn_getqualified_certifications(&$variables) {
+
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified');
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified_certifications');
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_certifications.js', 'file');
+
+	$certifications_data = vcn_getqualified_get_certifications_data();
+	$image_basepath = vcn_image_path();
+
+	if ($certifications_data['bad_data'] === FALSE) {
+		$variables['onetcode'] = vcnuser_get_onetcode();
+		$variables['careerdetail'] = vcn_get_career_detail($variables);
+		$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+
+		if ($certifications_data['cert_count'] > 0) {
+			$header = array(
+					array('data' => 'Certification Name', 'class' => 'dtheader'),
+					array('data' => 'Type', 'class' => 'dtheader'),
+					array('data' => 'Certifying Organization', 'class' => 'dtheader'),
+			);
+
+			$rows = array();
+			$d6_link = vcn_drupal6_base_path();
+			$d7_link = vcn_drupal7_base_path();
+			$vcn_user_id = (int)$GLOBALS['vcn_user_id'];
+			$is_user_logged_in = (int)$GLOBALS['is_user_logged_in'];
+
+			foreach ($certifications_data['cert_data']->data->certifications as $certification) {
+				$rows[] = array(
+						'data' => array(
+								'cert_name' => '<a href="'.$d7_link.'get-qualified/certification/'.$certification->certid.'/onetcode/'.$certifications_data['params']['onetcode'].'">'.$certification->certname.'</a>',
+								'cert_type' => $certification->certtypename,
+								'cert_org_name' => $certification->certorg->orgname,
+						),
+						'no_striping' => TRUE,
+				);
+			}
+			$certifications_table = array();
+			$certifications_table['header'] = $header;
+			$certifications_table['rows'] = $rows;
+			$certifications_table['attributes'] = array('id' => 'vcngetqualified-certifications-table', 'class' => 'dttable');
+			$certifications_table['caption'] = NULL;
+			$certifications_table['colgroups'] = NULL;
+			$certifications_table['sticky'] = NULL;
+			$certifications_table['empty'] = NULL;
+		}
+
+		$variables['certifications_table'] = isset($certifications_table) ? $certifications_table : NULL;
+		$variables['certifications_data_count'] = $certifications_data['cert_count'];
+		$variables['career_title'] = vcn_get_careername_from_onetcode($certifications_data['params']['onetcode']);
+		if ($certifications_data['auxiliary_params']['zip']) {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$certifications_data['params']['onetcode'].'/overview/'.$certifications_data['auxiliary_params']['zip'];
+		} else {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$certifications_data['params']['onetcode'];
+		}
+	}
+	$variables['bad_data'] = $certifications_data['bad_data'];
+	
+	$variables['vcn_user_selections'] = module_invoke('vcngetqualified', 'block_view', 'vcn_user_selections');
+	
+	vcn_get_qualified_tabs($variables);
+	vcn_get_qualified_nav_bar($variables);
+	
+}
+
+
+/**
+ * Implementing hook_preprocess_theme for Get Qualified Licenses
+ * @param unknown_type $variables
+ */
+function vcngetqualified_preprocess_vcn_getqualified_licenses(&$variables) {
+
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified');
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified_licenses');
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_licenses.js', 'file');
+
+	$licenses_data = vcn_getqualified_get_licenses_data();
+	$image_basepath = vcn_image_path();
+
+	if ($licenses_data['bad_data'] === FALSE) {
+		$variables['onetcode'] = vcnuser_get_onetcode();
+		$variables['careerdetail'] = vcn_get_career_detail($variables);
+		$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+		$variables['preceding_career_onetcode'] = (string) $variables['careerdetail']->precedingcareeronetcode;
+		$variables['preceding_career_title'] = (string) $variables['careerdetail']->precedingcareertitle;
+
+		if (isset($variables['preceding_career_onetcode']) && strlen($variables['preceding_career_onetcode'])) {
+			$variables['preceding_career_link'] = vcn_drupal7_base_path().'careers/'.$variables['preceding_career_onetcode'];
+		}
+
+		$variables['career_title'] = vcn_get_careername_from_onetcode($licenses_data['params']['onetcode']);
+		if (isset($licenses_data['params']['location']['zip'])) {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$licenses_data['params']['onetcode'].'/overview/'.$licenses_data['params']['location']['zip'];
+		} else {
+			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$licenses_data['params']['onetcode'];
+		}
+		$variables['licensing_state'] = $licenses_data['params']['location']['state'];
+		$variables['licenses_data_count'] = $licenses_data['licenses_count'];
+
+		if ($licenses_data['licenses_count'] > 0) {
+			$header = array(
+					array('data' => 'License Name', 'class' => 'dtheader'),
+					array('data' => 'Licensing Agency', 'class' => 'dtheader'),
+			);
+
+			$rows = array();
+			$d6_link = vcn_drupal6_base_path();
+			$d7_link = vcn_drupal7_base_path();
+			$vcn_user_id = (int)$GLOBALS['vcn_user_id'];
+			$is_user_logged_in = (int)$GLOBALS['is_user_logged_in'];
+				
+			foreach($licenses_data['licenses_data']->data->licenses as $license) {
+				$rows[] = array(
+						'data' => array(
+								'license_name' => '<a href="'.$GLOBALS['vcn_config_default_base_path_drupal7'].'get-qualified/license/'.$license->licenseid.'/location/'.$licenses_data['params']['location']['state'].'/onetcode/'.$licenses_data['params']['onetcode'].'">'.$license->lictitle.'</a>',
+								'license_agency' => $license->licauth->name1,
+						),
+						'no_striping' => TRUE,
+				);
+			}
+			$licenses_table = array();
+			$licenses_table['header'] = $header;
+			$licenses_table['rows'] = $rows;
+			$licenses_table['attributes'] = array('id' => 'vcngetqualified-licenses-table', 'class' => 'dttable');
+			$licenses_table['caption'] = NULL;
+			$licenses_table['colgroups'] = NULL;
+			$licenses_table['sticky'] = NULL;
+			$licenses_table['empty'] = NULL;
+		}
+	} else {
+		$variables['is_onetcode_set'] = $licenses_data['bad_data_additional_info']['is_onetcode_set'];
+		$variables['is_location_set'] = $licenses_data['bad_data_additional_info']['is_location_set'];
+	}
+
+	$variables['licenses_table'] = isset($licenses_table) ? $licenses_table : NULL;
+	$variables['bad_data'] = $licenses_data['bad_data'];
+	
+	$variables['vcn_user_selections'] = module_invoke('vcngetqualified', 'block_view', 'vcn_user_selections');
+	
+	vcn_get_qualified_tabs($variables);
+	vcn_get_qualified_nav_bar($variables);
+}
+
+
+
+/**
+ * Implementing hook_preprocess_theme for Get Qualified Programs
+ * @param unknown_type $variables
+ */
+function vcngetqualified_preprocess_vcn_getqualified_programs(&$variables) {
+	
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified');
+	module_load_include('inc', 'vcngetqualified', '/includes/vcngetqualified_programs');
+
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['no_onetcode_set'] = FALSE;
+	$variables['no_award_level_set'] = FALSE;
+
+	$onetcode = vcnuser_get_onetcode();
+	$zipcode = vcnuser_get_zip();
+	$distance = vcnuser_get_distance();
+	$award_level = vcnuser_get_awlevel();
+	$education_category_name = vcn_get_education_category_by_id($award_level);
+
+	if (!$distance) {
+		$distance = $GLOBALS['default_distance'];
+	}
+
+	if ($onetcode && $award_level) {
+		$variables['onetcode'] = $onetcode;
+		$variables['careerdetail'] = vcn_get_career_detail($variables);
+		$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+
+		$preceding_career_onetcode = (string) $variables['careerdetail']->precedingcareeronetcode;
+		$preceding_career_title = (string) $variables['careerdetail']->precedingcareertitle;
+
+		$preceding_career_link = '';
+		if (isset($preceding_career_onetcode) && strlen($preceding_career_onetcode)) {
+			$preceding_career_link = vcn_drupal7_base_path().'careers/'.$preceding_career_onetcode;
+		}
+
+		drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_programs.js', 'file');
+		$variables['zipcode'] = $zipcode;
+		$variables['num_columns'] = isset($variables['zipcode']) ? 4 : 3;
+		$variables['distance'] = $distance;
+		$career_title = vcn_get_careername_from_onetcode($onetcode);
+		if ($zipcode) {
+			$career_title_link = vcn_drupal7_base_path().'careers/'.$onetcode.'/overview/'.$zipcode;
+		} else {
+			$career_title_link = vcn_drupal7_base_path().'careers/'.$onetcode;
+		}
+		drupal_add_js(
+			array(
+				'vcngetqualified' => array(
+					'onetcode' => $onetcode,
+					'zipcode' => $zipcode,
+					'distance' => $distance,
+					'award_level' => $award_level,
+					'career_title' => $career_title,
+					'career_title_link' => $career_title_link,
+					'preceding_career_title' => $preceding_career_title,
+					'preceding_career_title_link' => $preceding_career_link,
+					'education_category_name' => $education_category_name
+					)
+				),
+			array('type' => 'setting')
+		);
+	} else {
+		if (!$onetcode) {
+			$variables['no_onetcode_set'] = TRUE;
+		}
+		if (!$award_level) {
+			$variables['no_award_level_set'] = TRUE;
+		}
+	}
+	
+	$variables['vcn_user_selections'] = module_invoke('vcngetqualified', 'block_view', 'vcn_user_selections');
+	
+	vcn_get_qualified_tabs($variables);
+	vcn_get_qualified_nav_bar($variables);
+}
+
+function vcngetqualified_preprocess_vcn_getqualified_sidebar(&$variables) {
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	vcn_get_qualified_tabs($variables);
+	
+	$variables['learning_exchange'] = vcn_node_text_by_urlalias("learning-exchange-toolbox");
+}
+
+
+//Utility functions required by different files
+
+function vcn_getqualified_calculate_url_params() {
+	$current_path_array = explode("/", $_SERVER['REQUEST_URI']);
+
+	$onetcode_key = array_search('onetcode', $current_path_array);
+	$zip_key = array_search('zip', $current_path_array);
+	$award_level_key = array_search('awlevel', $current_path_array);
+	$distance_key = array_search('distance', $current_path_array);
+	$page_key = array_search('get-qualified', $current_path_array); //look for the word get-qualified, the page type will be the word after it
+	$stfips_key = array_search('stfips', $current_path_array);
+
+	$params = array();
+	if ($onetcode_key !== FALSE) {
+		$params['onetcode'] = $current_path_array[$onetcode_key + 1];
+	}
+
+	if ($zip_key !== FALSE) {
+		$params['zipcode'] = $current_path_array[$zip_key + 1];
+		if ($distance_key !== FALSE) {
+			$params['distance'] = $current_path_array[$distance_key + 1];
+		} else {
+			$params['distance'] = $GLOBALS['default_distance'];
+		}
+	}
+
+	if ($award_level_key !== FALSE) {
+		$params['award_level'] = $current_path_array[$award_level_key + 1];
+	}
+
+	if ($stfips_key !== FALSE) {
+		$params['stfips'] = $current_path_array[$stfips_key + 1];
+	}
+
+	if (isset($current_path_array[$page_key + 1])) {
+		$current_page_param = $current_path_array[$page_key + 1];
+		if (($current_page_param=='licenses') ||
+				($current_page_param=='certifications') ||
+				($current_page_param=='programs') ||
+				($current_page_param=='resources') ||
+				($current_page_param=='requirements')) {
+			$params['page'] = $current_page_param;
+		} else {
+			$params['page'] = 'overview';
+		}
+	} else {
+		$params['page'] = 'overview';
+	}
+
+	return $params;
+}
+
+
+// get the id of the selected tab from the url
+function vcn_get_selected_tab($vcn_tabs_list) {
+	$urlArr = explode('/', $_SERVER['REQUEST_URI']);
+	$urlLastItem = $urlArr[count($urlArr)-1];
+
+	$selectedTabIndex = '';
+	foreach ($vcn_tabs_list as $tab) {
+		$tabPathArr = explode('/', $tab[3]);
+		$tabPathLastItem = $tabPathArr[count($tabPathArr)-1];
+
+		if ($tabPathLastItem != 'get-qualified' && stristr($_SERVER['REQUEST_URI'], $tabPathLastItem)) {
+			$selectedTabIndex = $tab[0];
+			break;
+		}
+	}
+
+	return $selectedTabIndex;
+}
+
+
+function vcn_get_qualified_tabs(&$variables) {
+
+	$drupal_basepath = vcn_drupal7_base_path();
+
+	$vcn_tabs_list = array();
+	$vcn_tabs_list[] = array("start", "How to<br/>Get Qualified", 'getqualified_howto.png', $drupal_basepath."get-qualified");
+	$vcn_tabs_list[] = array("req", "Career<br/>Requirements", 'getqualified_career_requirements.png', $drupal_basepath."get-qualified/requirements");
+	$vcn_tabs_list[] = array("prog", "Education<br/>Programs", 'getqualified_training_programs.png', $drupal_basepath."get-qualified/programs");
+	$vcn_tabs_list[] = array("cert", "Job<br/>Certifications", 'getqualified_job_certifications.png', $drupal_basepath."get-qualified/certifications");
+	$vcn_tabs_list[] = array("lic", "Required<br/>Licenses", 'getqualified_required_licenses.png', $drupal_basepath."get-qualified/licenses");
+
+	$variables['vcn_tabs_list'] = $vcn_tabs_list;
+	$variables['vcn_tabs_keys'] = array("start", "req", "prog", "cert", "lic");
+
+	$variables['selected_tab_index'] = $selectedTabIndex = vcn_get_selected_tab($vcn_tabs_list);	
+	$variables['selected_tab_key_index'] = array_search($selectedTabIndex, $variables['vcn_tabs_keys']);	
+	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($variables['vcn_tabs_list'], $variables['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+
+	return true;
+}
+
+
+function vcn_user_selections_form_validate($form, &$form_state) {
+	$zipcode_val = trim($form_state['input']['vcn_user_selections_zipcode']);
+	$career_val = trim($form_state['input']['vcn_user_selections_career']);
+	if (!empty($zipcode_val)) {
+		$zipcode_data = vcn_rest_wrapper('vcnlocationsvc', 'vcnlocation', 'get-location', array('zipcode' => $zipcode_val), 'json', 'post', false);
+		if (empty($zipcode_data->location)) {
+			form_set_error('vcn_user_selections_zipcode', t('Please enter a valid US ZIP Code.'));
+		}
+	}
+	if (empty($career_val)) {
+		form_set_error('vcn_user_selections_career', t('Please select a desired career from the list.'));
+	}
+}
+
+function vcn_user_selections_form_submit($form, &$form_state) {
+	$vcn_user_selections_career = isset($form_state['input']['vcn_user_selections_career']) ? trim($form_state['input']['vcn_user_selections_career']) : '';
+	$vcn_user_selections_zipcode = isset($form_state['input']['vcn_user_selections_zipcode']) ? trim($form_state['input']['vcn_user_selections_zipcode']) : '';
+	$vcn_user_selections_distance = isset($form_state['input']['vcn_user_selections_distance']) ? trim($form_state['input']['vcn_user_selections_distance']) : '';
+  //$form_st = isset($form_state['input']['user_st']) ? trim($form_state['input']['user_st']) : '';
+	$vcn_user_selections_page = isset($form_state['input']['vcn_user_selections_page']) ? trim($form_state['input']['vcn_user_selections_page']) : '';
+	$vcn_user_selections_edu_level = isset($form_state['input']['vcn_user_selections_edu_level']) ? trim($form_state['input']['vcn_user_selections_edu_level']) : '';
+	
+	$redirect_url = 'get-qualified';
+	
+	switch($vcn_user_selections_page) {
+		case 'overview':
+			break;
+		case 'requirements':
+			$redirect_url .= '/requirements';
+			break;
+		case 'programs':
+			$redirect_url .= '/programs';
+			break;
+		case 'licenses':
+			$redirect_url .= '/licenses';
+			break;
+		case 'certifications':
+			$redirect_url .= '/certifications';
+			break;
+		default:
+			break;
+	}
+	
+	if (!empty($vcn_user_selections_career)) {
+		$redirect_url .= "/onetcode/" . $vcn_user_selections_career;
+		vcnuser_set_onetcode_session($vcn_user_selections_career);
+	} else {
+		vcnuser_unset_onetcode_session();
+	}
+	
+	if (!empty($vcn_user_selections_zipcode)) {
+		$redirect_url .= "/zip/" . $vcn_user_selections_zipcode;
+		vcnuser_set_zip_cookie($vcn_user_selections_zipcode);
+		if (!empty($vcn_user_selections_distance)) {
+			vcnuser_set_distance_cookie($vcn_user_selections_distance);
+		}
+	} else {
+		vcnuser_clear_zip_cookie();
+	}
+	
+	if (!empty($vcn_user_selections_edu_level)) {
+		$redirect_url .= "/awlevel/" . $vcn_user_selections_edu_level;
+		vcnuser_set_awlevel_cookie($vcn_user_selections_edu_level);
+	}
+	
+	$form_state['redirect'] = $redirect_url;
+	
+}
+
+
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-qualified/certification/%/onetcode/% (Certification detail)
+ */
+function vcngetqualified_preprocess_vcn_certification_detail_template(&$variables) {
+
+	// Include vcnprovider.inc file
+	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
+
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+
+	$variables['vcn_user'] = vcn_get_user_info();
+
+	$variables['save_button'] = 'Save to My<br/> Career Wishlist';
+
+	$variables['careerdetail'] = vcn_get_career_detail($variables);
+	$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+
+	vcn_get_certification_detail($variables);
+	
+	// Generate vcn custom tabs
+	vcn_certification_detail_tabs($variables);
+	
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_or_targeted_notebookitem($variables['vcn_user']['vcn_user_id'], 'CERTIFICATE', $variables['certificationid'], $variables['onetcode']);// 1 = saved, 2 = targeted, 0 = none
+	$variables['back_to_wishlist_link_suffix'] = (isset($_COOKIE['user_state_career_wishlist_referer']) && $_COOKIE['user_state_career_wishlist_referer'] =="wishlist" && strpos($_SERVER["HTTP_REFERER"], "/cma/")) ? "/wishlist" : "";
+
+}
+
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-qualified/license/%/location/%/onetcode/% (License detail)
+ */
+function vcngetqualified_preprocess_vcn_license_detail_template(&$variables) {
+
+	// Include vcnprovider.inc file
+	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
+
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+
+	$variables['vcn_user'] = vcn_get_user_info();
+
+	$variables['save_button'] = 'Save to My<br/> Career Wishlist';
+
+	$variables['careerdetail'] = vcn_get_career_detail($variables);
+	$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+
+	vcn_get_license_detail($variables);
+	
+	// Generate vcn custom tabs
+	vcn_license_detail_tabs($variables);
+	
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_or_targeted_notebookitem($variables['vcn_user']['vcn_user_id'], 'LICENSE', $variables['licenseid'], $variables['onetcode'], $variables['fips']);// 1 = saved, 2 = targeted, 0 = none
+	$variables['back_to_wishlist_link_suffix'] = (isset($_COOKIE['user_state_career_wishlist_referer']) && $_COOKIE['user_state_career_wishlist_referer'] =="wishlist" && strpos($_SERVER["HTTP_REFERER"], "/cma/")) ? "/wishlist" : "";
+
+}
+
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-qualified/program/%/cipcode/%/onetcode/% (Program detail)
+ */
+function vcngetqualified_preprocess_vcn_program_detail_template(&$variables) {
+
+	// Include vcnprovider.inc file
+	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_program_courses_details.js', 'file');
+
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+
+	$variables['cipcodeyear'] = vcn_get_cipcode_year();
+	$variables['vcn_user'] = vcn_get_user_info();
+
+	$variables['save_button'] = 'Save this Program<br/>to My Wishlist';
+
+	/* REST Call */
+
+	$variables['careerdetail'] = vcn_get_career_detail($variables);
+	$variables['current_career_title'] = (string) $variables['careerdetail']->title;
+
+	$variables['programdetails'] = vcn_get_program_detail($variables);
+	$variables['programentrancetests'] = vcn_get_program_entrance_tests($variables);
+	$variables['programrequiredcourses'] = vcn_get_program_required_courses($variables);
+	$variables['programrequirededucation'] = vcn_get_program_required_education($variables);
+	$variables['programaccredited'] = vcn_get_program_accredited($variables);
+
+	$variables['providerdetail'] = vcn_get_provider_detail_by_programid($variables);
+	$variables['providerentrancetests'] = vcn_get_provider_entrance_tests_by_programid($variables);
+	$variables['providerrequiredcourses'] = vcn_get_provider_required_courses_by_programid($variables);
+
+	/* End REST Call */
+
+	// Process rest data to display at template file
+	vcn_program_detail_process($variables);
+
+	// Generate vcn custom tabs
+	vcn_program_detail_tabs($variables);
+	
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_or_targeted_notebookitem($variables['vcn_user']['vcn_user_id'], 'PROGRAM', $variables['programid'], $variables['onetcode'], $variables['cipcode']);// 1 = saved, 2 = targeted, 0 = none
+	$variables['back_to_wishlist_link_suffix'] = (isset($_COOKIE['user_state_career_wishlist_referer']) && $_COOKIE['user_state_career_wishlist_referer'] =="wishlist" && strpos($_SERVER["HTTP_REFERER"], "/cma/")) ? "/wishlist" : "";
+}
+
+
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-qualified/school/% (School/Provider detail page by Unitid)
+ */
+function vcngetqualified_preprocess_vcn_schooldetail_by_unitid_template(&$variables) {
+
+	// Include vcnprovider.inc file
+	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
+	
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
+	
+	// REST Call
+	$variables['providerdetail'] = vcn_get_provider_detail($variables);
+	$variables['providerservices'] = vcn_get_provider_services($variables);
+	$variables['providerentrancetests'] = vcn_get_provider_entrance_tests($variables);
+	$variables['providerrequiredcourses'] = vcn_get_provider_required_courses($variables);
+	$variables['providerdegreesoffered'] = vcn_get_provider_degrees_offered($variables);
+	$variables['providerfaidoffered'] = vcn_get_provider_faid_offered($variables);
+	// End REST Call
+	
+	// Process rest data to display at template file
+	vcn_school_detail($variables);
+	
+	// Generate vcn custom tabs
+	vcn_school_detail_tabs($variables);
+	
+	$variables['back_to_wishlist_link_suffix'] = (isset($_COOKIE['user_state_career_wishlist_referer']) && $_COOKIE['user_state_career_wishlist_referer'] =="wishlist" && strpos($_SERVER["HTTP_REFERER"], "/cma/")) ? "/wishlist" : "";
+	 
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-qualified/financialaid/% (Financial Aid page with providers Financial Aid info by unitid)
+ */
+function vcngetqualified_preprocess_vcn_financial_aid_by_unitid_template(&$variables) {
+
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['financial_aid'] = str_replace("vcn-user-navigation-bar", "vcn-user-navigation-bar element-hidden", vcn_node_text_by_urlalias("get-qualified/financialaid"));
+	
+	// REST Call
+	// get the provider info by provider unitid
+	$params = array('unitid' => $variables['unitid']);
+	$provider = vcn_rest_wrapper('vcnprovidersvc', 'vcnprovider', 'get-provider-by-unitid', $params);
+
+	$variables['webaddr'] = $provider->provider->item->webaddr;
+	$variables['name'] = $provider->provider->item->instnm;
+	$variables['street'] = $provider->provider->item->addr;
+	$variables['city'] = $provider->provider->item->city;
+	$variables['state'] = $provider->provider->item->stabbr;
+	$variables['zipcode'] = $provider->provider->item->zip;
+	$variables['phone'] = $provider->provider->item->gentele;
+	$variables['adminurl'] = $provider->provider->item->adminurl;
+	$variables['faidurl'] = $provider->provider->item->faidurl;
+
+	// End REST Call
+}
+
+
+
+
+
+function vcn_get_career_detail(&$variables) {
+	// get the career detail
+  $industry = vcn_get_industry();
+	$params = array('onetcode' => $variables['onetcode'], 'industry' => $industry);
+	$careerdetail = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career', $params, 'xml', 'post');
+	return $careerdetail->career;
+}

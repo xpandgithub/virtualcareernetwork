@@ -1,0 +1,136 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnonlinecourses_help($path, $arg) {
+	if ($path == 'admin/help#vcnonlinecourses') {
+		return t('Functionality related to VCN online courses.');
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses/take-online (Take a Course Online)
+ */
+function vcnonlinecourses_preprocess_vcn_take_online_template(&$variables) {
+
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['take_a_course_online_text'] = vcn_node_text_by_urlalias("take-a-course-online");	
+	$variables['learning_exchange'] = vcn_node_text_by_urlalias("take-a-course-online-learning-exchange");	
+	$variables['nter_online_courses'] = vcn_node_text_by_urlalias("take-a-course-online-nter-online-courses");
+	$variables['free_online_courses'] = vcn_node_text_by_urlalias("take-a-course-online-free-online-courses");
+	
+	if (empty($variables['industry'])) {
+		$variables['industry'] = vcn_get_industry();
+	}
+	$variables['max_listing'] = 15;
+	/* REST Call */
+	$variables['category'] = array("11","12","13");
+	$variables['order'] = array("resource_category_id","resource_name");
+	
+	// get the list of Resources //'order' => ''
+	$params = array('industry' => $variables['industry'], 'category' => $variables['category'], 'order' => $variables['order'], 'page' => 'take-a-courses-online-free-online-courses');
+	$content = vcn_rest_wrapper('vcnresourcessvc', 'vcnresources', 'list', $params);
+	$resourceslist = $content->resourceslist;
+	$variables['resourceslist'] = $resourceslist;
+	
+	if (count($resourceslist->item)>0) {
+		for ($i = 0; $i < count($resourceslist->item); $i++) {
+			$key = "cat".$resourceslist->item[$i]->resourcecategoryid;
+			$resourceslist_by_cat[$key]["catname"] = $resourceslist->item[$i]->categoryname;
+			$resourceslist_by_cat[$key][] = array($resourceslist->item[$i]->resourcename,$resourceslist->item[$i]->resourcelink,$resourceslist->item[$i]->resourcelinktype,$resourceslist->item[$i]->resourcemouseovertext);
+		}
+	}
+	$variables['resourceslist_by_cat'] = isset($resourceslist_by_cat) ? $resourceslist_by_cat : array();
+	/* END REST Call */
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses/non-credit-courses (Refresher Courses)
+ */
+function vcnonlinecourses_preprocess_vcn_non_credit_courses_template(&$variables) {
+	$variables["vcn_drupal7_base_path"] = vcn_drupal7_base_path();
+	/* REST Call */		
+	// get the list of "courses" order by course_title, ASC  
+	$params = array('type' => 'noncredit', 'unitid' => 1 , 'order' => 'course_title' , 'direction' => 'asc');
+	$course = vcn_rest_wrapper('vcntrainingsvc','vcncourse','get-course-list', $params);
+	$variables["course"] = $course;
+	/* End REST Call */
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses/non-credit-specialized-courses (Specialized Courses)
+ */
+function vcnonlinecourses_preprocess_vcn_non_credit_specialized_courses_template(&$variables) {
+	$variables["vcn_drupal7_base_path"] = vcn_drupal7_base_path();
+	/* REST Call */		
+	// get the list of "courses" order by course_title, ASC
+	$params = array('type' => 'noncreditspecialized', 'unitid' => 1 , 'order' => 'course_title' , 'direction' => 'asc');
+	$course = vcn_rest_wrapper('vcntrainingsvc','vcncourse','get-course-list', $params);
+	$variables["course"] = $course;
+	/* End REST Call */
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses/hit (Healthcare Information Technology Program)
+ */
+function vcnonlinecourses_preprocess_vcn_hit_template(&$variables) {
+	$variables["vcn_drupal7_base_path"] = vcn_drupal7_base_path();
+	/* REST Call */	
+	// get the list of "courses" order by course_title, ASC
+	$params = array('subject_area' => 7 , 'order' => 'course_title' , 'direction' => 'asc' );
+	$course = vcn_rest_wrapper('vcntrainingsvc','vcncourse','get-course-list', $params);
+	$variables["course"] = $course;
+	/* End REST Call */
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['hittop'] = vcn_node_text_by_urlalias("online-courses-hit-top");
+	$variables['hitleft'] = vcn_node_text_by_urlalias("online-courses-hit-leftside");
+	$variables['hitright'] = vcn_node_text_by_urlalias("online-courses-hit-rightside");	
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses?id=xyz (Take a Course Online - Online courses)
+ */
+function vcnonlinecourses_preprocess_vcn_online_courses_template(&$variables) {
+	$courseID = floatval($_GET['id']);
+	$url = vcn_moodle_base_path().'course/view.php?id=' . $courseID;
+	$variables["url"] = $url;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /online-courses/take-online?state=XYZ (Take a Course Online listing by state)
+ */
+function vcnonlinecourses_preprocess_vcn_take_online_bystate_template(&$variables) {
+	$variables["state"] = strtoupper($_GET['state']);	
+	/* REST Call */	
+	// get the list of "providers" 
+	$params = array('vhs_yn' => 'Y');
+	$providers = vcn_rest_wrapper('vcnprovidersvc','vcnprovider','get-provider-list', $params);
+	$variables["providers"] = $providers;	
+	/* End REST Call */	
+	
+	//Process rest data to display at template.
+	vcn_take_online_bystate_process($variables);
+}

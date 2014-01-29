@@ -1,0 +1,134 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnofficelocator_help($path, $arg) {
+	if ($path == 'admin/help#vcnofficelocator') {
+		return t('Functionality related to VCN Office Locator.');
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function vcnofficelocator_theme() {
+	$theme = array();
+
+	// Office Locator page theme variable
+	$theme['vcn_office_locator_template'] = array(
+			'arguments' => array('form' => NULL),
+			'render element' => 'form',
+			'template' => 'templates/vcnofficelocator',
+			//'path' => drupal_get_path('module', 'vcnofficelocator'),
+	);
+
+	return $theme;
+}
+
+/**
+ * Implementation of vcnofficelocator_form (callback function from hook_menu).
+ */
+function vcnofficelocator_form($form, &$form_state) {
+
+	$form['zip'] = array(
+			'#title' => t('Enter a ZIP Code to find the nearest office:'),
+			'#type' => 'textfield',
+			'#required' => TRUE,
+			'#maxlength' => 5,
+			'#size' => 5,
+			'#weight' => 0,
+			'#default_value' => vcnuser_get_zip(),
+	);
+
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Go'),
+			'#weight' => 10,
+			'#validate' => array('vcnofficelocator_form_validate'),
+			'#submit' => array('vcnofficelocator_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcnofficelocator-submit-button'),
+					'title' => "Go"
+					),
+	);
+	
+	//$form['#redirect'] = FALSE; // Not working here, set it at submit handler.
+
+	$form['#theme'][] = 'vcn_office_locator_template';
+	
+	$form['#attached']['js'] = array(
+			drupal_get_path('theme', 'vcnstark').'/js/vcnofficelocator.js',
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /office-locator (Office Locator)
+ */
+//function vcnstark_preprocess_vcn_office_locator_template(&$variables) {
+function vcnofficelocator_preprocess_vcn_office_locator_template(&$variables) {
+	
+	if (isset($_POST['zip']) && ($_POST['zip']) > 0) {
+		$variables['zipcode'] = ($_POST['zip']);
+	} else {
+		$user_zipcode = vcnuser_get_zip();
+		//$user_zipcode = vcnuser_get_zipcode_from_cookie();
+		
+		if(is_numeric($user_zipcode)) {
+			$variables['zipcode'] = $user_zipcode;
+		} 
+	}
+	
+	$form = $variables['form'];
+	
+	$variables['form_zip'] = render($form['zip']);
+	$variables['form_submit'] = render($form['submit']);
+	$variables['form_hidden'] = drupal_render_children($form);
+
+  if (empty($variables['industry'])) {
+    $variables['industry'] = vcn_get_industry();
+  }
+
+  $variables['is_healthcare_industry'] = vcn_is_healthcare_industry($variables['industry']);
+  
+	if (isset($variables['zipcode']) && $variables['zipcode'] > 0) {
+		
+		/* REST Call */
+		
+		$variables['coords'] = vcn_get_lat_long_byzip($variables['zipcode']);
+		
+		if(strlen($variables['coords']['latitude']) && strlen($variables['coords']['longitude'])) {
+			$variables['contact_method_text'] = "";
+			$variables['partners'] = vcn_get_partners($variables);			
+			$variables['community_colleges'] = vcn_get_community_colleges($variables);
+		}else {
+			$variables['partners'] = 'None found';
+			$variables['community_colleges'] = 'None found';
+		}
+		$variables['one_stop_careers_centers'] = vcn_get_one_stop_careers_centers($variables);
+		
+		/* End REST Call */
+	}
+	
+  if (!$variables['is_healthcare_industry']) {
+    $variables['contact_method_text'] = "";
+  }
+}

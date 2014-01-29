@@ -1,0 +1,5559 @@
+/*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ 
+
+
+
+/**
+ * @file
+ * VCN layout method
+ */
+ 
+/* Basic Layout Styles */
+html, body {
+    height: 100%;
+}
+
+body { 
+  background: #f2f2f2;  
+  font-family: Verdana;  
+  font-size: 12px; 
+  margin: 0;
+  padding: 0;
+}
+
+body,
+caption,
+th,
+td,
+input,
+textarea,
+select,
+option,
+legend,
+fieldset {
+  font-family: Verdana, Tahoma, "DejaVu Sans", sans-serif;
+}
+
+table {
+  border-collapse: collapse;  
+}
+
+a { 
+  color: #A71E28; 
+  text-decoration: none; 
+  outline: 0 none; /* To remove dotted lines, appears when clicking on the links/logo in IE */
+}
+
+a:hover {
+ text-decoration: underline;  
+}
+
+p { 
+  font-size: 12px;
+}
+
+
+pre,
+code {
+  font-size: 1.1em; 
+  font-family: "Courier New", "DejaVu Sans Mono", monospace;
+}
+
+h1 {
+  font-size: 2em;
+  line-height: 1.3em;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+h2 {
+  font-size: 16px;
+  line-height: 1.3em;
+  margin-top: 0.667em; 
+  margin-bottom: 0.667em;
+}
+
+h3 {
+  font-size: 1.3em;
+  line-height: 1.3em;
+  margin-top: 0.769em;
+  margin-bottom: 0.769em;
+}
+
+h4,
+h5,
+h6 {
+  font-size: 1.1em;
+  line-height: 1.3em;
+  margin-top: 0.909em;
+  margin-bottom: 0.909em;
+}
+
+blockquote {
+  margin: 1em 2em;
+}
+
+ul,
+ol {
+  margin-left: 0;
+}
+
+li {
+  margin: 0;
+  padding: 0;
+}
+
+ol {
+   margin-left:-20px;
+}
+
+ul {
+   margin-top:3px;
+   list-style-type: disc;
+}
+ul ul       { list-style-type: circle; }
+ul ul ul    { list-style-type: square; }
+ul ul ul ul { list-style-type: circle; }
+ol          { list-style-type: decimal; }
+ol ol       { list-style-type: lower-alpha; }
+ol ol ol    { list-style-type: decimal; }
+
+img {
+  border: 0;
+}
+
+hr {
+  
+  border: none;
+  background-color: #ccc;
+  color: #ccc;
+  height: 1px;
+}
+
+form {
+  margin: 0;
+  padding: 0;
+}
+
+fieldset {
+  margin: 1em 0;
+  padding: 0.5em;
+}
+
+abbr {
+  border-bottom: 1px dotted #666;
+  cursor: help;
+  white-space: nowrap;
+}
+
+dt {
+  margin: 0;
+  padding: 0;
+}
+
+dd {
+  margin: 0 0 0 2em;
+  padding: 0;
+}
+
+th,
+thead th,
+tbody th {
+  text-align: left; /* LTR */
+  padding: 0;
+  border-bottom: none;
+}
+
+tbody {
+  border-top: none;
+}
+
+tr.even, tr.odd {
+  background-color: #eee;
+  border-bottom: 0px solid #eee; 
+  padding: 0.1em 0.6em;
+}
+
+/* Commented due to side affect at all pages of drupal7 due to global class.
+*  Add specific to any page if needed.
+*/
+.block ul,
+.item-list ul /* Drupal overrides */ { 
+}
+
+ul ul, ul ol,
+ol ol, ol ul,
+.block ul ul, .block ul ol,
+.block ol ol, .block ol ul,
+.item-list ul ul, .item-list ul ol,
+.item-list ol ol, .item-list ol ul {
+  margin: 0;
+}
+
+.item-list ul li /* Drupal override */ {
+  margin: 0;
+  padding: 0;
+  list-style: inherit;
+}
+
+ul.menu li,
+li.expanded,
+li.collapsed,
+li.leaf  {
+  margin: 0;
+  padding: 0;
+}
+
+li a.active {
+  color: #000;
+}
+
+div.messages,
+div.status,
+div.warning,
+div.error {
+  min-height: 21px;
+  margin: 0 1em 5px 1em;
+  border: 2px solid #ff7;
+  padding: 5px 5px 5px 35px; /* LTR */
+  color: #000;
+  background-color: #ffc;
+  background-image: url(../images/messages-status.png);
+  background-repeat: no-repeat;
+  background-position: 5px 5px; /* LTR */
+}
+
+div.warning /* Medium priority messages */ {
+  border-color: #fc0;
+  background-image: url(../images/messages-warning.png);
+}
+
+div.warning,
+tr.warning {
+  color: #000; /* Drupal core uses #220 */
+  background-color: #ffc;
+}
+
+div.error /* High priority messages. See also the .error declaration in pages.css. */ {
+  border-color: #c00;
+  background-image: url(../images/messages-error.png);
+}
+
+div.error,
+tr.error {
+  color: #900; /* Drupal core uses #200 */
+  background-color: #fee;
+}
+
+div.messages ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+abbr.created {
+  border: none;
+  cursor: auto;
+  white-space: normal;
+}
+
+form tbody {
+  border-top: 1px solid #ccc;
+}
+
+form th,
+form thead th {
+  text-align: left; /* LTR */
+  padding-right: 1em; /* LTR */
+  border-bottom: 3px solid #ccc;
+}
+
+form tbody th {
+  border-bottom: 1px solid #ccc;
+}
+
+
+.vcn-round-border {
+  /*behavior: url(PIE-1.0.0/PIE.htc);*/  
+  border: 0px;
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px; 
+  border-radius: 5px; 
+  -khtml-border-radius: 5px; 
+}
+
+/* VCN buttons */
+.ui-dialog .vcn-button {
+	/*behavior: url(PIE-1.0.0/PIE.htc);*/
+    border-style: none; 
+    background: none;
+    background-color: #0099AF; 
+    color: white; 
+    font-weight: bold; 
+    padding: 2px 6px 3px 6px; 
+    border: 1px solid #777777;
+    -moz-border-radius: 5px; 
+    -webkit-border-radius: 5px; 
+    border-radius: 5px; 
+    -khtml-border-radius: 5px;    
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    -webkit-transition-duration: 0.2s;
+    -moz-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    cursor: pointer;
+}
+
+.vcn-button {
+  /*behavior: url(PIE-1.0.0/PIE.htc);*/
+  border-style: none; 
+  background: none;
+  background-color: #0099AF; 
+  color: white; 
+  font-weight: bold; 
+  padding: 4px 6px; 
+  border: 1px solid #777777;
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px; 
+  border-radius: 5px; 
+  -khtml-border-radius: 5px;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+  -webkit-transition-duration: 0.2s;
+  -moz-transition-duration: 0.2s;
+  transition-duration: 0.2s;
+  cursor: pointer;
+  text-align: center;
+  /*vertical-align:bottom;*/
+  font-size: 10pt;
+  font-family: Arial;
+  text-decoration: none;
+  position: relative;
+  z-index: 90;
+}
+
+a.vcn-button:hover, a.ctools-modal-user-form-style:hover,
+#vcn-igen-header a:hover,
+#vcn-header a:hover,
+#not-logged-in-modal-img a:hover {
+	text-decoration: none;
+}
+
+.header-buttons {
+  padding: 0;
+  width: 41px;
+  height: 41px;
+  text-align: center;  
+  margin-left:10px;
+  vertical-align: middle;
+  display: table-cell;
+}
+.header-buttons-small-text {
+  font-size: 7pt;
+}
+.header-buttons-medium-text {
+  font-size: 9pt;
+}
+.header-buttons-large-text {
+  font-size: 13pt;
+}
+.choose-career-buttons {
+  padding: 1px 1px 1px 1px;
+  width: 227px;
+  height: 38px;
+}
+.go-button-small {
+  padding: 2px 4px 2px 4px;
+  height: 25px;
+}
+.save-target-buttons {
+  padding: 2px 2px 2px 25px;
+  width: 110px;
+  height: 38px;
+  background-repeat:no-repeat; 
+  background-position: 5% 50%;
+}
+.save-button {
+  background-image:url('../images/buttons/save_icon.png');
+  background-size: 20px 20px;
+}
+.target-button {
+  background-image:url('../images/buttons/target_icon.png');
+}
+.save-target-icon {
+  width: 25px;
+  height: 25px;
+  vertical-align: top;
+  padding: 2px;
+}
+.save-target-icon img {
+  width: 18px;
+}
+
+.pla-learning-inventory-buttons {
+  padding: 1px 1px 1px 1px;
+  width: 227px;
+  height: 38px;
+}
+
+.ui-dialog .vcn-button {
+  padding: 0;
+}
+.ctools-use-modal {
+	border-style: none; 
+	background-color: #0099AF; 
+	color: white;
+    font-size: .7em;	
+	font-weight: bold; 
+	padding: 1px 3px 1px 3px; 
+	-moz-border-radius: 5px; 
+	-webkit-border-radius: 5px; 
+	border-radius: 5px; 
+	-khtml-border-radius: 5px;
+	border: solid 1px #777777;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    -webkit-transition-duration: 0.2s;
+    -moz-transition-duration: 0.2s;
+    transition-duration: 0.2s;
+    cursor: pointer;
+}
+
+#vcn-igen .vcn-button,
+#vcn-igen .ctools-use-modal,
+#vcn-igen .ui-dialog .vcn-button {
+  background-color: #4e968a; 
+}
+
+#vcn-healthcare .vcn-button,
+#vcn-healthcare .ctools-use-modal,
+#vcn-healthcare .ui-dialog .vcn-button { 
+  background-color: #0099AF;  
+}
+
+ .vcn-button.save-target-icon, #vcn-healthcare .vcn-button.save-target-icon, #vcn-igen .vcn-button.save-target-icon {
+  /*background-color: #cccccc;*/
+}
+
+/* 
+*
+* HEADER 
+*
+**/
+
+#vcn-header { 
+  clear:both; 
+  float:left; 
+  height: 120px;     
+  margin:5px 0;
+  width:100%; 
+}
+
+/* HEADER LOGO */
+
+#vcn-logo-block { 
+  float:left; 
+  height:113px;   
+  margin:0; 
+  width:161px;
+}
+
+#vcn-logo-block.front { 
+  float:left; 
+  margin:0; 
+  width:194px;   
+  height:20px; 
+}
+
+#vcn-logo-block-provider.front .logo { 
+  background: transparent url('../images/site_logo_images/vcn_logo_provider.png') 0px 0px no-repeat; 
+  float:left; 
+  width: 300px;
+  height:30px;
+  margin-top: -4px;
+  margin-bottom: -95px;
+  padding: 45px 80px;
+} 
+
+.logo  { 
+  background: transparent url(../images/logo_vcn_small.jpg) 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px;
+} 
+
+/* standard and alternate main header logos */
+
+#vcn-logo-block.front .header-logo { 
+  background: transparent url('../images/site_logo_images/vcn_logo.png') 0px 0px no-repeat; 
+  float:left; 
+  width: 250px;
+  margin-top: -4px;
+} 
+
+.header-logo  { 
+  background: transparent url('../images/site_logo_images/vcn_logo.png') 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px;
+} 
+
+#vcn-osp-logo-block.front .header-osp-logo { 
+  background: transparent url('../images/site_logo_images/logo_open_source.png') 0px 0px no-repeat; 
+  float:left; 
+  width: 290px;
+  margin-top: -4px;
+} 
+
+.header-osp-logo  { 
+  background: transparent url('../images/site_logo_images/logo_open_source.png') 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px 20px 80px;
+} 
+
+#osp-content {
+  float:left; 
+  width:625px; 
+  margin-bottom:50px;
+}
+
+#osp-main-image {
+  float:left; 
+  width:300px; 
+  margin-left:30px;
+}
+
+#osp-forum-activity-list {
+  padding-left:20px;
+}
+
+#forum th, #forum td {
+  padding: 4px;
+}
+
+div.header-logo {
+  margin-left: 10px;
+}
+
+#vcn-logo-block.front .iajvs-header-logo { 
+  background: transparent url('../images/site_logo_images/logo_iajvs_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  width: 250px;
+  margin-top: -4px;
+} 
+
+.iajvs-header-logo  { 
+  background: transparent url('../images/site_logo_images/logo_iajvs_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px;
+} 
+
+div.iajvs-header-logo {
+  margin-left: 10px;
+}
+
+#vcn-logo-block.front .ser-header-logo { 
+  background: transparent url('../images/site_logo_images/logo_ser_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  width: 250px;
+  margin-top: -4px;
+} 
+
+.ser-header-logo  { 
+  background: transparent url('../images/site_logo_images/logo_ser_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px;
+} 
+
+div.ser-header-logo {
+  margin-left: 10px;
+}
+
+#vcn-logo-block.front .goodwill-header-logo { 
+  background: transparent url('../images/site_logo_images/logo_goodwill_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  width: 250px;
+  margin-top: -4px;
+} 
+
+.goodwill-header-logo  { 
+  background: transparent url('../images/site_logo_images/logo_goodwill_small.jpg') 0px 0px no-repeat; 
+  float:left; 
+  padding:56px 80px;
+} 
+
+div.goodwill-header-logo {
+  margin-left: 10px;
+}
+
+.headerlogo {
+   text-decoration: none;
+   border: 0;
+   outline: 0;
+}
+
+#ajc-logo-block {
+   margin-left: 110px;
+   width: 70px;
+   height: 20px;
+   background: transparent url('../images/vcn/site_logo_images/ajc_logo.png') 0px 0px no-repeat; 
+   float:left; 
+}
+#ajc-provider-logo-block {
+   width: 70px;
+   height: 20px;
+   background: transparent url('../images/vcn/site_logo_images/ajc_logo.png') 0px 0px no-repeat; 
+   float:left;
+}
+#ajc-osp-logo-block {
+   width: 70px;
+   height: 20px;
+   background: transparent url('../images/vcn/site_logo_images/ajc_logo.png') 0px 0px no-repeat; 
+   float:left; 
+}
+
+#ajc-logo-block a, #ajc-osp-logo-block a, #ajc-provider-logo-block  a {
+   outline:0; 
+   width:70px; 
+   height:20px; 
+   padding:56px 80px; 
+   background: transparent url('../images/vcn/site_logo_images/ajc_logo.png') 0px 0px no-repeat; 
+   float:left; 
+   text-decoration: none; 
+   border: 0 none; 
+   outline: 0;
+}
+
+/* HEADER SEARCH */
+
+div.header-search {
+  float: right;
+  margin-left: 10px;
+}
+
+#edit-search-block-form--2 {
+   padding: 11px;
+}
+
+.form-item-search-block-form input {
+   font-weight: bold;
+   color: #bbbbbb;
+   width: 90px;
+}
+
+#vcn-search-block { 
+   float:left; 
+}
+
+#vcn-header-search-image { 
+  background: #fff url(../images/icon_mag.jpg) 0 0px no-repeat; 
+  height:28px; 
+  width:31px; 
+  float:left; 
+  margin:7px 0 0 0; 
+  border-left:1px solid #000; 
+  border-top:1px solid #000; 
+  border-bottom:1px solid #000; 
+  border-right:none; 
+}
+
+#vcn-header-search-input { 
+  float:left; 
+  height:28px; 
+  margin:7px 5px 0 0px; 
+  padding:0 5px; 
+  border-left:1px solid #000; 
+  border-top:1px solid #000; 
+  border-bottom:1px solid #000; 
+  border-right:1px solid #000; 
+}
+
+#vcn-header-search-go { 
+  float:left; 
+  margin-top:3px;
+}
+
+/* 
+* HEADER LINKS 
+*
+* VCN top header menu bar with buttons like "home","Choose a career", etc.
+*
+**/
+
+div.header-links ul.menu li.leaf {
+  list-style-image: none;
+  list-style-type: none;
+  display: inline;
+  float: right;
+}
+
+#vcn-header-links {
+  align: center; 
+  float:left; 
+  height:30px; 
+  margin-top:15px; 
+  padding:0; 
+  width:960px; 
+}
+ 
+#vcn-header-links.front { 
+  align:center; 
+  height:37px; 
+  margin-top:9px;
+  width: 960px; 
+  padding:0;
+  background: url('../images/buttons/nav_bg_no_line.jpg');
+}
+
+#vcn-header-links-end { 
+  background: transparent url(../images/buttons/nav_right.jpg) 0 0 no-repeat; 
+  float:right; 
+  height:30px; 
+  margin:0; 
+  padding:0; 
+  height:37px; 
+  width:11px; 
+}
+
+#vcn-header-links-front { 
+  background: #F2F2F2 url(../images/buttons/left_endcap_two_tone.png) 0 0 no-repeat; 
+  float:left; 
+  height:30px; 
+  margin:0; 
+  padding:0; 
+  height:37px; 
+  width:9px; 
+}
+
+#vcn-header-links-front-dark { 
+   background: #F2F2F2 url(../images/buttons/left_endcap_two_tone_dark.png) 0 0 no-repeat; 
+   float:left; 
+   height:30px; 
+   margin:0; 
+   padding:0; 
+   height:37px; 
+   width:9px; 
+ }
+
+#vcn-header-links li a { 
+  color:#fff; 
+  float:left; 
+  font-family:verdana; 
+  font-size:11px; 
+  font-weight:bold; 
+  margin:0; 
+  padding:10px 0 0; 
+  height:27px;  
+  text-decoration:none; 
+  text-outline:none; 
+  font-weight:bold;
+}
+
+#vcn-header-links ul, 
+#vcn-help-links ul,
+#vcn-osp-help-links ul { 
+  list-style-type:none; 
+  list-style-image:none; 
+  margin:0; 
+  padding:0; 
+}
+ 
+#vcn-header-links li  { 
+  background:transparent url(../images/buttons/nav_bg_off.jpg) 0 0px repeat-x; 
+  float:left; 
+  height:37px; 
+  list-style:none; 
+  padding:0 8px;  
+  text-align:center;
+}
+
+#vcn-header-links li.active-trail { 
+  background: #000 url(../images/buttons/nav_bg_on.jpg) 0 0px no-repeat; 
+}
+
+#vcn-primary-links {
+  float:left; 
+  margin:0; 
+  padding:0; 
+}
+
+#vcn-secondary-links {
+  float:right;
+  margin:0; 
+  padding:0; 
+}
+
+#vcn-header-links.front #vcn-primary-links li.first { 
+  background-position:-3px 0;  
+  padding-left:10px; 
+}
+
+#vcn-secondary-links li  { 
+  border-right:none; 
+}
+
+#vcn-secondary-links li.last  {
+  background: transparent url(../images/buttons/nav_bg_off.jpg) 0 0px no-repeat; 
+}
+
+#vcn-secondary-links li.last.active-trail  {
+  background: transparent url(../images/nav_bg_lon.jpg) 0 0px no-repeat;  
+}
+ 
+#vcn-secondary-links li a { 
+  text-decoration: none; 
+}
+
+#vcn-primary-links .menu .menu li { 
+  position:absolute; 
+  margin-top:38px;
+  margin-left:0;
+  z-index:20; 
+  padding:0 10px;
+}
+
+/* 
+* Header Navigation Bar 
+*
+* Top right navigation bar with buttons like "Provider Portal", "Open Source Portal", "Search box" etc.
+*
+*/
+
+#vcn-header-navbar { 
+  float:right; 
+  margin:25px 0 0; 
+}
+
+#vcn-help-links { 
+  float:right;  
+  margin-top: -19px; 
+  margin-left: -20px;
+  
+}
+
+#vcn-osp-help-links { 
+  float:right; 
+}
+
+#vcn-help-links li ,
+#vcn-osp-help-links li{ 
+  float:left; 
+  margin-left:10px;
+}
+
+#vcn-header-user-name { 
+   float: right; 
+   font-family: verdana; 
+   font-size: 15px; 
+   font-weight: bold;
+   color: #A71E28;
+}
+
+.hide-wish-list-icon
+{
+	display: none; /* To hide and release space, when li tag is blank for wish list icon  */
+}
+
+/* 
+*
+* End of HEADER 
+*
+**/
+
+/* 
+*
+* FOOTER 
+*
+**/
+
+#vcn-footer { 
+  border-top:1px solid #999; 
+  border-bottom:1px solid #999; 
+  float:left; 
+  font-size:12px; 
+  margin-top:15px; 
+  padding:5px 5px 15px; 
+  width:960px; 
+}
+
+#vcn-footer-navigation { 
+  float:left;
+  list-style:none; 
+}
+
+ul.vcn-footer-links { 
+  clear:both; 
+  color:#111; 
+  font-size:12px; 
+  float:left; 
+  list-style:none; 
+  margin:0 0 10px; 
+  padding:0;
+}
+
+.vcn-footer-links a { 
+  color:#111; 
+}
+
+.vcn-footer-links img { 
+  cursor: pointer;
+}
+
+.vcn-footer-links li { 
+  float:left; 
+  margin-right:5px; 
+  padding-right:5px; 
+  border-right:1px solid #777;
+}
+
+.vcn-footer-links li.last { 
+  border-right:none;
+}
+
+
+#vcn-footer-connect { 
+  float:right;
+  list-style:none; 
+}
+
+#vcn-footer-connect .vcn-footer-links li { 
+  border-right:none; 
+  padding-right:0; 
+}
+
+.tell-us-btn {
+  background-image: url("../images/buttons/btn_tell-us-what-you-think_vcn.png");
+  height: 40px;
+  width: 187px;
+  cursor: pointer;
+}
+
+.vcn-share-btn {
+  background-image: url("../images/buttons/btn_share_vcn.png");
+  height: 40px;
+  width: 130px;
+  cursor: pointer;
+}
+
+.facebook  { 
+  background: transparent url(../images/icon_social_network.jpg) -38px 0px no-repeat; 
+  padding:6px 13px;
+}
+
+.twitter { 
+  background: transparent url(../images/icon_social_network.jpg) -115px 0px no-repeat; 
+  padding:6px 13px;
+}
+  
+.linked-in { 
+  background: transparent url(../images/icon_social_network.jpg) -77px 0px no-repeat; 
+  padding:6px 13px;
+}
+
+.tellus { 
+  background: transparent url(../images/btn_tell_us.jpg) 0px 0px no-repeat; 
+  padding:7px 91px; 
+  cursor:pointer; 
+}
+
+
+#copyright { 
+  clear:both; 
+  float:left; 
+  padding:15px; 
+  text-align:center; 
+  margin-bottom:50px;
+}
+
+.dol-seal {
+  float:left; 
+  height:66px; 
+  width:66px; 
+  padding-top:15px; 
+  padding-left:50px; 
+  padding-right:15px;
+}
+
+.copyright-text {
+  float: left; 
+  text-align: center; 
+  width: 560px; 
+  font-size:12px; 
+  padding-right:20px;
+}
+
+.aacc-seal {
+  float:left; 
+  height:66px; 
+  width:177px; 
+  padding-top:15px;
+}
+
+/* 
+*
+* End of FOOTER 
+*
+**/
+
+/* 
+*
+* Other 
+*
+**/
+
+
+
+.exploreButton {
+  float: right;
+}
+  
+.homeButton {
+  float: left;
+}
+
+.welcomeMessage {
+  text-decoration: none;
+}
+
+#go-button-grid {
+  float:left; 
+  margin-left:15px;
+}
+
+.pursuitul {
+  margin-left:-41px;
+}
+
+.videoli {
+  margin-left:-10px;
+}
+
+.te_close_link { 
+  background:url("../../../modules/custom/vcn/occupations/occupations_detail/images/top_up/dashboard/close_link.png") no-repeat; 
+}
+
+#explore-search-jobtitle {
+  float:right; 
+  height:35px;
+}
+
+.redborder {
+  border: 2px solid red;
+}
+
+.cg_highlight {
+  color: #189ab0;	
+}
+
+#center-float {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.menu-spacer {
+  float: left;
+  width: 13%;
+  height: 37px;
+}
+
+#header,
+#main-wrapper,
+#footer { 
+  clear:both;  
+}
+
+#header,
+#content,
+#navigation,
+.region-sidebar-first,
+.region-sidebar-second,
+#footer,
+.region-page-closure {
+  overflow: visible;
+  word-wrap: break-word; /* A very nice CSS3 property */
+}
+
+/* 
+*
+* End of Other 
+*
+**/
+
+/* 
+*
+* Main-wrapper/Content 
+*
+**/
+
+#main-wrapper {
+  position: relative; /* Need to remove to fix front page footer unclickable links on chrome */
+  min-height: 300px;
+}
+
+#navigation {
+  float: left; 
+  width: 100%;
+  margin-left: 0; 
+  margin-right: -100%; 
+  padding: 0; 
+  overflow: hidden; /* May need to be removed if using a dynamic drop-down menu */
+  height: 63px; /* The navigation can have any arbritrary height. We picked one
+                   that is the image height plus 20 pixels: 43 + 20= 63px
+                   Set this to the same value as the margin-top below. */
+     
+}
+
+#navigation ul {
+  margin: 0;
+  padding: 0;
+  text-align: left; 
+}
+
+#navigation li {
+  float: left; 
+  padding: 0 10px 0 0; 
+}
+
+#navigation ul.imagemenu li.leaf {
+  list-style-image: none;
+  list-style-type: none;
+  display: inline;
+  padding-right: 4px;
+}
+
+.with-navigation #content,
+.with-navigation .region-sidebar-first,
+.with-navigation .region-sidebar-second {
+  margin-top: 63px; /* Set this to the same value as the navigation height above. */
+}
+
+
+.with-wireframes #header .section,
+.with-wireframes #content .section,
+.with-wireframes #navigation .section,
+.with-wireframes .region-sidebar-first .section,
+.with-wireframes .region-sidebar-second .section,
+.with-wireframes #footer .section {
+  margin: 1px;
+  padding: 2px;
+  border: 1px solid #ccc;
+}
+
+.with-wireframes .region-page-closure {
+  margin-top: 1px;
+  padding: 2px;
+  border: 1px solid #ccc;
+}
+
+#header .section .region {
+    display: relative;
+}
+
+#page-wrapper {
+  min-height: 820px; /* Added to remove page sliding from left to right when page content is less than one point. */
+}
+
+#page-wrapper,
+.region-page-closure {
+  margin-left: auto;
+  margin-right: auto;
+  width: 960px;
+}
+
+.region-sidebar-first {
+  float: left; /* LTR */
+  width: 200px;
+  margin-left: 0; /* LTR */
+  margin-right: -200px; /* LTR */ /* Negative value of .region-sidebar-first's width + left margin. */
+  padding: 0; /* DO NOT CHANGE. Add padding or margin to .region-sidebar-first .section. */
+}
+
+.region-sidebar-first .section {
+  margin: 0 20px 0 0; /* LTR */
+  padding: 0;
+}
+
+.region-sidebar-second {
+  float: left; /* LTR */
+  width: 200px;
+  margin-left: 760px; /* LTR */ /* Width of content + sidebar-first. */
+  margin-right: -960px; /* LTR */ /* Negative value of .region-sidebar-second's width + left margin. */
+  padding: 0; /* DO NOT CHANGE. Add padding or margin to .region-sidebar-second .section. */
+}
+
+.region-sidebar-second .section {
+  margin: 0 0 0 20px; /* LTR */
+  padding: 0;
+}
+
+div.pane-menu-secondary-links {
+  float: right;
+}
+
+div.pane-menu-secondary-links li.leaf {
+  padding-right: 14px;
+}
+
+div.pane-menu-secondary-links li.first {
+  padding-right: 4px;
+}
+
+div.pane-menu-primary-links li.leaf {
+  width: 95px;
+  text-align: center;
+  border: 1px solid black;
+}
+
+div.pane-menu-primary-links li.last {
+  width: 120px;
+}
+
+div.header-links li.leaf a {
+  text-decoration: none;
+}
+
+.fp-bottom-blocks {
+  width: 288px;
+  height: 170px;
+  padding: 5px;
+}
+
+div.fp-bottom-left {
+  position: relative;
+  left: 20px;
+}
+
+div.fp-bottom-center {
+  position: relative;
+  left: 2px;
+  background: transparent url('../../../../sites/default/files/images/box_gray.png') no-repeat;
+}
+
+
+div.fp-bottom-right {
+  position: relative;
+  right: 10px;
+  background: transparent url('../../../../sites/default/files/images/box_video.jpg') no-repeat;
+}
+
+div.snapshot {
+  background: transparent url('../../../../sites/default/files/images/box_orange.png') no-repeat;
+  position: absolute;
+  left: 88px;
+  top: 136px;
+  z-index: 10;
+  width: 276px;
+  height: 112px;
+  padding-top: 0px;
+  padding-left: 10px;
+  padding-right: 5px;
+  font-size: 1em;
+}
+
+div.snapshot h3 {
+  padding-top: 3px;
+  padding-bottom: 5px;
+  margin: 0px;
+  font-size: 1.5em;
+}
+
+div.snapshot table {
+  width: auto;
+  padding: 0px;
+  margin: 0px;
+}
+
+div.snapshot table img {
+  vertical-align: bottom;
+}
+
+div.snapshot span.prompt {
+  font-weight: bold;
+}
+
+#occupation-grid table {
+  width: 100%;
+}
+
+#occupation-grid table td {
+  padding: 2px;
+}
+
+#occupation-grid table th {
+  padding: 2px;
+}
+
+.vcn-heading { 
+  clear:both; 
+  font-size 110%; 
+  font-weight: bold; 
+  width: 100%; 
+  float: left; 
+  margin-bottom: 15px; 
+}
+
+#edit-keys{
+  padding: 10.5px;
+}
+
+#pager-table {
+  margin-top:-25px;
+} 
+
+.allclear {
+  clear: both; 
+}
+
+.region-header {
+  clear: both; 
+}
+.no-text-decoration {
+	 text-decoration: none;
+}
+/* 
+*
+* Occupation details page.
+*
+* All values copied over from production environment
+*
+**/
+
+/* wrapper container for the details left div (mostly text is displayed) and details right div (occupation image and video are displayed) */
+
+#occupation-details { 
+  width: 780px;
+}
+
+/* end of setting width for occupation-details*/
+
+
+/* Navigation tabs of career details page*/
+
+#linkcontainer { 
+  margin: 10px 0 0 0;
+  position:relative;
+}
+
+#overview-link,
+#salary-and-outlook-link,
+#on-the-job-link,
+#education-and-training-link,
+#skills-and-tools-link,
+#resources-link {
+  position: absolute;
+}
+
+#other-names, 
+#salary-and-outlook, 
+#on-the-job, 
+#education-and-training, 
+#skills-and-tools, 
+#resources {
+	margin: 15px 0 0 0px;
+}
+
+#overview-link {
+  left: 0px;
+}
+
+#salary-and-outlook-link {
+  left: 93px;
+}
+
+#on-the-job-link {
+  left: 226px;
+}
+
+#education-and-training-link { 
+  left: 321px; 
+}
+
+#skills-and-tools-link { 
+  left: 481px; 
+}
+
+#resources-link { 
+  left:589px; 
+}
+
+/* End of navigation tabs on Occupation details page. */
+
+/* Regular text, should always be visible all the time */
+
+#other-names-regular-text, #other-names-regular-text p,
+#description-regular-text, #description-regular-text p,
+#physical-requirements-regular-text, #physical-requirements-regular-text p,
+#medical-health-requirements-regular-text, #medical-health-requirements-regular-text p,
+#legal-requirements-regular-text, #legal-requirements-regular-text p,
+#on-the-job p,
+#academic-requirement-regular-text, #academic-requirement-regular-text p,
+#career-snapshot, #career-snapshot p {
+  font-size: 12px;
+  margin: 0 0 20px 0;
+  clear: both;
+}
+
+/* End of styling for regular text*/
+
+/* Positioning the Facebook iFrame*/
+
+#facebook-iframe {
+  position: absolute; 
+  top: 2px; /* top: 15px; Edited with change of title to be consistant with drupaal 7  */
+  left: 615px; 
+  width: 70px;
+  height: 50px;
+  bottom: 0; 
+  border: 0;
+}
+
+/* End of positioning the Facebook iFrame*/
+
+#typical-annual-salary-values, #typical-hourly-wages-values, #percent-growth-result-value {
+  font-size: 12px;
+  padding: 0 0 0 2px;
+}
+
+#wishlist-target, #match-careers-gateway-maps {
+  float: right;
+  width: 230px;
+}
+
+#wishlist-target {
+  margin:-35px 0 15px 50px;
+  font-size: 12px;
+}
+
+#match-careers-gateway-maps {
+  margin: 0 0 40px 50px;
+}
+
+#save-to-wishlist, #save-to-target {
+  width: 110px;	
+  cursor: pointer;
+}
+
+#save-to-target {
+  margin: 0 0 0 5px;
+}
+
+#match-education-to-careers, #match-interests-to-careers, #gateway-to-careers, #career-pathway-map {
+  margin: 6px 1px 6px 1px;
+}
+
+#similar-careers, #data-source-text {
+  float: left;
+  width: 230px;
+  margin: 0px 0 0 50px;
+}
+
+.similar-career-links {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+#data-source-text {
+  font-size: 12px;
+}
+
+/* 
+*  This is used for styling purpose when user with permission to edit the node logs in. 
+*  Because "View and Edit" links for the node are available to such user between node title 
+*  and navigation bar, the styling breaks if this div is not added
+*/
+
+#empty-adjustment-div {
+  height: 30px;
+}
+
+/* End */
+
+/*
+* styling for the "Show more", "Show less" jquery toggle functionality. 
+* Text in the hidden divs must be invisible and "More Details" link should be visible by default
+*/
+
+#other-names-hidden-text,
+#description-hidden-text,
+#physical-requirements-hidden-text, 
+#medical-health-requirements-hidden-text, 
+#legal-requirements-hidden-text, 
+#academic-requirement-hidden-text { 
+  display: none;
+  font-size: 12px;
+  margin: 0 0 20px 0;
+  clear: both;
+}
+
+#other-names-hidden-text p,
+#description-hidden-text p,
+#physical-requirements-hidden-text p, 
+#medical-health-requirements-hidden-text p, 
+#legal-requirements-hidden-text p, 
+#academic-requirement-hidden-text p {
+  font-size: 12px;
+}
+
+/* End of styling for the "Show more", "Show less" jquery functionality */
+
+
+#zipcode-go-button {
+  margin-left: 10px;
+}
+
+#skills-list, #tools-list, #technology-list {
+  margin: 0 0 15px 0;
+  font-size: 12px;
+}
+
+#skills-list ul, #technology-list ul, #tools-list ul {
+  list-style-type: none;
+  padding: 0 20px 0 0;
+}
+
+.resources-data {
+  margin: 0 0 25px 0;
+}
+
+#resources p, .resources-data p, #financial-resources-data p {
+  margin: 7px 0 7px 0px;
+}
+
+
+#resources a.extlink {
+  margin: 0px 0px 0px 0px;
+}
+
+/*
+*  Changes for salary info from Career Detail Page.
+*  All numeric and color values are copied over from inline style values.
+*  These changes are related to the salary details page which shows the data in HTML table and charts
+*/
+
+#wage-info, #trends-info {
+  display: block;
+  margin: 0 0 30px;
+  font-size: 12px;
+}
+
+.table-float-left {
+  float: left;
+}
+
+#wage-table, #trends-table {
+  height: 100px;
+  width: 390px;
+  margin-bottom: 10px;
+}
+
+#wage-table tr, #wage-table th, #wage-table td, #trends-table tr, #trends-table th, #trends-table td {
+  background-color: #CCCCCC;
+  border: 1px solid black;
+}
+
+#wage-table th#location-header {
+  width: 12%;
+}
+
+#wage-table th#pay-period {
+  width: 8%;
+}
+
+#wage-table th#year {
+  width: 80%;
+}
+
+#wage-table th.percent-median {
+  width: 13%;
+}
+
+#wage-table td.yearly-salary-header, #wage-table td.yearly-salary, #wage-table td.location {
+  background-color: #FFFFFF;
+}
+
+#wage-table td, #trends-info td {
+  height: 25px;
+}
+
+#wage-table td.text, #trends-table td.text, #wage-table th.text, #trends-table th.text {
+  font-size: 12px;
+}
+
+#wage-table td.metro {
+	font-size: 10px;
+}
+
+#trends-table td.location, #trends-table td.year-from-numbers, #trends-table td.year-to-numbers, #trends-table td.percent-change, #trends-table td.job-openings {
+  background-color: #FFFFFF;
+  text-align: center;
+}
+
+#trends-table th#location-header, #trends-table th#employment-header, #trends-table th#percent-change-header, #trends-table th#job-openings-header, 
+#trends-table th#year-from-header, #trends-table th#year-to-header {
+  text-align: center;
+  font-size: 12px;
+}
+
+#wage-table td.hourly-rates, #wage-table td.hourly-rates-header {
+  background-color: #B9D9EC;
+}
+
+#wage-table th#location-header, #wage-table th#pay-period, #wage-table th#year, #wage-table th.percent-median,
+#wage-table td.yearly-salary-header, #wage-table td.yearly-salary, td.location, 
+#wage-table td.hourly-rates, #wage-table td.hourly-rates-header {
+  text-align: center;
+}
+
+#trends-table th#location-header{
+  width: 25%;
+}
+
+#trends-table th#employment-header {
+  width: 35%;
+}
+
+.wage-chart, .common-education-chart {
+  width:390px; 
+  border:solid 1px #d8d8d8;
+}
+
+.wage-chart-title, .common-education-chart-title {
+  width:390px;
+  text-align:center;
+  font-weight:bold;
+  padding-bottom:10px;
+}
+.wage-bracket-explaination {
+  padding: 0 10px;
+}
+
+/* End of changes for salary info from Career Details Page */
+
+a.extlink {
+  margin: 0px 0px 0px 5px;
+}
+
+.find-jobs-programs-link a {
+  font-size: 12px;
+}
+
+#description-hidden-text a.extlink, #description-regular-text a.extlink,
+#academic-requirement-regular-text a.extlink, #academic-requirement-hidden-text a.extlink {
+  margin: 0px 0px 0px 0px;
+}
+
+/* Start of changes for modal dialogs used for saving and targeting */
+
+#not-logged-in-modal-img {
+  float:left; 
+  width:20%; 
+  margin-top:15px;
+}
+
+#not-logged-in-modal-txt {
+  float:left; 
+  width:80%;
+}
+
+#simple-modal-icon-info {
+  float:left; 
+  margin-right:20px;
+}
+
+#simple-modal-icon-warning {
+  float:left; 
+  margin-right:10px;
+}
+
+/*Career details error messages styling */
+
+#career-details-error-messages {
+	margin: 0 0 10px 0;
+}
+
+/*End of career details error messages styling */
+
+/* End of changes for career details used for saving and targeting */
+
+#wrong-zipcode {
+  display: none;
+  margin: 5px 0 0 0;
+  color: red;
+}
+
+a.morelink {
+  float: right;
+  margin: -10px 25px 20px 0;
+  outline: medium none;
+  font-size: 13px;
+}
+
+.morecontent span {
+  display: none;
+}
+
+.lineunder { 
+  font-family: Verdana; 
+  font-weight: bold;
+  font-size: 13px;  
+  width: 100%; 
+  float: left; 
+  clear: both; 
+  padding: 0px 0px 3px 0px; 
+  margin: 0px 0px 10px 0px; 
+}
+
+.lineunder1 { 
+  font-family: Verdana; 
+  font-weight: bold;
+  font-size: 13px;  
+  width: 100%; 
+}
+
+
+#loading {
+  background: #e8e8e8;
+  width: 175px;
+  border: 1px solid #000000;
+  left: 40%;
+  position: fixed;
+  top: 48%;
+  padding:5px;
+  z-index: 10;
+  display:none !important; /* Merged from occupations_worktypes.css */
+} 
+
+#loading.off {
+  display:none; 
+}
+
+#details-left { 
+  float: left; 
+  width: 390px; 
+  margin: 30px 0px 0px 0px; 
+}
+
+#details-right { 
+  float: left; 
+  width: 220px; 
+  margin: 40px 0px 0px 50px; 
+  padding: 10px 10px 10px 10px; 
+}
+
+#video-link { 
+  height: 220px; 
+}
+
+#zip-textbox { 
+  height: 20px; 
+}
+
+#certification,
+#job-growth-conclusion { 
+  width: 200px;
+  font-size: 12px; 
+}
+
+#career-snapshot { 
+  margin: 0px 0px 20px 0px; 
+}
+
+/* 
+*
+* End of Occupation details css 
+*
+**/
+
+/* 
+*
+* Local.css 
+*
+**/
+
+.worktypes {
+  width:100%;
+  margin-top:600px;
+}
+
+.worktype1 {
+  float: left;
+  width: 31%;
+  padding-right: 5px;
+  padding-left: 5px;
+  padding-bottom: 5px;
+  border-width: 1px;
+  border-right-style: dotted;
+  border-left-style: dotted;
+  border-top-style: dotted;
+  border-bottom-style: dotted;
+  border-color: #777777;
+}
+
+.worktype2 {
+  float: left;
+  width: 31%;
+  padding-left: 5px;
+  padding-bottom: 5px;
+  padding-right: 5px;
+  border-width: 1px;
+  border-right-style: dotted;
+  border-top-style: dotted;
+  border-bottom-style: dotted;		
+  border-color: #777777;
+}
+
+.worktype3 {
+  float: left;
+  width: 31%;
+  padding-left: 5px;
+  padding-bottom: 5px;
+  margin-top: 265px;
+  border-right-style: dotted;
+  border-top-style: dotted;
+  border-bottom-style: dotted;	
+  border-width: 1px;
+  padding-right: 5px;
+}
+
+.seemore1 {
+  padding: 5px;
+  background-color: #E5E5E5;
+  font-size: 12px;
+}
+
+.seemore21 {
+  padding: 5px;
+  background-color: #E5E5E5;
+}
+
+.seemore22 {
+  padding: 5px;
+  background-color: #E5E5E5;
+}	
+
+.seemore3 {
+  padding: 5px;
+  background-color: #E5E5E5;
+}
+
+.helpus {
+  border: 1px solid #777777;
+  margin-bottom: 15px;
+  padding: 5px;
+  -moz-border-radius: 8px 8px 8px 8px;
+}
+
+.whyhc {
+  border: 1px solid #777777;
+  margin-bottom: 15px;
+  padding: 5px;
+  -moz-border-radius: 8px 8px 8px 8px;
+}
+
+.fromtheblog {
+  border: 1px solid #777777;
+  padding: 5px;
+  -moz-border-radius: 8px 8px 8px 8px;
+}
+
+.fhc {
+
+  border-width: 1px;
+  border-style: dotted;
+  font-size: 12px;
+  float:left; 
+  padding:10px; 
+  margin-right:15px;
+}
+
+.fhcsearch {
+  border-color: #189AB0;
+  border-style: solid;
+  border-width: 1px;
+  font-size: 12px;
+  padding: 10px 10px 10px 10px;
+  margin: 0px;
+  text-align: right;
+}
+
+#vcn-igen .fhcsearch {
+  border-color: #4E968A;
+}
+
+.fhc.gray { 
+  background:#999;
+}
+
+#sellcma {
+  margin-left:711px; 
+  width:232px; 
+  margin-top:-1360px;
+}
+
+.arrow-link {
+  background: transparent url('../../../modules/custom/vcn/training/images/arrow_link.jpg') no-repeat;
+  padding-left:23px;
+}
+
+#mini-panel-header-help h2 {
+  display: none;
+}
+
+#mini-panel-header-help img {
+  height: 30px;
+}
+
+#mini-panel-header-help {
+  margin: 0;
+  padding: 0;
+  width: 200px;
+  float: right;
+}
+
+#mini-panel-header-help ul.imagemenu li.leaf {
+  list-style-image: none;
+  list-style-type: none;
+  display: inline;
+  float: right;
+  padding-left: 4px;
+}
+
+/* 
+*
+* End of Local.css  
+*
+**/
+
+/* 
+*
+* Layout.css 
+*
+**/
+
+#content,
+#sidebar-first,
+#sidebar-second {
+  float: left;
+  display: inline;
+  position: relative; /* need to remove to fix front page footer unclickable links on chrome */
+}
+
+#content {
+  width: 100%;
+  font-size: 12px;
+}
+
+#content,
+.no-sidebars #content {
+  float: left; 
+  width: 960px;
+  margin-left: 0; 
+  margin-right: -960px; 
+  padding: 0; 
+}
+
+.sidebar-first #content {
+  width: 760px;
+  margin-left: 200px;
+  margin-right: -960px;
+}
+
+.sidebar-second #content {
+  width: 760px;
+  margin-left: 0; 
+  margin-right: -760px; 
+}
+
+.two-sidebars #content {
+  width: 560px;
+  margin-left: 200px;
+  margin-right: -760px; 
+}
+
+#content .section {
+  margin: 0;
+  padding: 0;
+}
+
+body.sidebar-first #content {
+  width: 80%;
+  left: 20%; /* LTR */
+}
+body.sidebar-second #content {
+  width: 80%;
+}
+body.two-sidebars #content {
+  width: 60%;
+  left: 20%;
+}
+
+#sidebar-first {
+  width: 20%;
+  left: -80%; /* LTR */
+}
+
+body.two-sidebars #sidebar-first {
+  left: -60%; /* LTR */
+}
+
+#sidebar-second {
+  float: right; /* LTR */
+  width: 20%;
+}
+
+.section {
+  margin: 0px;
+}
+
+/* 
+*
+* End of Layout.css  
+*
+**/
+
+/* 
+*
+* Front_page.css 
+*
+**/
+
+div#preload1 {
+  background: url(../images/home/healthcare/banner_learn.jpg) no-repeat -9999px -9999px;
+}
+
+div#preload2 {
+  background: url(../images/home/healthcare/banner_earn.jpg) no-repeat -9999px -9999px;
+}
+
+div#preload3 {
+  background: url(../images/home/healthcare/banner_advance.jpg) no-repeat -9999px -9999px;
+}
+
+div#preload4 {
+  background: url(../images/home/healthcare/banner_contribute.jpg) no-repeat -9999px -9999px;
+}
+
+.cursorpointer {
+  cursor: pointer;
+}
+
+.fp-container1
+ {
+  font-family: arial, verdana, sans-serif;
+  background-image: url(../images/home/healthcare/banner_learn.jpg);
+  background-repeat: no-repeat;
+  height: 476px;
+}
+
+.fp-container2
+ {
+  font-family: arial, verdana, sans-serif;
+  background-image: url(../images/home/healthcare/banner_earn.jpg);
+  background-repeat: no-repeat;
+  height: 476px;
+}
+
+.fp-container3
+ {
+  font-family: arial, verdana, sans-serif;
+  background-image: url(../images/home/healthcare/banner_contribute.jpg);
+  background-repeat: no-repeat;
+  height: 476px;
+}
+
+.fp-container4
+ {
+  font-family: arial, verdana, sans-serif;
+  background-image: url(../images/home/healthcare/banner_advance.jpg);
+  background-repeat: no-repeat;
+  height: 476px;
+}
+
+.fp-title-block
+ {
+  position: relative;
+  top: 10px;
+  left: 30px;
+}
+  
+.fptb-line1
+{
+  position:relative;
+  font-size: 20px;
+  color: #A71E28;
+}
+
+.fptb-line2
+{
+  position:relative;
+  top: -2px;
+  font-size: 29px;
+  color: #A71E28;
+}
+
+.fptb-line3
+ {
+  position: relative;
+  top:0px;
+  left: 40px;
+  font-size: 16px;
+  font-color: black;
+  font-style: italic;
+}
+
+.dyncontent
+{
+  margin-top: 40px;
+  margin-left: 30px;
+  font-size: 17px;
+  width: 400px;
+  height: 60px;
+  line-height: 110%;
+}
+
+.fp-button-links
+{
+  margin-top: 70px;
+  margin-left: 30px;
+}
+  
+.gray-bottom-block
+{
+  position: absolute;
+  bottom: 70px;
+  left: 30px;
+  height: 112px;
+  width: 813px;
+  background-image: url(../images/gray_box_transparent.png);
+  background-repeat: no-repeat;
+}
+
+.inner-gray-box
+{
+  margin-left: 20px;
+  margin-top: 10px;
+}
+  
+.big-white-text
+{
+  position: relative;
+  bottom: 35px;
+  font-size: 28px;
+  color: #FFFFFF;
+}
+  
+.orange-text
+{
+  color: #E8631B;
+  font-size: 18px;
+  font-weight: bold;
+}
+  
+.single-red-text
+{
+  color: #A71E28;
+  font-size: 16px;
+  margin-top: 30px;
+  margin-left: 30px;
+}
+
+.ital
+{
+  font-style: italic;
+}
+
+.topImage
+{
+  float: right;
+  border:1px solid black;
+  margin-right: 300px;
+  margin-top: -68px;
+  opacity:0.0;
+  filter:alpha(opacity=0);
+}
+
+#provider-summary-front-container {
+  position: relative; 
+  min-height: 480px;
+}
+#provider-summary-front-image {
+  position: absolute; 
+  left: 0px; 
+  top: 0px;
+}
+#provider-summary-front-text {
+  position: absolute; 
+  width: 400px;
+  left: 51px; 
+  top: 90px;
+  z-index: 1000;
+}
+#listofschoolslabel {
+  display: inline; 
+  font-weight: normal;
+}
+#provider-summary-school-name { 
+  font-size: 16px;
+}
+#provider-summary-school-name-div {
+  width: 600px;
+  height: 100px; 
+  display: table-cell; 
+  vertical-align: middle;
+}
+#provider-summary-div {
+  background-image: url(../images/miscellaneous/provider_summary.png);
+  background-repeat: no-repeat;
+  background-size: 957px 92px;
+  height: auto; 
+}
+#provider-summary-school-name-heading-cap {
+  float: left; 
+  height: 100px; 
+  padding-left: 10px; 
+  padding-right: 20px;
+}
+#provider-summary-school-name-heading-cap.img {
+  margin-top: 7px;
+}
+.provider-summary-div-heading {
+   color: #3D3D3D; 
+   margin-left: 10px;
+}
+.provider-summary-button-div {
+  width: 100%; 
+  text-align: center;
+}
+#provider-summary-programs-outer-div { 
+  width: 48%; 
+  margin: 5px 0px 5px 5px; 
+  float : right;	
+  position: relative;
+}
+#provider-summary-school-profile-outer-div { 
+  width: 48%; 
+  margin: 5px 5px 5px 0px;  
+  float : left;
+  position: relative;
+}
+#provider-summary-school-profile-inner-div, #provider-summary-programs-inner-div { 
+  position: relative; 
+  height: auto;  
+}
+.provider-summary-table {
+  width:100%;
+  background-color: #CDCDCD;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  color: #3D3D3D;
+  margin: 0 auto;
+  min-height: 315px;
+}
+.nodata {
+  min-height: 0;
+}
+
+.provider-summary-table th.school-profile {
+   padding: 8px;
+   vertical-align: top; 
+   width: 135px;
+   background-color: #189AB0;
+   color: white;
+   font-weight: bold;
+   border-bottom: 1px solid white;
+   border-right: 1px solid #189AB0;
+   border-top: 1px solid #189AB0;
+   border-left: 1px solid #189AB0;
+}
+.provider-summary-table th.last .school-profile {
+  border-bottom: 1px solid #189AB0;
+}
+.provider-summary-table td.school-profile  {
+  padding: 8px;
+  vertical-align: middle; 
+  border-right: 1px solid #CDCDCD;
+}
+.provider-summary-table td.first {
+  border-top: 1px solid #CDCDCD;
+}
+.provider-summary-table td.odd {
+  background-color: #f0f0f6;
+}
+.provider-summary-table td.even {
+  background-color: #ffffff;
+}
+
+.provider-summary-table th.school-programs {
+  padding: 8px;
+  vertical-align: middle; 
+  text-align: center;
+  background-color: #189AB0;
+  color: white;
+  font-weight: bold;
+  border-bottom: 1px solid #189AB0;
+  border-right: 1px solid white;
+  border-top: 1px solid #189AB0;
+  border-left: 1px solid #189AB0;
+}
+.provider-summary-table tr.school-programs {
+  border-left: 1px solid #CDCDCD;
+}
+.provider-summary-table tr.odd {
+  background-color: #f0f0f6;
+}
+.provider-summary-table tr.even {
+  background-color: #ffffff;
+}
+.provider-summary-table tr.last {
+  border-bottom: 1px solid #CDCDCD;
+}
+.provider-summary-table tr.school-programs td {
+  padding: 8px;
+}
+.provider-summary-table td.awardlevel {
+  width: 40%;
+}
+#provider-programs-table { /*Initially hide to prevent the table from flashing, use jquery.show() to show the table on page load */
+  display: none;
+}
+#provider-programs-data-table {
+  padding-top: 10px;
+}
+#provider-programs-results-div {
+  height: 40px;
+}
+/* 
+*
+* End of Front_page.css  
+*
+**/
+
+/* 
+*
+* vcn_aggregated.css 
+*
+**/
+
+/* tabs for choose a career page */
+
+#imdnlink img,
+#iofclink img,
+#ilablink img,
+#ictplink img,
+#ivshlink img{
+   vertical-align: bottom;
+}
+
+
+/* styles found embedded in vcn healthcare code or blocks */
+
+.copyright-text2 {
+  clear: none;
+  font-size: 12px;
+  text-align: center;
+  width: 960px;
+}
+
+/* styles from vcn healthcare hvcp-aggregated.css */
+
+
+#skip-link,
+#page {
+  font-size: 0.75em; /* 16px x .75 = 12px */
+  font-size: 0.875em; /* 16px x .875 = 14px */
+}
+
+#skip-link a,
+#skip-link a:visited {
+  position: absolute;
+  display: block;
+  left: 0;
+  top: -500px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  text-align: center;
+  background-color: #666;
+  color: #fff;
+}
+
+#skip-link a:hover,
+#skip-link a:active,
+#skip-link a:focus {
+  position: static;
+  width: 100%;
+  height: auto;
+  padding: 2px 0 3px 0;
+}
+
+h1#site-name,
+div#site-name /* The name of the website */ {
+  margin: 0;
+  font-size: 2em;
+  line-height: 1.3em;
+}
+
+#site-name a:link,
+#site-name a:visited {
+  color: #000;
+  text-decoration: none;
+}
+
+#site-name a:hover,
+#site-name a:focus {
+  text-decoration: underline;
+}
+
+.breadcrumb /* The path to the current page in the form of a list of links */ {
+  padding-bottom: 0; /* Undo system.css */
+}
+
+.title {
+    font-size: 16px; 
+}
+
+h1.title, /* The title of the page */
+h2.title, /* Block title or the title of a piece of content when it is given in a list of content */
+h3.title /* Comment title */ {
+  margin: 15px 0 15px 0;
+}
+
+h4.title {
+   display: none;
+}
+
+/* limiting width of the node title, so that it does not overflow on Facebook Like button */
+
+h1.title { /* career detail pages */
+	width: 600px;
+}
+
+h1.title-top /* For Online courses */
+{
+  font-size: 16px;
+  margin: 15px 0 15px 0;
+  
+}
+
+/* end changes for limiting width of node title */
+
+.help /* Help text on a page */ {
+  margin: 1em 0;
+}
+
+.more-help-link /* Link to more help */ {
+  font-size: 0.85em;
+  text-align: right;
+}
+
+ul.links /* List of links */ {
+  margin: 1em 0;
+  padding: 0;
+}
+
+ul.links.inline {
+  margin: 0;
+  display: inline;
+}
+
+ul.links li {
+  display: inline;
+  list-style-type: none;
+  padding: 0 0.5em;
+}
+
+.pager /* A list of page numbers when more than 1 page of content is available */ {
+  clear: both;
+  margin: 1em 0;
+  text-align: center;
+}
+
+.pager a,
+.pager strong.pager-current /* Each page number in the pager list */ {
+  padding: 0.5em;
+}
+
+.feed-icons /* The links to the RSS or Atom feeds for the current list of content */ {
+  margin: 1em 0;
+}
+
+.more-link /* Aggregator, blog, and forum more link */ {
+  text-align: right; /* LTR */
+}
+
+.clearfix:after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+.element-hidden {
+  display: none;
+}
+
+.element-invisible {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+#block-imagemenu-1 {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+#block-imagemenu-1 h2 {
+   display: none;
+}
+
+#block-imagemenu-1 ul.imagemenu li.leaf {
+    list-style-type: none;
+    list-style-image: none;
+    display: inline;
+}
+
+.block /* Block wrapper */ {
+  margin-bottom: 1em;
+}
+
+div.block.with-block-editing {
+  position: relative;
+}
+
+div.block.with-block-editing div.edit {
+  display: none;
+  position: absolute;
+  right: 0; /* LTR */
+  top: 0;
+  z-index: 40;
+  border: 1px solid #eee;
+  padding: 0 2px;
+  font-size: 0.75em;
+  background-color: #fff;
+}
+
+div.block.with-block-editing:hover div.edit {
+  display: block;
+}
+
+.node-unpublished div.unpublished,
+.comment-unpublished div.unpublished /* The word "Unpublished" displayed underneath the content. */ {
+  height: 0;
+  overflow: visible;
+  color: #d8d8d8;
+  font-size: 75px;
+  line-height: 1;
+  font-family: Impact, "Arial Narrow", Helvetica, sans-serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+  word-wrap: break-word; /* A very nice CSS3 property */
+}
+
+.node.node-unpublished .picture,
+.comment.comment-unpublished .picture {
+  position: relative; /* Otherwise floated pictures will appear below the "Unpublished" text. */
+}
+
+.marker /* "New" or "Updated" marker for content that is new or updated for the current user */ {
+  color: #c00;
+}
+
+#comments /* Wrapper for the list of comments and its title */ {
+  margin: 1em 0;
+}
+
+.new /* "New" marker for comments that are new for the current user */ {
+  color: #c00;
+}
+
+.form-item,
+.form-checkboxes,
+.form-radios /* Wrapper for a form element (or group of form elements) and its label */ {
+  margin: 1em 0;
+}
+
+.form-item input.error,
+.form-item textarea.error,
+.form-item select.error /* Highlight the form elements that caused a form submission error */ {
+  border: 2px solid #c00;
+}
+
+.form-item label /* The label for a form element */ {
+  display: block; 
+  font-weight: bold;
+}
+
+.form-item label.option /* The label for a radio button or checkbox */ {
+  display: inline;
+  font-weight: normal;
+}
+
+.form-required /* The part of the label that indicates a required field */ {
+  color: #c00;
+}
+
+.form-item .description /* The descriptive help text (separate from the label) */ {
+  font-size: 0.85em;
+}
+
+.form-checkboxes .form-item,
+.form-radios .form-item /* Pack groups of checkboxes and radio buttons closer together */ {
+  margin: 0.4em 0;
+}
+
+.container-inline div,
+.container-inline label /* Inline labels and form divs */ {
+  display: inline;
+}
+
+.tips /* Tips for Drupal's input formats */ {
+	margin-top:15px;
+	font-size:12px;
+}
+
+#edit-search-theme-form-1-wrapper label /* Label that says "Search this site:" */ {
+  display: none;
+}
+
+#edit-search-block-form-1-wrapper label /* Label that says "Search this site:" */ {
+  display: none;
+}
+
+#search-block-form input.form-submit, #search-form input.form-submit {
+  display: inline;
+  height: 43px;
+  width: 43px;
+  vertical-align: top;
+  /* cursor: pointer;
+  text-indent: -9999px;
+  border: none;
+  background: url('../images/buttons/go_big.png') no-repeat left top;
+  background: url('../images/buttons/go_big.png') no-repeat left top; */
+}
+
+#edit-search-block-form-1 {
+  font-weight: bold;
+  color: #bbbbbb;
+  padding: 10.5px;
+}
+
+#user-login-form {
+  text-align: left; /* LTR */
+}
+
+#user-login-form ul /* OpenID creates a new ul above the login form's links. */ {
+  margin-bottom: 0; /* Position OpenID's ul next to the rest of the links. */
+}
+
+#user-login-form li.openid-link /* The "Log in using OpenID" link. */ {
+  margin-top: 1em;
+  margin-left: -20px; /* LTR */ /* Un-do some of the padding on the ul list. */
+}
+
+#user-login-form li.user-link /* The "Cancel OpenID login" link. */ {
+  margin-top: 1em;
+}
+
+#user-login ul {
+  margin: 1em 0;
+}
+
+#user-login li.openid-link,
+#user-login li.user-link /* The OpenID links on the /user form. */ {
+  margin-left: -2em; /* LTR */ /* Un-do all of the padding on the ul list. */
+}
+
+.sidebar-divider-hr { 
+  border-bottom: 1px solid #808080; 
+  border-top: 0px;  
+  width: 225px; 
+  float: left;
+  margin: 20px 25px 15px 0;
+}
+
+.sidebar-section-title { 
+  font-size: 14px; 
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.typical-requirements-growth-text, .typical-education-similar-careers { 
+  font-size: 12px; 
+  font-weight: bold;
+}
+
+/* Choose a career : 5 main categories section */
+
+.imgA1 { 
+  width: 230px;
+  height: 210px;
+  cursor: pointer;
+  top: 0px; 
+  left: 0px; 
+}
+
+.imgB1 { 
+  z-index: 3; 
+  position: relative; 
+  top: -65px; 
+  left: 150px;
+  cursor: pointer;
+}
+
+.imgC1 { 
+  margin-top: 72px; 
+  left: 75px;  
+} 
+
+.imgC5 { 
+  margin-top: 72px; 
+  left: 540px; 
+} 
+
+.imgC4 { 
+  margin-top: 68px; 
+  left: 306px;  
+} 
+
+.imgC3 { 
+  margin-top: 68px; 
+  left: 305px; 
+} 
+
+.pane-content { 
+  
+}
+
+#blueborder {
+  width: 649px;
+  padding: 10px;
+  background-color: #ffffff;
+  border-top-width: 1px;
+  border-top-color: #189AB0;
+  border-top-style: solid;
+  border-right-width: 1px;
+  border-right-color: #189AB0;
+  border-right-style: solid;
+  border-left-width: 1px;
+  border-left-color: #189AB0;
+  border-left-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #189AB0;
+  border-bottom-style: solid;
+  border-radius: 0px 0px 8px 8px;
+}
+
+
+#blueheader {
+  margin-top: 15px;
+}
+
+.thetabs table{
+  width:100%;
+}
+
+.tabimgtd{
+  align: right;
+  text-align: right;
+  vertical-align: top;
+}
+
+.tabmiddle
+{
+  margin-left: 27px;
+}
+
+.thetabs ul
+{
+  margin: 3px 0px 12px 0px;
+  padding-left: 40px; 
+}
+
+.greybg {
+  background-color: #E5E5E5;
+  color: #000000;
+}
+
+.thetabs {
+  padding: 8px;
+  margin-top: 5px;
+}
+
+.thetabs ul.career-sm-ul {
+	margin: 10px 0px 0px 0px;
+}
+
+.cac-tab-cat-bottom-div {
+  width: 210px;
+  float: left;
+}
+
+.cac-tab-cat-top-div-left {
+  float: left;
+  width: 450px;
+}
+
+.cac-tab-cat-top-div-right {
+  float: right;
+  padding-right: 5px;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.xouter {
+  width: 254px;
+}
+
+.xouter2 {
+  width: 250px;
+}
+
+.xleftcol {
+  float: left;
+  width: 34%;
+}
+
+.xmiddlecol {
+  float: left;
+  width: 33%;
+}
+
+.xrightcol {
+  float:left;
+  width: 33%;
+}
+
+#suggest {
+  text-align: left;
+  margin-left: 39px;
+  padding: 6px 11px 6px 11px;
+  width: 205px;
+  height: 40px;
+}
+
+#careergrid-suggest {
+  float: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-right: 2px;
+  font-size: 10px;
+}
+
+#careergrid-training {
+  position: relative;
+  float: left;
+  width: 410px;
+  margin-left: 0px;
+  margin-right: 10px;
+}
+
+#careergrid-worktype {
+  position: relative;
+  float: left;
+  margin-left: 0px;
+  margin-right: 10px;
+}
+
+#careergrid-suggest {
+  position: relative;
+  float: left;
+  margin-left: 0px;
+  margin-right: 10px;
+}
+
+#careergrid-submit {
+  position: relative;
+  float: left;
+  padding: 0px;
+  margin-left: 0px;
+  margin-right: 2px;
+  font-size: 10px;
+}
+
+.careergrid-selections {
+  margin-left: 2px;
+  margin-right: 7px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  padding-left: 8px;
+  padding-right: 2px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  border: 1px solid #189ab0;
+}
+
+.careergrid-selections-title1 {
+  padding-left: 1px; 
+  padding-top: 3px;
+  padding-bottom: 3px;
+  float: left;
+  width: 415px;
+}
+
+.careergrid-selections-title2{
+  padding-left: 4px; 
+  padding-top: 3px;
+  padding-bottom: 3px;
+  float: left;
+  width: 250px;
+}
+
+.careergrid-selections-title3 {  
+  padding-left: 5px; 
+  padding-top: 3px;
+  padding-bottom: 3px;
+  float: left;
+  width: 240px;
+}
+
+#careergrid-select-hint {
+  padding-top: 0px;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 8px;
+}
+
+.careergrid-col1 {
+  width: 340px;
+}
+
+.careergrid-col2 {
+  width: 120px;
+  text-align: center;
+}
+
+.careergrid-col3 {
+  width: 90px;
+  text-align: center;
+}
+
+.careergrid-col4 {
+  width: 176px;
+}
+
+.careergrid-col5 {
+  width: 176px;
+  text-align: center;
+}
+
+#under-search {
+  border-width:0px; 
+  width:270px; 
+}
+
+.advsearch-input {
+  width: 150px; 
+  height: 16px;
+  font-size: 12px;
+}
+
+.smlink {
+  margin-left: 27px;
+}
+
+/* 
+*
+* End of vcn_aggregated.css  
+*
+**/
+
+/* 
+*
+* occupations_worktypes.css 
+*
+**/
+
+#cac-left {
+  width: 690px;
+  float: left;
+}
+
+#cac-right {
+  width: 270px;
+  text-align: right;
+  float: left;
+}
+
+.cac-search {
+  float: left;
+  padding-right: 4px;
+}
+
+#cac-cma {
+  float: right;
+  width: 230px;
+  margin-top: 20px;
+  margin-left: 20px;
+  font-size: 12px;
+  text-align: center;
+}
+
+#cac-cmatext {
+  padding-left: 15px;
+  text-align: left;
+}
+
+#advancedsearch {
+  text-align: right;
+}
+
+#advancedsearch .form-item {
+  margin: 0px;
+}
+
+/* previously inline styles found in display block */
+
+.lightbox2-alt-layout-data #bottomNavClose {
+  margin-top:0px;
+}
+
+#imageDataContainer {
+  height:0px;
+}
+
+#lightboxFrame {
+  width:1200px; 
+  height:650px;
+}
+
+#bottomNavClose {
+  background-color:#f2f2f2 !important;
+}
+
+#vcnhighlightbuttons {
+  width:270px; 
+  text-align:right;
+  margin-right: 0px;
+  padding-right: 0px;
+}
+
+.vcnhighlightbutton {
+  float:right;
+  width:64px;
+  margin-left: 22px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.clearfloat {
+  clear:both;
+}
+
+.rndcrnr {
+  border-radius: 5px 5px 5px 5px;
+}
+
+.training-filters {
+  text-align: right;
+}
+
+#training-search-container {
+  width:97%;
+}
+
+#suggestions { 
+  background-color: #FFFFFF; 
+  border: 1px solid #558BE3; 
+  color: #000; 
+  font-family: Arial,Helvetica,sans-serif; 
+  font-size: 11px; 
+  margin:0; 
+  padding: 0;     
+}
+
+#suggestions ul {
+  list-style:none; 
+  padding:0; 
+  margin-top:0; 
+  margin-bottom:0;
+}
+
+#suggestions ul li { 
+  padding:5px;
+}
+
+#suggestions ul li:hover { 
+  background:#D5E2FF; 
+}
+		
+.squiggle {
+  background-image:url("squiggle.gif");
+  background-repeat:repeat-x;
+  background-position:left bottom;
+  padding-bottom:2px;
+  vertical-align:text-top;
+  font-style:italic;
+}
+
+.containerline {
+  border:1px solid #a5a5a5;
+  overflow-x: hidden;
+  width: 100%;
+  color: windowtext;
+  background-color: window
+}	
+
+/* 
+*
+* End of occupations_worktypes.css  
+*
+**/
+
+/* 
+*
+* tabs.css 
+*
+**/
+
+div.tabs {
+  margin: 0 0 5px 0;
+}
+
+ul.primary {
+  margin: 0 3px;
+  padding: 0 0 0 10px; /* LTR */
+  border-width: 0;
+  list-style: none;
+  white-space: nowrap;
+  line-height: normal;
+  background: url(../images/tab_images/tab-bar.png) repeat-x left bottom;
+}
+
+ul.primary li {
+  float: left; /* LTR */
+  margin: 0;
+  padding: 0;
+}
+
+ul.primary li a {
+  display: block;
+  height: 33px;
+  margin: 0;
+  padding: 0 0 0 9px; /* width of tab-left.png */
+  border-width: 0;
+  font-weight: bold;
+  text-decoration: none;
+  color: #777;
+  background-color: transparent;
+  background: url(../images/tab_images/tab_top_off_left.png) no-repeat left bottom;
+}
+
+ul.primary li a .tab {
+  display: block;
+  height: 29px; /* 33px (parent) - 4px (padding) */
+  margin: 0;
+  padding: 4px 13px 0 6px;
+  border-width: 0;
+  line-height: 20px;
+  background: url(../images/tab_images/tab_top_off_right.png) no-repeat right bottom;
+}
+
+ul.primary li a:hover,
+ul.primary li.active a,
+ul.primary li.active a:hover {
+  border-width: 0;
+  color: #000;
+  background-color: transparent;
+  background: url(../images/tab_images/tab_top_on_left.png) no-repeat left bottom;
+}
+
+ul.primary li a:hover .tab,
+ul.primary li.active a .tab,
+ul.primary li.active a:hover .tab {
+  background: url(../images/tab_images/tab_top_on_right.png) no-repeat right bottom;
+}
+
+div.secondary-tabs {
+  background: url(../images/tab_images/tab_bar_left_edge.png) no-repeat left bottom;
+}
+
+div.secondary-tabs-inner {
+  background: url(../images/tab_images/tab_bar_right_edge.png) no-repeat right bottom;
+}
+
+ul.secondary {
+  margin: 0 8px;
+  padding: 0 0 0 8px; /* LTR */
+  border-bottom: 1px solid #c0c0c0;
+  list-style: none;
+  white-space: nowrap;
+  background: url(../images/tab_images/tab_bar_center.png) repeat-x left bottom;
+}
+
+ul.secondary li {
+  float: left; /* LTR */
+  margin: 0 5px 0 0;
+  padding: 5px 0;
+  border-right: none; /* LTR */
+}
+
+ul.secondary li a {
+  display: block;
+  height: 27px;
+  margin: 0;
+  padding: 0 0 0 4px;
+  text-decoration: none;
+  color: #777;
+  background: url(../images/tab_images/tab_button_off_left.png) no-repeat left top;
+}
+
+ul.secondary li a .tab {
+  display: block;
+  height: 21px; /* 24px (parent) - 6px (padding) */
+  margin: 0;
+  padding: 3px 8px;
+  line-height: 18px;
+  background: url(../images/tab_images/tab_button_off_right.png) no-repeat right top;
+}
+
+ul.secondary li a.active,
+ul.secondary li a.active:hover {
+  padding: 0 0 0 3px;
+  height: 25px;
+  background: url(../images/tab_images/tab_button_on_left.png) no-repeat left top;
+}
+
+ul.secondary li a.active .tab,
+ul.secondary li a.active:hover .tab {
+  height: 19px; /* 24px (parent) - 6px (padding) */
+  color: #000;
+  background: url(../images/tab_images/tab_button_on_right.png) no-repeat right top;
+}
+
+ul.tertiary {
+  margin: 0 4px;
+  padding: 0 0 0 5px; /* LTR */
+  border-top: 1px solid #c0c0c0;
+  list-style: none;
+  white-space: nowrap;
+}
+
+ul.tertiary li {
+  float: left; /* LTR */
+  margin: 0 5px 0 0;
+  padding: 0;
+  border-right: none; /* LTR */
+}
+
+ul.tertiary li a {
+  display: block;
+  height: 24px;
+  margin: 0;
+  padding: 0 0 0 6px; /* width of tab-left.png */
+  border-width: 0;
+  font-weight: bold;
+  text-decoration: none;
+  color: #777;
+  background-color: transparent;
+  background: url(../images/tab_images/tab_bottom_off_left.png) no-repeat left top;
+}
+
+ul.tertiary li a .tab {
+  display: block;
+  height: 20px; /* 24px (parent) - 4px (padding) */
+  margin: 0;
+  padding: 0 13px 4px 6px;
+  border-width: 0;
+  line-height: 20px;
+  background: url(../images/tab_images/tab_bottom_off_right.png) no-repeat right top;
+}
+
+ul.tertiary li a:hover,
+ul.tertiary li.active a,
+ul.tertiary li.active a:hover {
+  border-width: 0;
+  color: #000;
+  background-color: transparent;
+  background: url(../images/tab_images/tab_bottom_on_left.png) no-repeat left top;
+}
+
+ul.tertiary li a:hover .tab,
+ul.tertiary li.active a .tab,
+ul.tertiary li.active a:hover .tab {
+  background: url(../images/tab_images/tab_bottom_on_right.png) no-repeat right top;
+}
+
+/* 
+*
+* End of tabs.css  
+*
+**/
+
+/* 
+*
+* Progressbar
+*
+**/
+
+.progressBarLeftEndCap {
+  background-image: url('../images/endcap_gray.png');
+  background-repeat: no-repeat;
+  float: left;
+  height: 40px
+}
+
+.progressBarLeftEndCapSelected {
+  background-image: url('../images/endcap_blue.png');
+  background-repeat: no-repeat;
+  float: left;
+  height: 40px;
+}
+
+.progressBarSelectedItem {
+  background-image: url('../images/line_blue.png');
+  float: left;
+  height: 38px;
+  padding-top: 2px;
+}
+
+.progressBarNonselectedItem {
+  background-image: url('../images/line_gray.png');
+  float: left;
+  height: 38px;
+  padding-top: 2px;
+}
+  
+.progressBarCurrentItem {
+  background-image: url('../images/background_green.png');
+  float: left;
+  height: 38px;
+  padding-top: 2px;
+}
+  
+.verticalCenterText {
+  font-size: small;
+  height: 40px;
+  padding-top: 10px;
+}
+
+.progressBarTopText {
+  color: black;
+  font-size: small;
+  text-align: center;
+}
+  
+.middleText {
+  color: white;
+  height: 30px;
+  font-size: 11px;
+  line-height: 11px;
+  font-weight: bold;
+  margin-right: 5px;
+  text-align: center;
+  text-decoration: none;
+  display:table-cell; 
+  vertical-align:middle;
+}
+
+  
+.progressBarBottomText {
+  color: white;
+  font-size: 11px;
+  width: 75px;
+  line-height: 11px;
+  font-weight: bold;
+  margin-right: 5px;
+  text-align: center;
+}
+  
+.progressBarSelectedToNonselected {
+  background-image: url('../images/blue_to_gray.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarSelectedToSelected {
+  background-image: url('../images/blue_to_blue.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarSelectedToCurrent {
+  background-image: url('../images/blue_to_green.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarCurrentToSelected {
+  background-image: url('../images/green_to_blue.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarCurrentToNonselected {
+  background-image: url('../images/green_to_grey.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarNonselectedToNonselected {
+  background-image: url('../images/gray_to_gray.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarNonselectedToSelected {
+  background-image: url('../images/gray_to_blue.png');
+  float: left;
+  height: 40px;
+  width: 39px;
+}
+
+.progressBarRightEndCapNonselected {
+  background-image: url('../images/arrowhead_gray.png');
+  float: left;
+  height: 40px;
+  width: 29px;
+}
+
+.progressBarRightEndCapSelected {
+  background-image: url('../images/arrowhead_blue.png');
+  float: left;
+  height: 40px;
+  width: 29px;
+}
+
+.progressBarRightEndCapCurrent {
+  background-image: url('../images/endcap_green.png');
+  float: left;
+  height: 40px;
+  width: 28px;
+}
+
+.progressBarContainer {
+  margin-top: 60px;
+  height: 40px;
+  width: 960px;
+  padding-left: -100px;
+}
+
+/* 
+*
+* End of Progressbar css  
+*
+**/
+
+/*
+* Css related to Online courses 
+*
+*/
+
+.indentonline {
+  padding-left: 15px;
+}
+
+.courses-listing-title /* Also in resources page */
+  {
+  font-size: 16px;
+  font-family: arial, helvetica, sans-serif;
+  font-weight: bold;
+  border: 1px solid black;
+  background-color: #0099AF;
+  color: white;
+  padding-left: 20px;
+}
+
+#vcn-healthcare .courses-listing-title {
+  background-color: #0099AF;
+}
+
+#vcn-igen .courses-listing-title {
+  background-color: #4e968a;
+}
+
+.courses-listing-detail {
+  padding-left: 30px;
+}
+
+.courses-detail-title {
+  font-weight: bold;
+  padding: 10px 10px;
+}
+
+.courses-listing-desc {
+  margin-left:25px;
+}
+
+.courses-state-inactive {
+  color:gray;
+}
+.strong {
+  font-weight: bold;
+}
+
+.font-size-10 {
+  font-size: 10px;
+}
+  
+.courses-subject-title {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  list-style-type: none;
+  margin-left: 45px;
+}
+ 
+.courses-listing-ul li {
+  margin-left: 80px; 
+  margin-bottom: 15px;
+}
+
+.block ul.courses-listing-ul, .item-list ul.courses-listing-ul {
+  margin: 0px;
+  padding: 0px;
+}
+
+.block #hitleft ul, .item-list #hitleft ul,
+.block #hitright ul, .item-list #hitright ul {
+  padding: 0px 0px 0px 4em;
+}
+
+#hitleft {
+  width: 47%; 
+  background-color: #d0e5ea; 
+  padding: 10px; 
+  border: 2px solid #ffffff; 
+  vertical-align: top;
+}
+
+#hitright {
+ width: 47%; 
+ background-color: #e5f2c6; 
+ padding: 10px; 
+ margin-left: -2px; 
+ border: 2px solid #ffffff; 
+ vertical-align: top;
+}
+
+#hitleft li, #hitright li {
+  margin-bottom: 10px;
+}
+
+.courses-hit-centertext {
+  font-weight:bold;
+  text-align:center;
+}
+
+.nodot
+  {
+  list-style-type: none;
+  }
+
+/*
+* Online courses end
+*
+*/
+
+/*
+* top 10 by xyz
+*/
+
+/* 
+* This are temporary classes to hide header footer for getting started top10byxyz popups 
+*/
+.page-top10byjobs-careerguide, .page-top10bygrowth-careerguide, .page-top10bypay-careerguide {
+  margin:35px;
+}
+.page-top10byjobs-careerguide div, .page-top10bygrowth-careerguide div, .page-top10bypay-careerguide div {
+  width:600px;
+}
+
+/* 
+* Temporary classes to hide header footer for getting started top10byxyz popups END 
+*/
+
+table.top10data {
+  width:650px;
+  border-width: 1px;
+  border-spacing: 0px;
+  border-style: solid;
+  border-color: gray;
+  background-color: white;
+}
+table.top10data th {
+  border-width: 1px;
+  padding: 10px;
+  border-style: solid;
+  border-color: white;
+  background-color: #189AB0;
+  color: white;
+  /*-moz-border-radius: ;*/
+  text-align: center;
+}
+#vcn-healthcare table.top10data th {
+  background-color: #189AB0;	
+}
+#vcn-igen table.top10data th {
+  background-color: #4E968A;	
+}
+table.top10data td {
+  border-width: 1px;
+  padding: 5px;
+  border-style: solid;
+  border-color: white;
+ /* -moz-border-radius: ;*/
+}
+.top10evenrows {
+  background: #d6d6d6;
+}
+.top10source {
+  font-size:9pt;
+}
+.top10td {
+  width: 100px;
+  text-align: center;
+}
+		  
+/*
+* top 10 by xyz end
+*/
+
+
+/*
+* Onet Assessment (Profiler)
+*/
+#profiler-iptable-outer-container {
+  width: 100%;
+  text-align: center;
+}
+#profiler-iptable {
+  border-color: gray; 
+  background-color: #CDCDCD;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  color: #3D3D3D;
+  margin: 0 auto;
+}
+.profiler-iptable-header {
+  background-color: #189AB0;
+  color: white;
+  font-size: 10pt;
+}
+.profiler-iptable-td-head {
+  border-right: 1px solid #FFFFFF;
+  padding: 4px;
+  text-align: center;
+}
+.profiler-iptable-index-head {
+  width: 25px;
+}
+.profiler-iptable-answer-head {
+  width: 70px;
+}
+.profiler-iptable-question-head {
+  width: 25px;
+}
+.profiler-iptable-tr-body-odd, .profiler-iptable-tr-body-even {
+  border-bottom: 0px solid #eee;
+  text-align: center;
+  font-size: 9pt;
+}
+.profiler-iptable-tr-body-odd {
+  background-color: #FFFFFF;
+}
+.profiler-iptable-tr-body-even {
+  background-color: #F0F0F6;
+}
+.profiler-iptable-tr-body-highlight {
+	background-color: #F4DEDE;
+}
+.profiler-iptable-td-body {
+  padding: 4px;
+}
+.profiler-iptable-index-body {
+  width: 25px;
+}
+.profiler-iptable-answer-body {
+  width: 30px;  
+}
+.profiler-iptable-question-body {
+  text-align: left;
+}
+.profiler-iptable-type-realistic {
+  background-color: #B8D9C3;
+}
+.profiler-iptable-type-investigative {
+  background-color: #E5BED3;  
+}
+.profiler-iptable-type-artistic {
+  background-color: #FCFCB3;  
+}
+.profiler-iptable-type-social {
+  background-color: #C6B8D9;  
+}
+.profiler-iptable-type-enterprising {
+  background-color: #F2D3B5;  
+}
+.profiler-iptable-type-conventional {
+  background-color: #BFDAD6;  
+}
+#profiler-iptable-submit {
+	width: 100%;
+	text-align: center;
+}
+.profiler-result-outer-container {
+	width: 900px;
+	margin: 0 auto;
+}
+.profiler-result-inner-container-left {
+	float: left; 
+	width: 130px;
+}
+.profiler-result-inner-container-right {
+	float: left; 
+	width: 700px;
+}
+.profiler-result-career-image {
+	width: 100px;
+}
+.profiler-details-outer-container {
+	width: 900px;
+	margin: 0 auto;
+}
+.profiler-details-inner-container-left {
+	float: left; 
+	width: 650px;
+}
+.profiler-details-inner-container-right {
+	float: right; 
+	width: 250px;
+	text-align: right;
+	position: relative;
+	top: 20px;
+}
+.profiler-onet-logo {
+  float: right;	
+}
+.profiler-alternate-color {
+	background-color: #727272;
+}
+.profiler-info-container-outer {
+	position: relative;
+}
+.profiler-info-container-left {
+	position: absolute; 
+	top: 0; 
+	bottom: 0; 
+	left: 0; 
+	width: 20px;
+}
+.profiler-info-container-right {
+	margin: 0 0 0 30px;
+}
+/* 
+* This is a temporary class to hide header footer for getting started popup 
+*/
+.page-interest-profiler-lightbox #content, .page-interest-profiler-results-lightbox #content {
+  overflow-y: scroll;
+  height: 670px;  
+  width:990px;
+}
+
+/*
+* Onet Assessment (Profiler) end
+*/
+
+/*
+* FAQ/Help
+*/
+.faq-video-play, .faq-video-play option{
+  background: url('../images/buttons/play-small.png') no-repeat; 
+  padding-left:20px;
+}
+/*
+* FAQ/Help End
+*/
+
+/*
+* Office Locator
+*/
+#office-locator .form-item label, #office-locator #edit-zip, #office-locator #edit-submit {
+  float:left;
+  font-weight: normal;
+  margin: 0px 10px 0px 0px;
+}
+
+div#office-locator-list > div {
+  float: left;
+  width:295px;
+  margin-right:20px;
+}
+
+#office-locator .form-item label {
+  position:relative;
+  top:10px;
+}
+
+#office-locator #edit-zip {
+  position:relative;
+  top:9px;
+}
+
+#office-locator #edit-submit {
+  position:relative;
+  top:8px;
+}
+
+#office-locator .form-required {
+  display: none;
+}
+
+#office-locator-list .strong{
+  text-decoration: underline;	
+}
+
+
+#office-locator a.extlink {
+  margin: 0px;
+}
+
+.office-locator-contact-method {
+  color: red;
+}
+/*
+* Office Locator End
+*/
+
+/*
+* Resources
+*/
+#resources a.extlink {
+    margin: 0 0 0 0px;
+}
+
+#resources li {
+padding-top: 3px;
+padding-bottom: 3px;
+}
+
+.resources-title {
+  padding-left:25px;
+}
+
+.courses-listing-title-right-hint {
+  float: right;
+  font-size:11px;
+  padding-right:5px;
+}
+
+#resources .smlink{
+  margin-top: -15px;
+}
+
+/*
+* Resources End
+*/
+
+/*
+* Match Your Education to Careers
+*/
+
+/* 
+* This are temporary classes to hide header footer for getting started educationmatch popups 
+*/
+.page-educationmatch-careerguide #content{
+  overflow-y: scroll;
+  height: 670px;  
+  width:990px;
+}
+
+/* 
+* Temporary classes to hide header footer for getting started educationmatch popups END 
+*/
+
+#grey-match-box {
+  border:1px solid #189AB0;
+  padding: 10px;
+  background-color: #d8d8d8;
+  width: 937px;
+  height:45px;
+}
+
+.match-box {
+  width: 420px; 
+  float: left; 
+  padding-bottom: 3px; 
+}
+
+.match-box-title {
+  width: 450px; 
+  float: left; 
+  padding-bottom: 3px; 
+}
+
+.match-select{
+  width:405px; 
+  height:23px; 
+  border: 1px solid #189AB0;
+}
+
+.match-box-button {
+  float: left;
+  margin-top: -5px;
+  margin-top: -3px\9; /* IE 8 and below */
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) { /*Chrome specific css*/
+	.match-box-button input{
+	  position: relative;
+	  top:-2px;
+	}
+}
+/*
+* Match Your Education to Careers End
+*/
+
+/*
+* Sitemap
+*/
+.sitemap a.extlink {
+  margin: 0px;
+}
+/*
+* Sitemap End
+*/
+
+/*
+* Community groups
+*/
+#communitygroups a.extlink {
+  margin: 0px;
+}
+/*
+* Community groups End
+*/
+
+/*
+* tool-kit
+*/
+.tool-kit ul {
+  padding: 0px;
+}
+
+.vcn-toolkit-select{
+  margin-bottom: -1px;
+}
+
+#vcn-toolkit-logo, #vcn-toolkit-providerlogo {
+    border:1px solid gray; 
+    overflow-x: hidden;
+    padding: 5px;
+    text-align: left;
+    width: 600px;
+    word-wrap: break-word;
+}
+
+/*
+* tool-kit End
+*/
+
+/*
+* find learning static pages/drupal basic nodes 
+*/
+
+.find-learning-actinfo-margin{
+  margin-left: 10px;
+}
+
+.find-learning-actinfo-table{
+  border: 0px;
+  width:528px;
+  border-collapse: collapse;
+  padding: 1px;
+}
+
+.find-learning-actinfo-table td{
+  text-align: center;
+}
+
+.find-learning-actinfo-title-tr td{
+  color: white;
+  font-weight: bold;
+  width:34%;
+  background-color: rgb(0, 153, 176);
+}
+
+.find-learning-actinfo-blue-tr td{
+  text-align: center;
+  background-color: rgb(154, 192, 205); 
+  border-color: rgb(255, 255, 255);
+}
+
+.compass-description-table {
+  border: 0px;
+  width: 523px;
+}
+
+.find-learning-financialaid-left{
+  float: left;
+  width:70%;
+  margin-right:2%;
+  margin-bottom: -40px;
+}
+
+.find-learning-financialaid-left dd {
+  margin-top: 5px;
+  margin-bottom: 45px;
+}
+
+.find-learning-financialaid-right{
+  float: left;
+  width:28%;
+}
+
+.find-learning-table.find-learning-right th {
+    background: none repeat scroll 0 0 #A71E28;
+    border: 1px solid #666666;
+    color: #FFFFFF;
+    padding: 15px;
+}
+
+.find-learning-table.find-learning-right td {
+    background: none repeat scroll 0 0 #F2D8D8;
+    border: 1px solid #666666;
+    padding: 10px 15px;
+}
+
+.find-learning-financialaid-bottom a.extlink {
+  margin: 0px;
+}
+
+ul.find-learning-resources {
+    margin: 0;
+    padding: 0 5px 0 10px;
+    width: 100%;
+}
+ul.find-learning-resources li {
+    padding: 0 10px 10px;
+}
+
+.job-corps-training-table {
+  border-collapse: collapse;
+  border: 0;
+  padding: 3px;
+  width: 957px;
+}
+
+.job-corps-training-table td {
+  border-collapse: collapse;
+  padding: 3px;   
+}
+
+.job-corps-center-table {
+  border: 0;
+  cellpadding:0;
+  cellspacing:0;
+  width: 758pt;
+}
+
+.job-corps-center-td {
+  height: 5.0pt;
+}
+
+.job-corps-center-title-td, .job-corps-training-table p {
+  color: #a52a2a;
+}
+
+.job-corps-center-table .corps1{
+  width: 151pt;	
+  height: 5.0pt;
+}
+
+.job-corps-center-table .corps2{
+  width: 246pt;	
+}
+
+.job-corps-center-table .corps3{
+  width: 235px;	
+}
+
+/*
+* find learning static pages/drupal basic nodes end
+*/
+
+/*
+* get qualified/find learning - school detail 
+*/
+#school-profile a.extlink {
+    margin: 0;
+}
+
+hr.divider {
+    background: none repeat scroll 0 0 #DDDDDD;
+    border: medium none;
+}
+
+#school-profile iframe { 
+  float: right; /* Facebook like button css */
+}
+
+#school-profile {
+  margin-top:20px;
+}
+
+#school-profile-top {
+  
+}
+
+#school-profile h1.title {
+  margin:0px;
+  width: 100%;
+}
+
+#school-profile-top-title {
+  float: left;
+  width:82%;  
+}
+
+#school-profile-top-image {
+  float: right;
+  width:16%;
+}
+
+#school-profile-top-desc > div, #school-profile-bottom > div {
+  margin-bottom: 10px;
+}
+
+#school-profile-bottom > div div {
+  line-height: 18px;
+}
+
+#school-profile-bottom > div > div:first-child {
+  width:25%;
+}
+
+.school-profile-tabs-body {
+  line-height: 18px;
+}
+
+.school-profile-tabs-detail {
+  width: 100%;
+}
+.school-ent-test div, .school-cost div, .school-fees div, .school-required-courses div {
+  float: left;
+  width: 20%;
+  text-align: right; 
+  padding-right: 10px;
+}
+
+.school-required-courses div:first-child {
+  width: 320px;
+  text-align: left;  
+}
+
+.school-ent-test div:first-child,
+.school-cost div:first-child,
+.school-fees div:first-child, .school-fees div:first-child + div {
+  text-align: left;
+  font-weight: bold;
+}
+
+.school-student-demo div {
+  float: left; 
+  width:10%;  
+}
+
+.school-student-demo div:first-child {
+  text-align: left;
+  font-weight: bold;
+  width: 30%;
+}
+
+#school-profile-tabs {
+  width: 100%;
+}
+
+.school-list-item {
+  display: list-item;
+  margin-left: 20px;
+}
+
+/*
+* get qualified/find learning - school detail end
+*/
+
+/*
+* get qualified/find learning - program detail 
+*/
+#program-detail a.extlink {
+    margin: 0;
+}
+
+#program-detail iframe { 
+  float: right; /* Facebook like button css */
+}
+
+#program-detail {
+  margin-top:20px;
+}
+
+#program-detail h1.title {
+  margin:0px;
+  width: 100%;
+}
+
+#program-save-target, #license-save-target, #certification-save-target {
+    float: right;
+}
+
+.program-button {
+  width:100px;
+  font-size:12px;
+  text-align: right;
+  float:right;
+  margin-left: 5px;
+}
+
+#program-top-title {
+  width: 75%;
+  float:left;
+}
+
+.program-button > div:first-child {
+  padding-top: 5px;
+  padding-top: 2px\9; /* IE 8 and below */
+  width: 10%;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) { /*Chrome specific css*/
+  .program-button > div:first-child {    
+    padding-top: 2px;   
+  }
+}
+
+.program-button > div {
+  float: left;
+  width: 90%;
+}
+
+.program-button.save-icon > div:first-child {
+  padding-top: 7px;
+}
+
+.program-req {
+  width: 80%;
+}
+.program-edu-req div {
+  float: left;
+  width: 20%;
+  text-align: right; 
+  padding-right: 10px;
+}
+
+.program-edu-req div:first-child {
+  text-align: left;
+  font-weight: bold;
+  width: 30%;
+}
+
+#program-detail #school-profile-bottom > div div:first-child + div {
+   width: 70%;
+}
+
+#program-detail .pro-required-courses div {
+  float: left;
+  width: 20%;
+  text-align: right; 
+  padding-right: 10px;
+}
+
+#program-detail .pro-required-courses div:first-child {
+  width: 45%;
+  text-align: left;  
+}
+
+#program-detail #school-profile-bottom > div > div:first-child {
+  width:auto;
+}
+
+/*
+* get qualified/find learning - program detail end
+*/
+
+/*
+* get qualified/find learning - certification detail 
+*/
+
+
+#certification-detail iframe { 
+  float: right; /* Facebook like button css */
+}
+
+#certification-detail {
+  margin-top:20px;
+}
+
+#certification-detail h1.title {
+  margin:0px;
+  width: 100%;
+}
+
+.certification-button {
+  width:100px;
+  font-size:12px;
+  text-align: right;
+  float:right;
+  margin-left: 5px;
+}
+
+#certification-top-title {
+  width: 75%;
+  float:left;
+}
+
+.certification-button > div:first-child {
+  padding-top: 5px;
+  padding-top: 2px\9; /* IE 8 and below */
+  width: 10%;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) { /*Chrome specific css*/
+  .certification-button > div:first-child {    
+    padding-top: 2px;   
+  }
+}
+
+.certification-button > div {
+  float: left;
+  width: 90%;
+}
+
+.certification-button.save-icon > div:first-child {
+  padding-top: 7px;
+}
+
+#certification-detail a.extlink {
+  margin: 0px 0px 0px 0px;
+}
+
+/*
+* get qualified/find learning - certification detail end
+*/
+
+/*
+* get qualified/find learning - certification detail 
+*/
+
+
+#license-detail iframe { 
+  float: right; /* Facebook like button css */
+}
+
+#license-detail {
+  margin-top:20px;
+}
+
+#license-detail h1.title {
+  margin:0px;
+  width: 100%;
+}
+
+.license-button {
+  width:100px;
+  font-size:12px;
+  text-align: right;
+  float:right;
+  margin-left: 5px;
+}
+
+#license-top-title {
+  width: 75%;
+  float:left;
+}
+
+.license-button > div:first-child {
+  padding-top: 5px;
+  padding-top: 2px\9; /* IE 8 and below */
+  width: 10%;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) { /*Chrome specific css*/
+  .license-button > div:first-child {    
+    padding-top: 2px;   
+  }
+}
+
+.license-button > div {
+  float: left;
+  width: 90%;
+}
+
+.license-button.save-icon > div:first-child {
+  padding-top: 7px;
+}
+
+#license-detail a.extlink {
+  margin: 0px 0px 0px 0px;
+}
+
+/*
+* get qualified/find learning - license detail end
+*/
+
+/*
+* Provider program detail edit
+*/
+.program-detail-edit #program-top-title{
+  width: 82%;
+}
+/*
+.program-top-input, .program-top-select {
+  margin-bottom: 10px;
+}
+
+.program-top-select select {
+  width:389px;
+  height: 23px;
+}
+
+.program-top-select select:focus { 
+  width:auto ;
+  position:relative ;
+}
+@-moz-document url-prefix() { 
+  .program-top-select select {
+ 	 width:386px;
+	}
+}
+*/
+.program-detail-edit #program-bottom input, .program-detail-edit #program-bottom select, .program-detail-edit #program-bottom textarea {  
+  box-sizing:content-box;  
+  -moz-box-sizing:content-box;
+  -webkit-box-sizing:content-box; 
+  width:702px;
+}
+
+.program-detail-edit #program-bottom textarea {
+  resize: none;
+}
+
+.program-detail-edit .grippie {
+  display: none;
+}
+
+.program-detail-edit #program-bottom select {
+  width:705px;
+  height: 21px;
+}
+
+#program-top-title div, #program-bottom > div {
+  margin-bottom: 10px;
+}
+
+.program-detail-edit .form-item {
+  margin: 0px;
+}
+
+.program-top-buttons {
+  float: right; 
+  width: 18%;
+}
+
+.program-top-buttons div {
+    text-align: right;
+    margin-bottom:10px;
+}
+
+.program-edit-buttons input {
+  width:150px;  
+}
+
+.program-detail-edit #program-bottom .program-contact input {
+  width:280px;
+  margin-right: 10px
+}
+/*
+* Provider program detail edit End
+*/
+
+/* 
+* vcn-tabs css  
+*/
+
+.vcn-tabs-blueheader {
+  height: 35px;
+}
+
+.sptext { 
+  font-size:10px;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  display: table-cell; 
+  vertical-align: middle; 
+  height: 35px;
+  padding-left:5px;
+  padding-right:8px;
+}
+
+.spimg {  
+  display: table-cell; 
+  vertical-align: middle; 
+  height: 35px;
+  cursor: pointer; 
+}
+
+.spimg img {
+  height: 45px;
+}
+
+#vcn-tabs-blueborder {  
+  padding: 10px;
+  background-color: #ffffff;
+  border: 1px solid #189AB0;
+  border-radius: 0px 0px 8px 8px;
+}
+
+#vcn-igen #vcn-tabs-blueborder {
+  border: 1px solid #4E968A;
+}
+
+.vcn_tabs-links {
+  float: left;
+  cursor: pointer;
+}
+.vcn-tabs-on-left {
+  background-image: url(../images/tab_images/tab_on_left_vcn.png);
+  background-repeat: no-repeat;
+  width: 4px;
+  height: 35px;
+  float: left; 
+}
+.vcn-tabs-on {
+  color: #fff;
+  background-image: url(../images/tab_images/tab_on_middle_vcn.png);
+  background-repeat: repeat-x;  
+  height: 35px;
+  display: block;
+  float: left;
+}
+.vcn-tabs-on-right {
+  background-image: url(../images/tab_images/tab_on_right_vcn.png);
+  background-repeat: no-repeat;
+  width: 4px;
+  height: 35px;
+  float: left; 
+}
+.vcn-tabs-off-left {
+  background-image: url(../images/tab_images/tab_off_left.png);
+  background-repeat: no-repeat;
+  width: 4px;
+  height: 35px;
+  float: left; 
+}
+
+.vcn-tabs-off {
+  color: #fff;
+  background-image: url(../images/tab_images/tab_off_middle.png);
+  background-repeat: repeat-x;  
+  height: 35px;
+  display: block;
+  float: left;
+}
+
+.vcn-tabs-off-right {
+  background-image: url(../images/tab_images/tab_off_right.png);
+  background-repeat: no-repeat;
+  width: 4px;
+  height: 35px;
+  float: left; 
+}
+
+.vcn-tabs-with-image {
+  height: 55px;
+}
+
+.tabhide{
+  display: none;
+}
+
+.tabshow{
+  display: block;
+}
+
+.floatleft {
+  float: left;
+}
+
+.floatright {
+  float: right;
+}
+/* 
+* vcn-tabs css end 
+*/
+
+/* 
+* provider profile 
+*/
+.align-center { 
+  text-align: center;
+}
+
+.provider-profile form tbody {
+  border: 0px;
+}
+
+.provider-profile .form-item, .provider-profile .form-checkboxes, .provider-profile .form-radios {
+  margin: 0px;
+}
+
+.entrance-tests-form div div {
+  float: left;
+  width: 30%;
+  margin: 5px 0px; 
+}
+
+.required-courses-form div div {
+  float: left;
+  width: 22%;
+  margin: 5px 0px; 
+}
+
+.entrance-tests-form div div:first-child + div + div + div, .required-courses-form div div:first-child + div + div + div + div {
+  width: 8%; 
+}
+
+.entrance-tests-form input, .required-courses-form input {
+  width: 90%;
+}
+
+.no-margin{
+  margin: 0px;
+}
+
+.provider-input-div div {
+  margin-right:10px;
+}
+
+.provider-profile .filter-wrapper, .provider-profile .grippie {
+  display: none;
+}
+
+.provider-profile #school-profile-bottom > div > div:first-child {
+  width: 100%;
+}
+
+.provider-profile .form-textarea-wrapper textarea {
+  width: 725px;
+  resize: none; 
+}
+
+.provider-profile #edit-provider-state {
+  width: 168px;
+  height: 23px;
+  width: 166px\9; /* IE 8 and below */
+  height: 21px\9; /* IE 8 and below */
+}
+
+#edit-provider-logo {
+  width: 100%;
+}
+
+.provider-profile input.error,
+.provider-profile textarea.error,
+.provider-profile select.error /* Highlight the form elements that caused a form submission error */ {
+  border: 2px solid #c00;
+}
+
+/* 
+* provider profile end 
+*/
+
+/*
+* Career Ladder/Pathway 
+*/
+#career-ladder-by-wroktype {
+  text-align: center;
+}
+
+#career-ladder-by-onetcode {
+  background-color: white;
+}
+
+#ladder-left {
+  float:left; 
+  width:800px; 
+  text-align: center;
+}
+
+#ladder-right {
+  float:left; 
+  width:120px; 
+  padding-left: 10px; 
+  padding-top: 2px;
+  border-left:2px solid #000000;
+}
+/*
+* Career Ladder/Pathway
+*/
+
+/*
+* Debug mode
+*/
+.node-text-highlight {
+ border: 2px solid #ff0000;
+ background-color: yellow;
+}
+/*
+* Debug mode end
+*/
+
+/*
+* find a job static pages/drupal basic nodes 
+*/
+
+.findjobs-container td {
+  border-collapse: collapse;
+  padding: 3px; 
+  width: 120px;  
+}
+
+.findwork-research-employers-table {
+  border-collapse: separate\9; /* IE 8 and below */
+  width: 864px; 
+}
+
+.findwork-research-employers-th {
+  background-color: rgb(24, 154, 176);
+  color: rgb(255, 255, 255);
+}
+
+.findajob-int-table { 
+  width: 831px; 
+  height: 1691px; 
+  border-color: white;  
+  border-collapse:collapse;  
+  border:1px solid #ffffff;
+}
+
+.findajob-int-th { 
+  width: 97px; 
+  background-color: rgb(24, 154, 176); 
+  text-align: center; 
+  border-color: white;
+  color: white;
+}
+
+.findajob-int-td-white { 
+  width: 97px; 
+  background-color: rgb(255, 255, 255); 
+  border-color: white;
+}
+
+.findajob-int-td-grey { 
+  width: 97px; 
+  background-color: rgb(214, 214, 214); 
+  border-color: white;
+}
+/*
+* find a job static pages/drupal basic nodes end
+*/
+
+/* Find a work page */
+
+#findwork-main-content {
+	width: 665px;
+	padding: 0 10px 0 5px;
+	float: left;
+}
+
+#findwork-right-sidebar {
+	width: 265px;
+	padding: 30px 0 0 15px;
+	float: left;
+}
+
+.findwork-page-title, #findwork-job-search-help, #findwork-employer-help {
+	font-weight: bold;
+	font-size: 16px;
+}
+
+.findwork-description-highlight-words {
+	font-weight: bold;
+}
+
+#findwork-submit-form {
+	border: 1px solid #189AB0;
+	-moz-border-radius: 5px; 
+	-webkit-border-radius: 5px; 
+	border-radius: 5px;
+	padding: 5px 0 0 10px;
+}
+
+#findwork-submit-form-career {
+	height: 50px;
+}
+
+#findwork-submit-form-job-search {
+	height: 50px;
+}
+
+#findwork-submit-form-distance .form-item label, #findwork-submit-form-zipcode .form-item label {
+	display: inline;
+}
+
+#findwork-submit-form-zipcode, #findwork-submit-form-distance {
+	float: left;
+}
+
+#findwork-submit-form-distance {
+	width: 200px;
+}
+
+#findwork-submit-form-zipcode {
+	width: 190px;
+}
+
+#findwork-submit-form-career #edit-careers, #findwork-submit-form-job-search #edit-search-by-job-title {
+	width: 640px;
+}
+
+#findwork-submit-form-seperator {
+	padding: 5px auto;
+	width: 30px;
+	height: 15px;
+	font-weight: bold;
+	margin: auto;
+	padding: 15px 0 0 0;
+}
+
+.findwork-hr {
+	width: 640px;
+	border-top: 1px solid #A8A8A8;
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
+}
+
+#find-jobs-results-header {
+	font-size: 16px;
+	font-weight: bold;
+}
+
+#findworkresults-submit-form-leftbox .form-item-zipcode {
+	float: left;
+	width: 90px;
+}
+
+#findworkresults-submit-form-leftbox .form-item-distance {
+	float: left;
+	width: 90px;	
+}
+
+#findworkresults-submit-form-leftbox .form-item label {
+	width: 90px;
+}
+
+#findworkresults-submit-form-leftbox, #findworkresults-submit-form-middlebox  {
+	float: left;
+}
+
+#findworkresults-submit-form-leftbox {
+	width: 200px;
+	margin: 0 0 0 5px;
+}
+
+#findworkresults-submit-form-middlebox {
+  width: 670px;
+}
+
+#findworkresults-submit-form-rightbox {
+	width: 55px;
+	float: left;
+	margin: 25px 5px 0 0;
+}
+
+#findworkresults-submit-form-middlebox-careers #edit-careers {
+	width: 385px;
+	float: left;
+	white-space: nowrap;
+}
+
+#findworkresults-submit-form-middlebox-job-title #edit-search-by-job-title {
+	width: 240px;
+	float: left;
+}
+
+#findworkresults-submit-form-submit #edit-search-by-job-title {
+	margin: 10px 0 0 0;
+}
+
+#findworkresults-submit-form-submit {
+  width: 60px;
+  float: left;
+  margin: 26px 0px 0px 10px;
+}
+
+
+#findwork-submit-form-career .vcnfindwork-submit-button, #findwork-submit-form-job-search .vcnfindwork-submit-button {
+	margin: 25px 0 0 15px;
+}
+
+.form-item-search-by-job-title, .form-item-careers {
+  float: left;
+}
+
+#findwork-right-sidebar a.extlink {
+	margin: 0px
+}
+
+#findworkresults-submit-form-searchboxes-wrapper {
+	margin: 10px 0 0 0;
+	padding: 0 5px 0 5px;
+	border: 1px solid #189AB0;
+}
+
+#findwork-results-data-table {
+	margin: 20px 0 0 0;
+}
+
+#findwork-jobs-results-header {
+	 float: left;
+   font-size: 16px;
+   font-weight: bold;
+   width: 180px;
+}
+
+#findwork-results-header-save-job-search {
+	overflow: hidden;
+}
+
+#findwork-jobs-results-cma {
+	float: right;
+	width: 300px;
+	overflow: hidden;
+	margin: 15px 0 0 0;
+}
+
+#findwork-save-job-text {
+	float: right;
+	width: 185px;
+}
+
+#findwork-save-job-image {
+	float: right;
+	cursor: pointer;
+}
+
+#findwork-save-job-image .vcn-button {
+	padding: 3px 2px 0px 2px;
+}
+
+#findwork-results-feedback {
+	float: right;
+	margin: 20px 0 0 0;
+}
+
+#findwork-results-user-feedback-message {
+	margin: 0 0 10px 0;
+	font-size: 0.875em;
+}
+
+#findwork-submit-button {
+	margin: 15px 0 15px 290px;
+}
+
+#findworkresults-submit-form-middlebox-careers, #findworkresults-submit-form-middlebox-job-title, #findworkresults-submit-form-middlebox-or {
+	float: left;
+}
+
+#findworkresults-submit-form-middlebox-or {
+	width: 20px;
+	margin: 30px 5px 0 5px;
+}
+
+#findwork-results-feedback-link {
+	margin: 0 0 0 40px;
+}
+
+#findwork-results-table { /*Initially hide to prevent the table from flashing, use jquery.show() to show the table on page load */
+	display: none;
+}
+
+#findwork-main-content h1 {
+	margin: 0px 0px 0px 0px;
+}
+
+/* end of find a work page */
+
+/* Error/Alert/Info */
+.alert {
+  margin: 1px 0;
+  font-weight: bold;
+  padding: 8px 35px 8px 14px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  background-color: #fcf8e3;
+  border: 1px solid #fbeed5;
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+}
+
+.alert,
+.alert h4 {
+  color: #c09853;
+}
+
+.alert h4 {
+  margin: 0;
+}
+
+.alert .close {
+  position: relative;
+  top: -2px;
+  right: -21px;
+  line-height: 20px;
+}
+
+.alert-success {
+  color: #468847;
+  background-color: #dff0d8;
+  border-color: #d6e9c6;
+}
+
+.alert-success h4 {
+  color: #468847;
+}
+
+.alert-danger,
+.alert-error {
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
+}
+
+.alert-danger h4,
+.alert-error h4 {
+  color: #b94a48;
+}
+
+.alert-info {
+  color: #3a87ad;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+}
+
+.alert-info h4 {
+  color: #3a87ad;
+}
+
+.alert-block {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.alert-block > p,
+.alert-block > ul {
+  margin-bottom: 0;
+}
+
+.alert-block p + p {
+  margin-top: 5px;
+}
+
+.alert ul {
+  margin:3px 0px;
+}
+
+/* Error/Alert/Info End */
+
+/* general styles (including overrides) for datatables (datatables.net) */
+
+.paging_full_numbers {
+   text-align: center;
+   padding-top: 8px;
+}
+
+#careergrid-main_paginate .paging_full_numbers a.paginate_button{
+  background-color: #ff0000;
+}
+
+#careergrid-main_paginate .paginate_button, .careergrid-selections .paginate_active {
+   padding: 10px;
+}
+
+.dtheader {
+  background-color: #189AB0;
+  color: white;
+  font-size: 10pt;
+  border-right: 1px solid #FFFFFF;
+  padding: 4px;
+  text-align: center;
+}
+
+#vcn-igen .dtheader {
+  background-color: #4E968A;
+}
+
+#vcn-healthcare .dtheader {
+  background-color: #189AB0;
+}
+
+.dttable {
+  border-color: gray; 
+  background-color: #CDCDCD;
+  border-spacing: 0px;
+  border-collapse: collapse;
+  color: #3D3D3D;
+  margin: 0 auto;
+}
+
+table.dataTable thead th {
+  border-bottom: 1px solid #818181;
+}
+
+.paging_full_numbers a.paginate_active, .paging_full_numbers a.paginate_button:hover {
+	background-color: #e0e0e6;
+	border-left: 1px solid #e0e0e6;	
+  border-top: 1px solid #e0e0e6;
+  border-bottom: 1px solid #e0e0e6;
+  cursor: pointer;
+}
+
+.paging_full_numbers a.paginate_active {
+	background-color: #A4A4A4;
+}
+
+.paginate_button {
+  border-left: 1px solid #e0e0e6;	
+  border-top: 1px solid #e0e0e6;
+  border-bottom: 1px solid #e0e0e6;
+  cursor: pointer;
+}
+
+.dataTables_paginate .last {
+	border-right: 1px solid #e0e0e6;
+}
+
+.paging_full_numbers {
+  padding-top: 25px;	
+}
+
+.sorting, .sorting_asc, .sorting_desc {
+	cursor: pointer;
+}
+
+/* Autocomplete highlighting*/
+.autocomplete-highlight-text {
+	color: #FF4000;
+}
+/* end autocomplete highlighting*/
+
+/* REST debugger */
+.rest-debugger {
+  margin-top:10px; 
+  margin-left:10px; 
+  margin-right:10px; 
+  padding-left:10px; 
+  border:1px #7f7f7f solid; 
+  height:40px; 
+  background-color:#bed1e2; 
+  overflow:hidden;
+}
+/* end REST debugger */
+
+/* Styling for Get Qualified pages */
+.programs-boldfont {
+	font-weight: bold;
+}
+
+.programs-smallfont{
+	font-size: 10px;
+}
+
+#vcngetqualified-certifications-table .datatable-save-target, #vcngetqualified-licenses-table .datatable-save-target {
+	margin: 0 25px;
+}
+
+#vcngetqualified-programs-table .datatable-save-target {
+	margin: 0px;
+}
+
+.datatable-save-target img {
+  cursor: pointer;
+  padding: 2px 0px 0px 0px;
+  width: 18px;
+}
+
+.datatable-save-target .save-target-icon {
+  margin-right: 5px;
+  padding: 0px;
+}
+
+#profiler-box {
+  width: 940px;
+  height: 75px;
+  border: 1px #7f7f7f solid;
+  background-color:#e2e2e2;
+  padding: 8px 8px 8px 8px;
+  line-height: 20px;
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px; 
+  border-radius: 5px; 
+  -khtml-border-radius: 5px;
+}
+
+#profiler-box-icon {
+  padding: 0px 18px 0px 8px;
+  float: left;
+}
+
+#profiler-box-form {
+  padding: 4px 0px 0px 0px;
+  float: left;
+}
+
+#get-qualified-pointer-image {
+  vertical-align: middle;
+}
+
+#vcn-getqualified-resources-financial-aid {
+	margin: 10px 0 0 0;
+}
+
+.vcn-getqualified-resources-primary-header, .vcn-getqualified-resources-secondary-header, .vcn-getqualified-requirements-paragraph-header {
+	font-weight: bold;
+}
+
+.vcn-getqualified-resources-primary-header {
+	font-size: 14px;
+}
+
+.vcn-getqualified-resources-prerequisite-tests-inner-indent-div {
+    margin: 0px 5px 0 15px;
+}
+
+#vcngetqualified-licenses-data-info, #vcngetqualified-certifications-data-info, #vcngetqualified-programs-data-info {
+	margin:0px 0px 10px 0px;
+}
+
+#vcngetqualified-programs-data-info p img, #vcngetqualified-certifications-data-info p img, #vcngetqualified-licenses-data-info p img, #vcngetqualified-howto-getqualified-div-for-img-sizing p img {
+	height: 18px;
+}
+
+#vcngetqualified-programs-data-info .vcn-button, #vcngetqualified-certifications-data-info .vcn-button, #vcngetqualified-licenses-data-info .vcn-button, #vcngetqualified-howto-getqualified-div-for-img-sizing .vcn-button {
+  cursor: default;
+}
+
+.vcn-getqualified-wrapper {
+	margin: 10px 0px 0px 10px;
+}
+
+#vcn-getqualified-legal-requirements, 
+#vcn-getqualified-physical-requirements, 
+#vcn-getqualified-medical-requirements, 
+#vcn-getqualified-typical-education-requirements,
+#vcn-getqualified-prior-experience-requirements {
+    margin: 0 0 0 5px;
+    padding: 0 5px;
+}
+
+#vcn-getqualified-next-step-div {
+  width: 100%; 
+  text-align: right; 
+  padding-top: 20px;
+}
+
+.getqualified-next-button {   
+  background-image:url('../images/buttons/next_step_vcn.png');
+  height: 40px;
+  width: 101px;  
+}
+
+#vcngetqualified-requirements-intro {
+	font-size: 13px;
+	font-weight: bold;
+	margin: 10px 0 0 0;
+}
+
+#vcngetqualified-programs-info-text {
+	margin: 25px 0 0 0;
+}
+
+#vcn-getqualified-resources-bottom-button {
+	margin: 15px 0 15px 0;
+}
+
+#vcn-getqualified-resources-top-button .vcn-button {
+	float: right;
+}
+
+#vcn-getqualified-resources-bottom-button .vcn-button {
+	float:left;
+}
+
+#vcn-get-qualified-tabs #tabres {
+	overflow: auto;
+}
+
+#vcn-getqualified-resources-intro {
+	margin: 20px 0 0 0;
+}
+
+.vcngetqualified-paragraph-additional-space {
+	margin: 20px 0 20px 0;
+}
+
+.vcngetqualified-tabs-bold {
+	font-weight: bold;
+}
+
+.vcngetqualified-tabs-bold-blue {
+	font-weight: bold;
+	color: #00B8E6;
+}
+
+.vcngetqualified-tabs-bold-red {
+	font-weight: bold;
+	color: #FF0000;
+}
+
+.vcngetqualified-tabs-italics {
+	font-style: italic;
+}
+
+#vcngetqualified-vocabulary {
+    margin: 10px 0 25px 0;
+}
+
+#vcngetqualified-vocabulary ul li {
+	font-size: 11px;
+}
+
+/* end of styling for Get Qualified pages*/
+
+
+/* styling for CTools modal dialog */
+
+div.ctools-modal-content {
+  padding: 3px 3px 3px 3px;
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px; 
+  border-radius: 5px; 
+  -khtml-border-radius: 5px;
+}
+
+div.ctools-modal-content .modal-header {
+  background-color: #aaaaaa;
+  padding: 10px 10px 10px 10px;
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px; 
+  border-radius: 5px; 
+  -khtml-border-radius: 5px;
+}
+
+div.ctools-modal-content .modal-header .close {
+  display: none;
+}
+
+div.ctools-modal-content .modal-title {
+  color: #000000;
+}
+
+.vcnuser-submit-button {
+  margin: 0px 2px 0px 2px;
+}
+
+.vcnuser-cancel-button {
+  margin: 0px 2px 0px 2px;
+}
+
+
+div.ctools-modal-content div.form-item-user-zip label, div.ctools-modal-content div.form-item-user-distance label {
+	width: 80px;
+}
+
+/* end of styling for CTools modal dialog */
+
+/* remove the close icon on all jquery ui window modals */
+.ui-dialog-titlebar-close {
+  visibility: hidden;
+}
+
+/* remove the "please wait" message for CTools modal dialog forms */
+.ajax-progress-throbber  .message {
+  display:none;
+}
+
+
+/*********************** IGEN ***************************/
+/*
+* IGEN Header 
+*/
+
+#vcn-igen-header {   
+  /*clear:both; 
+  float:left; 
+  height: 120px;   
+  width:100%; */  
+}
+
+#igen-header-topbar {
+  background-color: #4e968a; 
+  width: 100%;
+  height:35px;
+}
+
+.igen-header-left { 
+  width: 40%;
+  height: 100%;
+  float: left;
+}
+
+.igen-header-right {   
+  width: 60%;
+  height: 100%;
+  float: right;
+}
+
+.igen-header-right-inner-top, .igen-header-right-inner-bottom {
+  text-align: right;  
+  color: #ffffff;
+  font-size: 12px;    
+}
+
+.igen-header-right-inner-top {
+  margin: 10px 10px 0px 0px;
+}
+
+.igen-header-right-inner-bottom {
+  margin: 10px 0px 0px 0px;
+}
+
+.igen-header-right-inner-bottom ul {
+  float: right;
+  margin: 0px;
+  padding: 0px;
+}
+.igen-header-right-inner-bottom li {
+  float: left;
+  list-style-type: none;
+  margin-left: 10px;
+}
+.igen-header-right-inner-bottom a:hover {
+  text-decoration: none;
+}
+
+#igen-header-middlebar { 
+  width: 100%;
+  height: 52px;  
+}
+
+#igen-header-bottombar { 
+  width: 100%;
+  height: auto;  
+}
+
+#igen-header-logo {
+  background-image: url(../images/site_logo_images/logo_vcn_igen.png);
+  background-repeat: no-repeat;
+  margin-top: 5px;
+  margin-left:10px;
+  height: 76px;
+}
+
+#vcn-igen-header .welcomeMessage {
+  font-size: 15px;
+  color: white;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+#igen-home-top10-icons {
+  position: absolute;
+  top: 50px;
+  left:900px;
+}
+
+#igen-home-start-img {
+  text-align: center;
+}
+
+#igen-home-start-text {
+  margin: 30px 0px; 
+  font-size: 14px;  
+  line-height: 25px;
+}
+
+#igen-home-bottom {
+  background-color:#D1E3CD;
+  text-align: center;
+  width: 100%;   
+  height:186px;
+  margin: 30px 0px 0px 0px; 
+}
+
+#igen-home-bottom > div {  
+  background-color: #EAFDE7;
+  display: inline-block;
+  height: 141px;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  margin: 23px 8px;
+  width: 212px;    
+}
+
+#igen-home-bottom img { 
+  margin-top: 35px;
+}
+
+.vcn-user-links {
+  color: #ffffff;
+}
+
+#vcn-igen-header a.vcn-user-links:hover {
+  text-decoration: underline;
+}
+
+/* IGEN HEADER END */
+
+#node-lightbox-content{ /* Content type lightbox : page--lightbox.tpl.php */
+  height: 500px;
+  overflow-y: scroll;
+  width: 720px; 
+  padding: 0px 15px;
+}
+
+#why-green, .vcn-lightbox-content {
+  padding-top:15px;
+}
+
+.why-green-title {
+  font-size: 16px;
+  color: #4e968a;
+}
+
+.lightbox-content {
+  padding: 15px;
+  text-align: left;
+}
+
+.vcn-lightbox-paragraph {
+    padding-left: 40px;
+}

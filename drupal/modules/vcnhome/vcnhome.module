@@ -1,0 +1,189 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help()
+ */
+function vcnhome_help($path, $arg) {
+  if ($path == 'admin/help#vcnhome') {
+    return t('Home block for VCN.');
+  }
+}
+
+/**
+ * Implementation of hook_block_info()
+ */
+function vcnhome_block_info() {
+  $blocks = array();
+ $blocks['vcnhome'] = array(
+    'info' => t('VCN Home Block'),
+  	//'cache' => DRUPAL_NO_CACHE,
+  );
+  $blocks['healthcarehome'] = array(
+  		'info' => t('Healthcare Home Block'),
+  );
+  $blocks['igenhome'] = array(
+    'info' => t('IGEN Home Block'),
+  );  
+  $blocks['transithome'] = array(
+    'info' => t('Transit Home Block'),
+  );  
+  $blocks['aarphome'] = array(
+    'info' => t('AARP Home Block'),
+  );  
+  return $blocks;
+}
+
+/**
+ * Implementation of hook_block_view()
+ */
+function vcnhome_block_view($delta='vcnhome') {
+  $block = array();
+  switch($delta) {
+    case 'vcnhome':
+     	//$block['subject'] = t('VCN Home Block');
+     	$block['content'] = theme('vcnhome_block', array('var' => 'hello'));       
+        break;    
+     case 'healthcarehome':
+        $block['content'] = theme('vcnhome_healthcare_block', array('var' => 'hello'));  
+        break; 
+     case 'igenhome':
+        $block['content'] = theme('vcnhome_igen_block', array('var' => 'hello'));
+        break;
+     case 'transithome':
+        $block['content'] = theme('vcnhome_transit_block', array('var' => 'hello'));
+        break;
+     case 'aarphome':
+        $block['content'] = theme('vcnhome_aarp_block', array('var' => 'hello'));
+        break;
+  }
+  return $block;
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function vcnhome_theme() {
+  $theme = array();    
+  $theme['vcnhome_block'] = array(	 
+  	  'variables' => array('var' => NULL),
+	  'template' => 'templates/vcnhome-block',
+  	  'file' => 'includes/vcnhome.inc',
+  );
+  $theme['vcnhome_healthcare_block'] = array(
+  		'variables' => array('var' => NULL),
+  		'template' => 'templates/vcnhome-healthcare-block',
+  		'file' => 'includes/vcnhome.inc',
+  );  
+  $theme['vcnhome_igen_block'] = array(
+	  'variables' => array('var' => NULL),
+	  'template' => 'templates/vcnhome-igen-block',
+  	  'file' => 'includes/vcnhome.inc',
+  );  
+  $theme['vcnhome_transit_block'] = array(
+	  'variables' => array('var' => NULL),
+	  'template' => 'templates/vcnhome-transit-block',
+  	  'file' => 'includes/vcnhome.inc',
+  ); 
+  $theme['vcnhome_aarp_block'] = array(
+	  'variables' => array('var' => NULL),
+	  'template' => 'templates/vcnhome-aarp-block',
+  	  'file' => 'includes/vcnhome.inc',
+  ); 
+  return $theme;
+}
+
+
+
+/**
+ * Implementation of hook_preprocess_HOOK()
+ */
+
+function vcnhome_preprocess_vcnhome_block(&$variables) {
+	
+	$industry_code =  vcn_get_industry_code();	
+	
+	$block = module_invoke('vcnhome', 'block_view', $industry_code.'home');
+	$variables['home_content'] = render($block['content']);	
+	
+}
+
+/**
+ * Implementation of hook_preprocess_HOOK()
+ */
+
+function vcnhome_preprocess_vcnhome_healthcare_block(&$variables) {  
+
+	$path = drupal_get_path('theme', 'vcnstark');
+	drupal_add_js($path . '/js/vcn_home.js');
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	$variables['vcn_video_path'] = vcn_video_path();
+	$variables['vcn_industry_name'] = strtolower(vcn_get_industry_name());
+	
+}
+
+/**
+ * Implementation of hook_preprocess_HOOK()
+ */
+
+function vcnhome_preprocess_vcnhome_igen_block(&$variables) {
+
+	$path = drupal_get_path('theme', 'vcnstark');
+	drupal_add_js($path . '/js/vcn_home.js');
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.	
+	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
+	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
+	
+	$variables['home_banner_count'] = 4;
+}
+
+function vcnhome_preprocess_vcnhome_transit_block(&$variables) {
+
+	$path = drupal_get_path('theme', 'vcnstark');
+	drupal_add_js($path . '/js/vcn_home.js');
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	$variables['industry_name'] = vcn_get_industry_name();
+  
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
+	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
+  
+	$variables['home_banner_count'] = 4;
+}
+
+function vcnhome_preprocess_vcnhome_aarp_block(&$variables) {
+
+	$path = drupal_get_path('theme', 'vcnstark');
+	drupal_add_js($path . '/js/vcn_home.js');
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	$variables['industry_name'] = vcn_get_industry_name();
+  
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
+	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
+  
+	$variables['home_banner_count'] = 4;
+}

@@ -1,0 +1,106 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcngetstarted_help($path, $arg) {
+	if ($path == 'admin/help#vcngetstarted') {
+		return t('Functionality related to VCN Get Started.');
+  }
+}
+
+/**
+ * Implementation of vcngetstarted_form (callback function from hook_menu).
+ */
+function vcngetstarted_form($form, &$form_state) {
+		
+	$form['#form_state'] = $form_state;	// send form state variable to preprocess function. 
+	
+	$form['zipcode'] = array(
+			'#title' => t('ZIP Code:'),
+			'#type' => 'textfield',
+			'#default_value' => vcnuser_get_zip(),
+			'#size' => 5,
+			'#maxlength' => 5,
+	);	
+		
+	$form['edu_level'] = array (
+			'#type' => 'select',
+			'#title' => t('Your Current Education:'),
+			'#multiple' => false,
+			'#options' => vcngetstarted_get_edu_level(),
+			'#default_value' => vcnuser_get_edu_level(),
+	);
+
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Enter'),
+			'#weight' => 10,
+			'#validate' => array('vcngetstarted_form_validate'),
+			'#submit' => array('vcngetstarted_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcngetstarted-submit-button'),
+					'title' => "Enter"
+			),
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /get-started (Get Started)
+ */
+function vcngetstarted_preprocess_vcn_get_started_template(&$variables) {	 
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['industry'] = vcn_get_industry();
+	drupal_add_js(drupal_get_path('module', 'vcngetstarted').'/js/vcngetstarted.js');
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['getstarted_intro_text'] = vcn_node_text_by_urlalias("get-started-intro"); 
+	$variables['getstarted_sidebar_text'] = vcn_node_text_by_urlalias("get-started-sidebar");
+	
+	$variables['vcn_get_started_form'] = $form = drupal_get_form('vcngetstarted_form');	
+	//$form = $variables['form'];		
+	$variables['form_zipcode'] = render($form['zipcode']);
+	$variables['form_edu_level'] = render($form['edu_level']);
+	$variables['form_submit'] = render($form['submit']);
+	
+	$variables['form_hidden'] = drupal_render_children($form);	
+	$variables['form_start_tag'] = str_replace("</div></form>", "", drupal_render($form));
+	$variables['form_end_tag'] = "</div></form>";
+	 
+	$variables['zipcode'] = $zipcode = (int) ((isset($form['#form_state']['input']['zipcode']) && $form['#form_state']['input']['zipcode'] > 0) ? $form['#form_state']['input']['zipcode'] : vcnuser_get_zip());
+	$edu_level = (int) ((isset($form['#form_state']['input']['edu_level']) && $form['#form_state']['input']['edu_level'] > 0) ? $form['#form_state']['input']['edu_level'] : vcnuser_get_edu_level());
+	
+	$variables['display_career_list'] = -1;
+	if($zipcode > 0 && $edu_level > 0) {		
+		
+		$params = array('industry' => $variables['industry'], 'education_level' => $edu_level, 'zipcode' => $zipcode , 'limit' => '5');
+		$variables['career_list'] = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-Careers-By-Min-Education-And-Zipcode', $params);
+	
+		if(isset($variables['career_list']->career) && count($variables['career_list']->career) > 0){
+			$variables['display_career_list'] = 1;			
+		}else {
+			$variables['display_career_list'] = 0;
+		}
+	}
+}
+
+

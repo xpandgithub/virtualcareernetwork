@@ -1,0 +1,159 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function vcnfindwork_help($path, $arg) {
+	if ($path == 'admin/help#vcnfindwork') {
+		return t('Findwork for VCN.');
+	}
+}
+
+/**
+ * Implementation of hook_preprocess Preprocess function for vcn_findwork_tools
+ * @param $variables
+ */
+function vcnfindwork_preprocess_vcn_findwork_tools(&$variables) {
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['industry_name'] = vcn_get_industry_name();
+	$variables['industry_id'] = vcn_get_industry();
+	$params = array('industry' => $variables['industry_id'], 'category' => 10, 'order' => array('resource_category_id','resource_name'));
+	$variables['job_search_resources_link'] = vcn_rest_wrapper('vcnresourcessvc', 'vcnresources', 'list', $params, 'json');
+	
+	$variables['find_job_tools_employer_help'] = vcn_node_text_by_urlalias('find-job-tools-employer-help');
+}
+
+/**
+ * Implementation of hook_preprocess Preprocess function for vcn_findwork_overview
+ * @param $variables
+ */
+function vcnfindwork_preprocess_vcn_findwork_overview(&$variables) {	
+	
+	vcn_findwork_tabs($variables);
+	$variables['selectedTabIndex'] = $selectedTabIndex = 'overview';
+	$variables['vcn_tabs_header'] = vcn_tabs_header($variables['vcn_tabs_list'], $variables['vcn_tabs_keys'], $selectedTabIndex, FALSE);	
+	$variables['selected_tab_key_index'] = array_search($selectedTabIndex, $variables['vcn_tabs_keys']);
+	
+	vcn_find_job_nav_bar_html($variables);
+	
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['industry_name'] = vcn_get_industry_name();
+		
+	$num_careers = vcn_get_career_count();
+
+	drupal_add_js(array('vcnfindwork' => array('num_careers' => $num_careers)),array('type' => 'setting'));
+	drupal_add_js(drupal_get_path('module', 'vcnfindwork') .'/js/vcnfindwork.js', 'file');
+	
+	//vcn_node_text_by_urlalias('find-job-intro')
+	$variables['find_job_before_you_begin'] = vcn_node_text_by_urlalias('find-job-before-you-begin');
+	$variables['find_job_search_jobs'] = vcn_node_text_by_urlalias('find-job-search-jobs');
+	$variables['find_job_results'] = vcn_node_text_by_urlalias('job-search-results-text');
+	
+}
+
+/**
+ * Implementation of hook_preprocess_form. Preprocess function for vcn_findwork_results_form
+ * @param $variables
+ */
+function vcnfindwork_preprocess_vcn_findwork_results_form(&$variables) {
+	
+	vcn_findwork_tabs($variables);
+	$variables['selectedTabIndex'] = $selectedTabIndex = 'findwork-results';
+	$variables['vcn_tabs_header'] = vcn_tabs_header($variables['vcn_tabs_list'], $variables['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['selected_tab_key_index'] = array_search($selectedTabIndex, $variables['vcn_tabs_keys']);
+
+	vcn_find_job_nav_bar_html($variables);
+	
+	drupal_add_js(drupal_get_path('module', 'vcnfindwork') .'/js/vcnfindwork_common.js', 'file');
+	drupal_add_js(drupal_get_path('module', 'vcnfindwork') .'/js/vcnfindworkresults.js', 'file');
+	
+	$variables['first_visit'] = false;
+	$search_text_low_results_display = '';
+	if (strpos($variables['form']['#action'],"search-term") !== FALSE) {
+		$params = array (
+				'search_term' => $variables['form']['search_by_job_title']['#value'],
+				'zipcode' => isset($variables['form']['valid_zipcode']['#value']) ? $variables['form']['valid_zipcode']['#value'] : NULL,
+				'distance' => isset($variables['form']['distance']['#value']) ? $variables['form']['distance']['#value'] : NULL
+		);
+		
+		$data = vcn_findwork_results_get_data_freetext_search($params, TRUE);
+		$search_text_low_results_display = $params['search_term'];
+	
+	} else if (strpos($variables['form']['#action'],"career") !== FALSE) {
+		$params = array (
+				'onetcode' => $variables['form']['careers']['#default_value'],
+				'zipcode' => isset($variables['form']['valid_zipcode']['#value']) ? $variables['form']['valid_zipcode']['#value'] : NULL,
+				'distance' => isset($variables['form']['distance']['#value']) ? $variables['form']['distance']['#value'] : NULL,
+				'career_title' => $variables['form']['careers']['#options'][$variables['form']['careers']['#default_value']]
+		);
+		
+		$data = vcn_findwork_results_get_data_by_onetcode($params, TRUE);
+		$search_text_low_results_display = $params['career_title'];
+	
+	} else if($variables['form']['careers']['#default_value']  != ""){
+		  
+		$params = array (
+				'onetcode' => $variables['form']['careers']['#default_value'],
+				'zipcode' => (isset($variables['form']['zipcode']['#value']) && $variables['form']['zipcode']['#value'] > 0 ) ? $variables['form']['zipcode']['#value'] : NULL,
+				'distance' => (isset($variables['form']['distance']['#default_value']) && $variables['form']['distance']['#default_value'] > 0 ) ? $variables['form']['distance']['#default_value'] : NULL,
+				'career_title' => $variables['form']['careers']['#options'][$variables['form']['careers']['#default_value']]
+		);	
+		
+		$data = vcn_findwork_results_get_data_by_onetcode($params, TRUE);
+		$search_text_low_results_display = $params['career_title'];
+		 
+		 
+	}else {
+		$variables['first_visit'] = true;
+		$variables['first_visit_guide_text'] = vcn_node_text_by_urlalias('find-job-intro');
+		$data = array();
+	}
+	
+	if($search_text_low_results_display == 'No matching data found') {
+		$search_text_low_results_display = '';
+	}
+
+	$variables['num_records_found'] = count($data);
+	if ($variables['num_records_found'] >= 500) {
+		$variables['jobs_found_text'] =  "+ jobs found";
+		$variables['num_records_found'] = 500;
+	} else {
+		if ($variables['num_records_found'] == 1) {
+			$variables['jobs_found_text'] =  " job found";
+		} else {
+			$variables['jobs_found_text'] =  " jobs found";
+		}
+	}	
+		
+	/*$variables['find_job_results'] = vcn_node_text_by_urlalias('job-search-results-text');
+	if ($num_records_found <= 5) {
+		$variables['find_job_results'] = vcn_node_text_by_urlalias('job-search-low-results-text');
+	}*/
+	
+	$form = $variables['form'];
+	$variables['zipcode'] = render($form['zipcode']);
+	$variables['distance'] = render($form['distance']);
+	$variables['careers'] = render($form['careers']);
+	$variables['search_by_job_title'] = render($form['search_by_job_title']);
+	$variables['find_jobs_submit'] = render($form['find_jobs_submit']);
+	$variables['children'] = drupal_render_children($form);
+	
+	$json_data = json_encode($data);
+	drupal_add_js(array('vcnfindworkresults' => array('job_results' => $json_data)),array('type' => 'setting'));
+	
+}

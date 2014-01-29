@@ -1,0 +1,458 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+//Menu callback functions
+
+function vcn_pla_save_courses($ace_id, $start_date, $end_date, $type) {
+
+	switch ($type) {
+		case 'military':
+			$military_yn = 'Y';
+			break;
+		case 'professional_training':
+			$military_yn = 'C';
+			break;
+		case 'national-exams':
+			$military_yn = 'E';
+			break;
+		default:
+			$military_yn = NULL;
+			break;
+	}
+
+	$user_id = (int)$GLOBALS['vcn_user_id'];
+
+	$params = array('ace_id' => $ace_id, 'start_date' => $start_date, 'end_date' => $end_date, 'user_id' => $user_id, 'military_yn' => $military_yn);
+	$call_result = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'save-pla-courses-to-cma', $params, 'json', 'post', false);
+	echo json_encode($call_result);
+}
+
+function vcn_remove_credit_courses_ajax_callback($usercourseid) {
+
+	$user = vcn_get_user_info();
+	$userid = $user['vcn_user_id'];
+	
+	$params = array('userid' => $userid, 'usercourseid' => $usercourseid);
+	$call_result = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'delete-credit-courses-by-user-courseid', $params, 'xml', 'post', false);
+	echo (string) $call_result->item;
+}
+
+//End of menu callback functions
+
+
+//Theme preprocess functions
+function vcnpla_preprocess_vcn_pla_getting_started(&$variables) {
+	
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "start";//vcn_get_selected_tab($vcn_tabs_list);
+	 
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+	
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	// Call function to access the node containing editable text by "URL Alias" of specific node.
+	$variables['get_started'] = vcn_node_text_by_urlalias("earn-college-credits-get-started");
+
+}
+
+function vcnpla_preprocess_vcn_pla_mylearning_inventory(&$variables) {
+	
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "e_transcript";//vcn_get_selected_tab($vcn_tabs_list);
+
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['my_learning_inventory'] = vcn_node_text_by_urlalias("earn-college-credits-my-learning-inventory");
+	
+	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();	
+	
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	$user = vcn_get_user_info();
+	$variables['userid'] = $user['vcn_user_id'];
+	$variables['is_user_logged_in'] = $user['is_user_logged_in'];
+	
+	if($variables['userid'] > 0) {		
+		drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_mylearning_inventory.js', 'file');
+		drupal_add_js(array('vcnpla' => array('userid' => $variables['userid'], 'isUserLoggedIn' => $variables['is_user_logged_in'] )), array('type' => 'setting'));
+		
+		$params = array('userid' => $variables['userid']); // optional params coursedetail=true coursetype=college_courses/military_courses/professional_courses/national_courses
+		$variables['credit_courses'] = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-credit-courses-by-userid', $params, 'xml', 'post', false);	
+		$variables['courses_listing'] = vcn_pla_inventory_listing($variables);	
+	} else {
+		$variables['courses_listing'] = "";
+	}	
+}
+
+function vcnpla_preprocess_vcnpla_college_courses_form(&$variables) {
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_college_credit.js', 'file');
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "college_courses";//vcn_get_selected_tab($vcn_tabs_list);
+	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+	
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	$form = $variables['form'];
+	$variables['school_name'] = render($form['school_name']);
+	$variables['program_name'] = render($form['program_name']);
+	$variables['course_name'] = render($form['course_name']);
+	$variables['course_number'] = render($form['course_number']);
+	$variables['final_grade'] = render($form['final_grade']);
+	$variables['year_course_completed'] = render($form['year_course_completed']);
+	$variables['num_credit_hours'] = render($form['num_credit_hours']);
+	$variables['college_courses_submit'] = render($form['college_courses_submit']);
+	$variables['children'] = drupal_render_children($form);
+	
+  $variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+}
+
+function vcnpla_preprocess_vcnpla_military_credit_form(&$variables) {
+	
+	$form = $variables['form'];
+	$variables['display_result'] = false;
+	if(($form['#form_state']['submitted']) || ($form['military_credit_show_grid']['#value'])) {
+		$variables['display_result'] = true;
+	}
+	
+	$branch = $form['military_credit_branch']['#value'];
+	
+	$military_credit_search_box = trim($form['military_credit_search_box']['#value']);
+	if (!empty($military_credit_search_box) && (strlen($military_credit_search_box) > 2)) {
+		$search_term = $military_credit_search_box;
+		$search_term = str_replace('/', '~', $search_term);
+		$search_term = str_replace('\\', '*', $search_term);
+	} else {
+		$search_term = null;
+	}
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_military_credit.js', 'file');
+	drupal_add_js(array('vcnpla' => array('military_credits_branch' => $branch, 'military_credits_search_term' => $search_term, 'display_result' => $variables['display_result'] )), array('type' => 'setting'));
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "military_credit";
+	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();	
+	
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	$variables['military_credit_branch'] = render($form['military_credit_branch']);
+	$variables['military_credit_search_box'] = render($form['military_credit_search_box']);
+	$variables['military_credit_submit'] = render($form['military_credit_submit']);
+	$variables['military_credit_children'] = drupal_render_children($form);
+	
+  $variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+}
+
+function vcnpla_preprocess_vcnpla_professional_training_form(&$variables) {
+	
+	$form = $variables['form'];
+	$variables['display_result'] = false;
+	if(($form['#form_state']['submitted']) || ($form['professional_training_show_grid']['#value'])) {
+		$variables['display_result'] = true;
+	}
+	
+	$organization = $form['professional_training_organization']['#value'];
+	
+	$professional_training_search_term = trim($form['professional_training_search_box']['#value']);
+	if (!empty($professional_training_search_term) && (strlen($professional_training_search_term) > 2)) {
+		$search_term = $professional_training_search_term;
+		$search_term = str_replace('/', '~', $search_term);
+		$search_term = str_replace('\\', '*', $search_term);
+	} else {
+		$search_term = null;
+	}
+	
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_professional_training.js', 'file');
+	drupal_add_js(array('vcnpla' => array('professional_training_organization' => $organization, 'professional_training_search_term' => $search_term, 'display_result' => $variables['display_result'] )), array('type' => 'setting'));
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "professional_training";
+	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+		
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	$variables['professional_training_organization'] = render($form['professional_training_organization']);
+	$variables['professional_training_search_box'] = render($form['professional_training_search_box']);
+	$variables['professional_training_submit'] = render($form['professional_training_submit']);
+	$variables['professional_training_children'] = drupal_render_children($form);
+  
+  $variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+}
+
+function vcnpla_preprocess_vcnpla_national_exams_form(&$variables) {
+
+	$form = $variables['form'];
+	$variables['display_result'] = false;
+	if(($form['#form_state']['submitted']) || ($form['national_exams_show_grid']['#value'])) {
+		$variables['display_result'] = true;
+	}
+	
+	$organization = $form['national_exams_organization']['#value'];
+	
+	$national_exams_search_term = trim($form['national_exams_search_box']['#value']);
+	if (!empty($national_exams_search_term) && (strlen($national_exams_search_term) > 2)) {
+		$search_term = $national_exams_search_term;
+		$search_term = str_replace('/', '~', $search_term);
+		$search_term = str_replace('\\', '*', $search_term);
+	} else {
+		$search_term = null;
+	}
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_national_exams.js', 'file');
+	drupal_add_js(array('vcnpla' => array('national_exams_organization' => $organization, 'national_exams_search_term' => $search_term, 'display_result' => $variables['display_result'] )), array('type' => 'setting'));
+	module_load_include('inc', 'vcnpla', 'includes/vcnpla');
+	
+	$vcn_tabs = vcn_pla_get_tabs_list();
+	$selectedTabIndex = "national_exams";
+
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['vcn_tabs_body_id_prefix'] = vcn_tabs_body_id_prefix();
+	
+	$variables['pla_sidebar'] = theme('vcn_pla_sidebar');
+	
+	$variables['national_exams_organization'] = render($form['national_exams_organization']);
+	$variables['national_exams_search_box'] = render($form['national_exams_search_box']);
+	$variables['national_exams_submit'] = render($form['national_exams_submit']);
+	$variables['national_exams_children'] = drupal_render_children($form);
+  
+  $variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+}
+
+function vcnpla_preprocess_vcn_pla_college_course_details(&$variables) {
+	
+	$params = array('usercourseid' => $variables['usercourseid']);
+	$college_course_detail = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-college-course-details', $params);
+	$variables['college_course_detail'] = $college_course_detail->item;
+	
+}
+
+function vcnpla_preprocess_vcn_pla_military_credit_details(&$variables) {
+	
+	$user_id = (int)$GLOBALS['vcn_user_id'];
+	$isUserLoggedIn = (int)$GLOBALS['is_user_logged_in'];
+	
+	$branch = empty($variables['branch']) ? NULL : $variables['branch'];
+	$search_term = empty($variables['search_term']) ? NULL : $variables['search_term'];
+	
+	$military_credit_link = vcn_drupal7_base_path().'pla/military-credit';
+	if(!empty($branch)) {
+		$military_credit_link .= '/'.$branch;
+		if (!empty($search_term)) {
+			$military_credit_link .= '/'.$search_term;
+		}
+	}
+	
+	$variables['military_credit_link'] = $military_credit_link;
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_military_credit_details.js', 'file');
+	drupal_add_js(array
+									('vcnpla' => array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date'], 'user_id' => $user_id, 'isUserLoggedIn' => $isUserLoggedIn)), 
+										array('type' => 'setting')
+							);
+	
+	$params = array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date']);
+	$data = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-military-course-details', $params, 'json');
+	
+	if(!empty($data)) {
+		$variables['first_title'] = $data->course_info->first_title;
+		$variables['second_title'] = $data->course_info->second_title;
+		$variables['objective'] = $data->course_info->objective;
+		$variables['instruction'] = $data->course_info->instruction;
+		
+		if (!empty($data->military_course_id)) {
+			$military_course_id_str = '';
+			$count_military_course_id = count($data->military_course_id);
+			$i = 1;
+			foreach ($data->military_course_id as $military_course_id) {
+				$military_course_id_str .= $military_course_id->course_id;
+				if ($i < $count_military_course_id) {
+					$military_course_id_str .= ', ';
+				}
+				$i++;
+			}
+			$variables['military_course_id_str'] = $military_course_id_str;
+		}
+
+		if (!empty($data->course_credit_info)) {
+			$course_credit_info_str = '';
+			foreach ($data->course_credit_info as $course_credit_info) {
+				if (!is_null($course_credit_info->course_conjunction)) {
+					$course_credit_info_str .= $course_credit_info->course_conjunction.' ';
+				}
+				$course_credit_info_str .= $course_credit_info->course_credit.' ';
+				$course_credit_info_str .= $course_credit_info->course_credit_unit.' ';
+				$course_credit_info_str .= $course_credit_info->course_condition.' ';
+				$course_credit_info_str .= $course_credit_info->course_subject.' ';
+			}
+			$variables['course_credit_info_str'] = $course_credit_info_str;
+		}
+	}
+	
+	$variables['vcn_user'] = vcn_get_user_info();
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_course($variables['vcn_user']['vcn_user_id'], 'Y', $variables['ace_id'], $variables['start_date'], $variables['end_date']);// 1 = saved, 2 = targeted, 0 = none
+	
+}
+
+
+function vcnpla_preprocess_vcn_pla_professional_training_details(&$variables) {
+	
+	$user_id = (int)$GLOBALS['vcn_user_id'];
+	$isUserLoggedIn = (int)$GLOBALS['is_user_logged_in'];
+	
+	$organization = empty($variables['organization']) ? NULL : $variables['organization'];
+	$search_term = empty($variables['search_term']) ? NULL : $variables['search_term'];
+	
+	$professional_training_link = vcn_drupal7_base_path().'pla/professional-training';
+	if(!empty($organization)) {
+		$professional_training_link .= '/'.$organization;
+		if (!empty($search_term)) {
+			$professional_training_link .= '/'.$search_term;
+		}
+	}
+	
+	$variables['professional_training_link'] = $professional_training_link;
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_professional_training_details.js', 'file');
+	drupal_add_js(array
+									('vcnpla' => array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date'], 'user_id' => $user_id, 'isUserLoggedIn' => $isUserLoggedIn)),
+										array('type' => 'setting')
+							);
+	
+	$params = array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date'], 'branch' => 'Course');
+	$data = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-professional-training-course-details', $params, 'json');
+
+	//to get the ace id, primary title, secondary title, objective, instruction, we just need to pick it up from the first index of the array. the other
+	if(!empty($data)) {
+		$variables['first_title'] = $data->course_info->first_title;
+		$variables['second_title'] = $data->course_info->second_title;
+		$variables['objective'] = $data->course_info->objective;
+		$variables['instruction'] = $data->course_info->instruction;
+
+		if (!empty($data->course_credit_info)) {
+			$course_credit_info_str = '';
+			foreach ($data->course_credit_info as $course_credit_info) {
+				if (!is_null($course_credit_info->course_conjunction)) {
+					$course_credit_info_str .= $course_credit_info->course_conjunction.' ';
+				}
+				$course_credit_info_str .= $course_credit_info->course_credit.' ';
+				$course_credit_info_str .= $course_credit_info->course_credit_unit.' ';
+				$course_credit_info_str .= $course_credit_info->course_condition.' ';
+				$course_credit_info_str .= $course_credit_info->course_subject.' ';
+			}
+			$variables['course_credit_info_str'] = $course_credit_info_str;
+		}
+	}
+	
+	$variables['vcn_user'] = vcn_get_user_info();
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_course($variables['vcn_user']['vcn_user_id'], 'C', $variables['ace_id'], $variables['start_date'], $variables['end_date']);// 1 = saved, 2 = targeted, 0 = none
+	
+}
+
+function vcnpla_preprocess_vcn_pla_national_exam_details(&$variables) {
+	
+	$user_id = (int)$GLOBALS['vcn_user_id'];
+	$isUserLoggedIn = (int)$GLOBALS['is_user_logged_in'];
+	
+	$organization = empty($variables['organization']) ? NULL : $variables['organization'];
+	$search_term = empty($variables['search_term']) ? NULL : $variables['search_term'];
+	
+	$national_exams_link = vcn_drupal7_base_path().'pla/national-exams';
+	if(!empty($organization)) {
+		$national_exams_link .= '/'.$organization;
+		if (!empty($search_term)) {
+			$national_exams_link .= '/'.$search_term;
+		}
+	}
+	
+	$variables['national_exams_link'] = $national_exams_link;
+	
+	drupal_add_js(drupal_get_path('module', 'vcnpla') .'/js/vcnpla_national_exam_details.js', 'file');
+	drupal_add_js(array
+									('vcnpla' => array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date'], 'user_id' => $user_id, 'isUserLoggedIn' => $isUserLoggedIn)),
+									array('type' => 'setting')
+							);
+	
+
+	$params = array('ace_id' => $variables['ace_id'], 'start_date' => $variables['start_date'], 'end_date' => $variables['end_date'], 'branch' => 'Exam');
+	$data = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-national-exam-details', $params, 'json');
+	
+	//to get the ace id, primary title, secondary title, objective, instruction, we just need to pick it up from the first index of the array. the other
+	if(!empty($data)) {
+		$variables['first_title'] = $data->course_info->first_title;
+		$variables['second_title'] = $data->course_info->second_title;
+		$variables['objective'] = $data->course_info->objective;
+		$variables['instruction'] = $data->course_info->instruction;
+
+		if (!empty($data->course_credit_info)) {
+			$variables['course_credit_info_array'] = $data->course_credit_info;
+		}
+	}
+	
+	$variables['vcn_user'] = vcn_get_user_info();
+	$variables['is_saved_or_targeted_item'] = vcn_is_saved_course($variables['vcn_user']['vcn_user_id'], 'E', $variables['ace_id'], $variables['start_date'], $variables['end_date']);// 1 = saved, 2 = targeted, 0 = none
+	
+}
+
+//end of theme preprocess functions
+
+function vcn_pla_get_training_exams_organizations($type) {
+	$data = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'list-courses-exams-organization', array('type' => $type), 'json');
+	
+	$select_list_array = array();
+	
+	if (count($data) > 0) {
+		foreach ($data as $value) {
+			$select_list_array[$value->ace_code] = $value->company_name;
+		}
+	}
+	return $select_list_array;
+}
+
+//Save courses to CMA
+
+//this code will go away when we move the generating of userid to D7
+function vcnpla_form_vcnpla_college_courses_form_alter(&$form, &$form_state, $form_id) {
+	$user_id = (int)$GLOBALS['vcn_user_id'];
+	if ($user_id == 0) {
+		$form['#after_build'][] = 'vcn_after_build';
+	}	
+}
+
+
+function vcn_after_build($form, &$form_state) {
+	$path = drupal_get_path('module', 'vcnpla').'/js';
+	drupal_add_js ("$path/vcnpla_college_credit_uid.js");
+	return $form;
+}
+//end of comment starting above function vcnpla_form_vcnpla_college_courses_form_alter, both the functions will go away

@@ -1,0 +1,102 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnchooseacareer_help($path, $arg) {
+	if ($path == 'admin/help#vcnchooseacareer') {
+		return t('Functionality related to VCN Choose a Career.');
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /explorecareers (Choose a Career)
+ */
+function vcnchooseacareer_preprocess_vcn_explore_careers_template(&$variables) {
+	
+  module_load_include('inc', 'vcngeneral', '/includes/vcngeneral');
+  module_load_include('inc', 'vcnonetassessment', '/includes/vcnonetassessment');
+  
+	if (empty($variables['industry'])) {
+		$variables['industry'] = vcn_get_industry();
+	}
+	
+  $variables['page_title'] = 'Choose a Career';
+  $variables['display_careers_match_by_default'] = false;
+  if (vcn_get_industry_code() == 'aarp') {
+    $variables['page_title'] = 'Target Local Hot Jobs and Careers';
+    $variables['display_careers_match_by_default'] = true;
+  }
+  
+	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
+	$variables['vcn_image_path'] = vcn_image_path();
+	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	
+	$variables['targeted_career_count'] = 0;
+	$user = vcn_get_user_info();
+	if($user['vcn_user_id'] > 0) {
+		$vcnuser_get_notebook_items = vcnuser_get_notebook_items($user['vcn_user_id'], 'OCCUPATION', 1);
+		$variables['targeted_career_count'] = count($vcnuser_get_notebook_items->item) > 0 ? 1 : 0;
+	}
+	
+	$variables['isLoggedInUser'] = $user['is_user_logged_in'];
+	//$variables['isLoggedInUser'] = ($GLOBALS['d6_uid'] && is_numeric($GLOBALS['d6_uid']) && $GLOBALS['d6_uid'] > 0) ? true : false;
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['cactext'] = vcn_node_text_by_urlalias("explorecareers-text");
+	$variables['industry_name'] = vcn_get_industry_name();
+  
+	$variables['work_categories'] = vcn_get_work_categories($variables);
+	
+	$variables['education_group_list'] = vcn_get_education_group_list($variables);
+	
+	$variables['careers_byworktype_edu_list'] = vcn_get_careers_byworktype_edu($variables);
+	
+	$variables['careers_byworktype_edu'] = vcn_process_careers_byworktype_edu($variables);
+	$variables['max_listing'] = 4;
+	
+	vcn_career_categories_tabs($variables);
+	
+	$path = drupal_get_path('theme', 'vcnstark');
+	drupal_add_js($path . '/js/vcn_choose_a_career.js');
+	
+  // check for onet assessment careers if avaiable
+  $variables['onet_assessment_matching_careers'] = vcn_get_onet_assessment_career_matches(5);
+  
+}
+
+function vcn_get_work_categories($variables) {
+	/* REST Call */
+	// get the Work category from lookup table.
+	$params = array('industry' => $variables['industry']);
+	$work_categories = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-work-categories', $params);
+	
+	return $work_categories->categories;
+	/* End REST Call */
+}
+
+/**
+ * hook_preprocess_theme for Advanced Career Tools
+ */
+
+function vcnchooseacareer_preprocess_vcn_advanced_career_tools(&$variables) {
+	drupal_add_js(drupal_get_path('module', 'vcnchooseacareer') .'/js/vcn_advanced_career_tools.js', 'file');
+	$variables['is_healthcare_industry'] = vcn_is_healthcare_industry();
+}

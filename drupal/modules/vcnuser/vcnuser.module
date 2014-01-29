@@ -1,0 +1,542 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+// 
+// VCNUser -- all functionality related to VCN user data
+//
+// The VCNUser module is intended to operate as a singleton global object, with the following
+// public interfaces:
+//
+// To get user data:
+//   vcnuser_get_zip()
+//   vnuser_get_distance()
+//   vcnuser_get_st() 
+//   vcnuser_get_onetcode() 
+//   vcnuser_get_awlevel() 
+//   other get methods to be added
+// 
+// To set user data:
+//   invoke block "profiler"
+//   other form blocks to be added  
+//
+
+/**
+ * Implements hook_help().
+ */
+function vcnuser_help($path, $arg) {
+  if ($path == 'admin/help#vcnuser') {
+    return t('User and user profile functionality for VCN.');
+  }
+}
+
+/** 
+ * User Object
+ */
+class VCNUser {
+   private $url_zip = null;
+   private $url_onetcode = null;
+   private $url_distance = null;
+   private $url_st = null;
+   private $url_awlevel = null;
+   
+   private $session_zip = null;
+   private $session_onetcode = null;
+   private $session_distance = null;
+   private $session_st = null;
+   private $session_awlevel = null;
+   
+   private $cma_zip = null;
+   private $cma_onetcode = null;
+   private $cma_distance = null;
+   private $cma_st = null;
+   private $cma_awlevel = null;
+   
+   // store REST data for occupation and education levels to avoid
+   // repeat REST calls for form display and edit
+   
+   private $occupation_list;
+   private $education_levels_list;
+   private $distance_options = array(5 => "5 miles", 
+	                     15 => "15 miles", 
+				    			     25 => "25 miles", 
+							         50 => "50 miles", 
+							         100 => "100 miles", 
+							         250 => "250 miles", 
+							         500 => "500 miles");
+   
+   // default values 
+   private $default_distance;
+   
+   function __construct() {
+   	 	
+   		// gather reference data needed for forms
+	   	$params = array('industry' => $GLOBALS['vcn_config_default_industry_id']);
+	   	$this->occupation_list = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'listcareers', $params);
+	   	//don't want to show education level less than high school, hence using no_less_than_hs flag
+	   	$this->education_levels_list = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-education-category', array('industry' => $GLOBALS['vcn_config_default_industry_id'], 'no_less_than_hs' => TRUE));
+	   
+	   	$this->set_default_distance($GLOBALS['default_distance']); // default distance is 25 miles
+	   	
+	   	if (empty($GLOBALS['vcn_user_id']) || !isset($GLOBALS['vcn_user_id'])) {
+	   		$is_user_id_set = false;
+	   	} else {
+	   		$is_user_id_set = true;
+	   	}
+	   	
+	   	if (!isset($_SESSION['vcnuser_onetcode']) && ($is_user_id_set)) { //if no carrer is selected by user, pull the targeted career from CMA if exists, and later set it to session in function get_onetcode()
+	   		$get_targeted_career_data = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-targeted-career', array('user_id' => $GLOBALS['vcn_user_id'], 'industry' => $GLOBALS['vcn_config_default_industry_id']), 'xml', 'post', false);
+	   		$targeted_career = isset($get_targeted_career_data->item) ? (string)$get_targeted_career_data->item->itemid[0] : NULL;
+	   		$this->cma_onetcode = $targeted_career;
+	   	}
+   
+   }
+   
+   public function get_zip() {
+     if (!empty($this->url_zip)) {
+     	// sync session value to url value
+	   vcnuser_set_zip_cookie($this->url_zip);
+	   return $this->url_zip;
+	 } else if (!empty($this->session_zip)) {
+	 	if ($this->session_zip == 'cleared' || !is_numeric($this->session_zip)) {
+	 		return null;
+	 	}
+	   return $this->session_zip;
+	 } else if (!empty($this->cma_zip)) {
+	   return $this->cma_zip;
+	 } else {
+	   return null;
+	 }
+   }
+   
+   public function get_onetcode() {
+     if (!empty($this->url_onetcode)) {
+	   // sync session value to url value
+		   vcnuser_set_onetcode_session($this->url_onetcode);
+		   return $this->url_onetcode;
+		 } else if (!empty($this->session_onetcode)) {
+		   return $this->session_onetcode;
+		 } else if (!empty($this->cma_onetcode)) { //defined in the __construct
+		 		return $this->cma_onetcode;
+		 } else {
+		   return null;
+		 }
+   }
+   
+   public function get_distance() {
+     if (!empty($this->url_distance)) {
+	   // sync session value to url value
+	   vcnuser_set_distance_cookie($this->url_distance);
+	   return $this->url_distance;
+	 } else if (!empty($this->session_distance)) {
+	   return $this->session_distance;
+	 } else if (!empty($this->cma_distance)) {
+	   return $this->cma_distance;
+	 } else {
+	   return $this->default_distance;
+	 }
+   }
+   
+	public function get_awlevel() {
+   	if (!empty($this->url_awlevel)) { // sync session value to url value
+   		vcnuser_set_awlevel_cookie($this->url_awlevel);
+   		return $this->url_awlevel;
+   	} else if (!empty($this->session_awlevel)) {
+   		return $this->session_awlevel;
+   	} else if (!empty($this->cma_awlevel)) {
+   		return $this->cma_awlevel;
+   	} else {
+   		//return null;
+   		$onetcode = $this->get_onetcode();
+   		if (!empty($onetcode)) {
+   			/*$max_education_array = vcn_calculate_max_edu_for_career($onetcode, FALSE);
+   			vcnuser_set_awlevel_cookie($max_education_array['max_education_id']);
+   			return $max_education_array['max_education_id'];*/
+   			
+   			$all_education_id = vcn_get_all_education_id();
+   			vcnuser_set_awlevel_cookie($all_education_id);
+   			return $all_education_id;
+   			
+   		} else {
+   			return null;
+   		}
+   	}
+  }
+   
+   public function get_zip_st() {
+     $zip = $this->get_zip();
+	 if (!empty($zip)) {
+	   return vcnStateUtil::getStateAbbrevFromZip($zip);
+     } else {
+	   return null;
+	 }
+   }
+   
+   public function get_st() {
+     //if (!empty($this->url_st)) {
+	 //  return $this->url_st;
+	 //} else if (!empty($this->session_st)) {
+	 //  return $this->session_st;
+	 //} else if (!empty($this->cma_st)) {
+	 //  return $this->cma_st;
+	 //} else {
+	 return $this->get_zip_st();
+	 //}
+   }
+    
+   public function get_url_zip() {
+     return $this->url_zip;
+   }
+   
+   public function set_url_zip($zip) {
+     $this->url_zip = $zip;
+   }
+   
+   public function set_url_distance($distance) {
+     $this->url_distance = $distance;
+   }
+   
+//   public function set_url_st($st) {
+//     $this->url_st = $st;
+//   }
+   
+   public function set_url_onetcode($onetcode) {
+     $this->url_onetcode = $onetcode;
+   }
+   
+   public function set_url_awlevel($awlevel) {
+     $this->url_awlevel = $awlevel;
+   }
+   
+   public function set_session_zip($zip) {
+     $this->session_zip = $zip;
+   }
+   
+   public function set_session_distance($distance) {
+     $this->session_distance = $distance;
+   }
+   
+//   public function set_session_st($st) {
+//     $this->session_st = $st;
+//   }
+   
+   public function set_session_onetcode($onetcode) {
+     $this->session_onetcode = $onetcode;
+   }
+   
+   public function set_session_awlevel($awlevel) {
+     $this->session_awlevel = $awlevel;
+   }
+   
+   public function set_cma_zip($zip) {
+     $this->cma_zip = $zip;
+   }
+   
+   public function get_session_zip() {
+     return $this->session_zip;
+   }
+   
+   public function get_session_distance() {
+     return $this->session_distance;
+   }
+   
+   public function get_session_st() {
+     return $this->session_st;
+   }
+   
+   public function get_session_onetcode() {
+     return $this->session_onetcode;
+   }
+   
+   public function get_session_awlevel() {
+     return $this->session_awlevel;
+   }
+   
+   public function get_occupation_list() {
+     return $this->occupation_list;
+   }
+   
+   public function get_education_levels_list() {
+     return $this->education_levels_list;
+   }
+   
+   public function get_distance_options() {
+     return $this->distance_options;
+   }
+   
+   public function set_default_distance($default_distance) {
+   		$this->default_distance = $default_distance;
+   }
+}
+
+/**
+ * create global user object with all URL, session and CMA user values
+ */ 
+ 
+$vcnuser = new stdClass();
+
+function vcnuser_get_user_values() {
+    $vcnuser = new VCNUser();
+	$GLOBALS['vcnuser'] = $vcnuser;
+	$current_path_array = explode("/", $_SERVER['REQUEST_URI']);
+	
+	// first, fill values from URL
+	
+	$find_zip_key = array_search('zip', $current_path_array);
+	if ($find_zip_key) {
+	  $vcnuser->set_url_zip($current_path_array[$find_zip_key + 1]);
+	}
+	
+    $find_distance_key = array_search('distance', $current_path_array);
+	if ($find_distance_key) {
+	  $vcnuser->set_url_distance($current_path_array[$find_distance_key + 1]);
+	}
+	
+	$find_st_key = array_search('st', $current_path_array);
+	if ($find_st_key) {
+	  $vcnuser->set_url_st($current_path_array[$find_st_key + 1]);
+	}
+	
+	$find_onetcode_key = array_search('onetcode', $current_path_array);
+	if ($find_onetcode_key) {
+	  $vcnuser->set_url_onetcode($current_path_array[$find_onetcode_key + 1]);
+	}
+	
+	$find_awlevel_key = array_search('awlevel', $current_path_array);
+	if ($find_awlevel_key) {
+	  $vcnuser->set_url_awlevel($current_path_array[$find_awlevel_key + 1]);
+	} else {
+		$session_onetcode = isset($_SESSION['vcnuser_onetcode']) ? $_SESSION['vcnuser_onetcode'] : NULL;
+		$onetcode = vcnuser_get_onetcode();
+		if (isset($onetcode)) {
+			if ($onetcode != $session_onetcode) { 
+				// navigate to the bottom of the file for explanation E1
+				/*$min_education_array = vcn_calculate_max_edu_for_career($onetcode, FALSE);
+				$vcnuser->set_url_awlevel($max_education_array['max_education_id']);*/
+				
+				$all_education_id = vcn_get_all_education_id();
+				$vcnuser->set_url_awlevel($all_education_id);
+			}
+		}
+	}
+	
+	// next, fill values from session
+	
+	if (isset($_COOKIE['d6_d7_zipcode_share'])) {
+	  $vcnuser->set_session_zip($_COOKIE['d6_d7_zipcode_share']);
+	}
+	
+	if (isset($_COOKIE['vcnuser_distance'])) {
+	  $vcnuser->set_session_distance($_COOKIE['vcnuser_distance']);
+	}
+	
+	//if (isset($_COOKIE['vcnuser_st'])) {
+	//  $vcnuser->set_session_st($_COOKIE['vcnuser_st']);
+	//}
+	
+	if (isset($_SESSION['vcnuser_onetcode'])) {
+	  $vcnuser->set_session_onetcode($_SESSION['vcnuser_onetcode']);
+	}
+	
+	if (isset($_COOKIE['vcnuser_awlevel'])) {
+	  $vcnuser->set_session_awlevel($_COOKIE['vcnuser_awlevel']);
+	}
+	
+	// next, fill value from CMA
+	
+	if ($GLOBALS['is_user_logged_in']) {
+      $vcnuser->set_cma_zip($GLOBALS['logged_in_user_default_zipcode']);
+	}
+
+}
+
+function vcnuser_get_zip() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_zip();
+}
+
+function vcnuser_get_distance() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_distance();
+}
+
+function vcnuser_get_zip_st() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_zip_st();
+}
+
+function vcnuser_get_st() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_st();
+}
+
+function vcnuser_get_onetcode() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_onetcode();
+}
+
+function vcnuser_get_awlevel() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_awlevel();
+}
+
+function vcnuser_get_career_name() {
+  $career_name = null;
+ 
+  $onetcode = vcnuser_get_onetcode();
+  if (!empty($onetcode)) {
+    $occlist = vcnuser_get_occupation_list();
+    foreach ($occlist->careerdata as $occ) { 
+       if ($occ->onetcode==$onetcode) {
+		  $career_name = $occ->title;
+		  break;
+	   }
+    }
+  }
+  return $career_name;
+}
+
+function vcnuser_get_edulevel() {
+  $edulevel = null;
+  
+  $awlevel = vcnuser_get_awlevel();
+  if (!empty($awlevel)) {
+	$edulist = vcnuser_get_education_levels_list();
+    foreach ($edulist->categories->item as $lev) { 
+      if ($lev->educationcategoryid==$awlevel) {
+		$edulevel = $lev->educationcategoryname;
+	    break;
+	  }
+	}
+  }
+  return $edulevel;
+}
+
+function vcnuser_get_occupation_list() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_occupation_list();
+}
+
+function vcnuser_get_education_levels_list() {
+  $vcnuser = $GLOBALS['vcnuser'];
+  return $vcnuser->get_education_levels_list();
+}
+
+/**
+ * implements hook_init to initialize global user object
+ */
+ 
+function vcnuser_init() {
+	vcnuser_get_user_values();
+}
+
+
+/**
+ * Returns the ZIP Code if it exists in the URL
+ * @return $zipcode
+ */
+function vcnuser_get_zipcode_from_url() {
+	$current_path_array = explode("/", $_SERVER['REQUEST_URI']);
+	$find_zip_key = array_search('zip', $current_path_array);
+	if ($find_zip_key) {
+		$zipcode_value = $current_path_array[$find_zip_key + 1];
+	} else {
+		$zipcode_value = NULL;
+	}
+	return $zipcode_value;
+}
+  
+/**
+ * 
+ * @return $zipcode
+ */
+function vcnuser_get_zipcode_from_cookie() {
+	if (isset($_COOKIE['d6_d7_zipcode_share'])) {
+		$zipcode = $_COOKIE['d6_d7_zipcode_share'];
+	} else {
+		$zipcode = NULL;
+	}
+	return $zipcode;
+}
+
+/**
+ * Create cookie values
+ */
+function vcnuser_set_zip_cookie($zip) {
+	setcookie("d6_d7_zipcode_share", $zip, time()-86400, '/');
+	setcookie("d6_d7_zipcode_share", $zip, 0, '/');
+}
+
+function vcnuser_set_distance_cookie($distance) {
+	setcookie("vcnuser_distance", $distance, time()-86400, '/');
+	setcookie("vcnuser_distance", $distance, 0, '/');
+}
+
+function vcnuser_set_onetcode_session($onetcode) {
+	if (isset($_SESSION['vcnuser_onetcode'])) {
+		unset($_SESSION['vcnuser_onetcode']);
+	}
+	$_SESSION['vcnuser_onetcode'] = $onetcode;
+}
+
+function vcnuser_set_awlevel_cookie($awlevel) {
+	setcookie("vcnuser_awlevel", $awlevel, time()-86400, '/');
+	setcookie("vcnuser_awlevel", $awlevel, 0, '/');
+}
+
+function vcnuser_unset_onetcode_session() {
+  if (isset($_SESSION['vcnuser_onetcode'])) { unset($_SESSION['vcnuser_onetcode']); }
+  if (isset($_SESSION['user_answers'])) { unset($_SESSION['user_answers']); }
+  if (isset($_SESSION['user_answers_types'])) { unset($_SESSION['user_answers_types']); }
+  if (isset($_SESSION['vcn_counselor_student_id'])) { unset($_SESSION['vcn_counselor_student_id']); }
+}
+
+
+/**
+ * this function will help us identify if the user really cleared the ZIP code from input field and wanted to see the data across the entire country, so we are setting cookie value to "cleared"
+ */
+function vcnuser_clear_zip_cookie() {
+	setcookie("d6_d7_zipcode_share", null, time()-86400, '/');
+	setcookie("d6_d7_zipcode_share", "cleared", 0, '/');
+}
+
+function vcnuser_get_notebook_items($vcnuserid, $item_type = "ALL", $targeted = '0', $details = FALSE) { //$item_type = 'OCCUPATION'/'PROGRAM'/'CERTIFICATE'/'LICENSE'/'ALL'
+	/* REST Call */
+	$industry = vcn_get_industry();
+
+	$params = array('userid' => $vcnuserid, 'industry' => $industry, 'type' => $item_type, 'targeted' => $targeted, 'details' => $details);
+	$user_notebook_items = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-items', $params, 'xml', 'post', false);
+
+	return $user_notebook_items;
+
+	/* End REST Call */
+}
+
+function vcnuser_get_edu_level() {
+	if (isset($_COOKIE['user_edu_level'])) {
+		$user_edu_level = $_COOKIE['user_edu_level'];
+	} else {
+		$user_edu_level = 0;
+	}
+	return $user_edu_level;
+}
+
+// -------------- Do not delete ------------
+//E1
+// if user selects new career then get minimum education for the selected career.
+// if they are looking at the same career keep the education level they had selected for the career
+// eg: if users select "Acute Care Nurse" (min education is Associate's degree) and "bachelors degree" and submit the user selection form, "bachelor degree" will be in the min education cookie.
+// now if they explore the website and go to career details page for "Acute Care Nurse" and click on Find Programs link, they should go to get qualified page with "Acute care nurse" as the career and "Bachelors degree"
+// but if they go to career detail page of some other career and click on Find programs link, go to the get qualified page with minimum education of that particular career selected

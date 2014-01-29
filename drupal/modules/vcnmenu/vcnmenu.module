@@ -1,0 +1,1892 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implements hook_help().
+ */
+function vcnmenu_help($path, $arg) {
+  if ($path == 'admin/help#vcnmenu') {
+    return t('Menu/URL callback functions for VCN.');
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ *
+ * Implementations return an associative array
+ * whose keys define paths
+ * and whose values are an associative array of properties for each path.
+ *
+ */
+
+function vcnmenu_menu() {
+	
+	$items = array();
+	
+	// define your custom path here. for Example
+	/*$items['online-courses/%/%'] = array(
+			'page callback' => 'vcnonlinecourses_callback_function',
+			// page callback function, which is invoked when the registered path is requested
+			'page arguments' => array(1,2),
+			// position of argument
+			// ['online-courses/%/%/edit'] : 0 => online-courses , 1 => first occurrence of %, 2 => second occurrence of %, 3 => edit
+			// ['abc/def'] with array(1, 'foo') : 1 => def, 2 => foo
+			// array(2) => will give value of second occurrence of %
+			// array(0) for no arguements ( or skip to define)
+			// array(1) for my-module/%/edit
+			'access callback' => TRUE,
+			'type' => MENU_CALLBACK,
+	);*/
+	
+	// Get Started page
+	
+	$items['get-started'] = array(
+			'title' => 'Get Started',
+			'page callback' => 'vcn_get_started',
+			'file' => 'includes/vcngetstarted.inc',
+			'file path' => drupal_get_path('module', 'vcngetstarted'),
+			'access callback' => TRUE,
+	);
+	
+	// Choose a Career page
+	
+	$items['explorecareers'] = array(
+		'title' => 'Choose a Career',
+		'page callback' => 'vcn_explore_careers',			
+		'file' => 'includes/vcnmenucallback.inc',			
+		'access callback' => TRUE,				
+	);
+	
+	// Career detail
+	// %: 1 onetcode = save/target, 2 tabid = overview/salary-outlook/on-the-job/education-training/skills-tools/resources  [optional], 3 = zipcode [optional]	
+	$items['careers/%'] = array(
+		'title' => 'Career Detail',
+		'page callback' => 'vcn_careerdetails',
+		'page arguments' => array(1,2,3),
+		'file' => 'includes/vcncareerdetails.inc',
+		'file path' => drupal_get_path('module', 'vcncareerdetails'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	// Career pathway by worktype
+	$items['careerladder/%'] = array(
+		'title' => 'Career Pathway',
+		'page callback' => 'vcn_career_ladder_by_worktype',
+		'page arguments' => array(1), // worktype
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Career pathway by onetcode
+	$items['careerladder/onetcode/%'] = array(
+		'title' => 'Career Pathway',
+		'page callback' => 'vcn_career_ladder_by_onetcode',
+		'page arguments' => array(2), // onetcode
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,		
+	);
+	
+	// Get Qualified pages
+	
+	$items['get-qualified'] = array(
+		'title' => t('Get Qualified: Prepare for a Career in '.vcn_get_industry_name()),
+		'page callback' => 'vcn_getqualified_callback',
+		'access callback' => TRUE,
+		'file' => 'includes/vcngetqualified.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+	);
+	
+	$items['get-qualified/requirements'] = array(
+		'title' => t('Get Qualified: Requirements'),
+		'page callback' => 'vcn_getqualified_requirements_callback',
+		'access callback' => TRUE,
+		'file' => 'includes/vcngetqualified_requirements.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+	);
+	
+	$items['get-qualified/certifications'] = array(
+		'title' => t('Get Qualified: Certifications'),
+		'page callback' => 'vcn_getqualified_certifications_callback',
+		'access callback' => TRUE,
+		'file' => 'includes/vcngetqualified_certifications.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+	);
+	
+	$items['get-qualified/licenses'] = array(
+		'title' => t('Get Qualified: Licenses'),
+		'page callback' => 'vcn_getqualified_licenses_callback',
+		'access callback' => TRUE,
+		'file' => 'includes/vcngetqualified_licenses.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+	);
+	
+	$items['get-qualified/programs'] = array(
+		'title' => t('Get Qualified: Programs'),
+		'page callback' => 'vcn_getqualified_programs_callback',
+		'access callback' => TRUE,
+		'file' => 'includes/vcngetqualified_programs.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+	);
+	
+	// Certification detail page ( old page was find-learning/detail/certifications/cert_id/%/onetcode/%)
+	$items['get-qualified/certification/%'] = array(
+		'title' => 'Certification',
+		'page callback' => 'vcn_certification_detail',
+		'page arguments' => array(2,4), 
+		'file' => 'includes/vcngetqualified_certification_detail.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'access callback' => TRUE,
+	);
+	
+	// License detail page ( old page was find-learning/detail/licenses/licenseid/%/stfips/%/onetcode/%)
+	$items['get-qualified/license/%/location/%/onetcode/%'] = array(
+		'title' => 'License',
+		'page callback' => 'vcn_license_detail',
+		'page arguments' => array(2,4,6),
+		'file' => 'includes/vcngetqualified_license_detail.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'access callback' => TRUE,
+	);
+	
+	// Program detail page ( old page was find-learning/detail/programs/program_id/%/cipcode/%/onetcode/%)
+	$items['get-qualified/program/%/cipcode/%/onetcode/%'] = array(
+		'title' => 'Program',
+		'page callback' => 'vcn_program_detail',
+		'page arguments' => array(2,4,6),
+		'file' => 'includes/vcngetqualified_program_detail.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'access callback' => TRUE,
+	);
+	
+	// School/Provider detail page by Unitid ( old page was find-learning/detail/school/unitid/%)
+	$items['get-qualified/school/%'] = array(
+		'title' => 'School',
+		'page callback' => 'vcn_schooldetail_by_unitid',
+		'page arguments' => array(2), // provider unitid
+		'file' => 'includes/vcngetqualified_school_detail.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'access callback' => TRUE,
+	);
+	
+	$items['get-qualified/financialaid/%'] = array(
+		'title' => 'Financial Aid',
+		'page callback' => 'vcn_financial_aid_by_unitid',
+		'page arguments' => array(2), // provider unitid
+		'file' => 'includes/vcngetqualified_financialaid_detail.inc',
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'access callback' => TRUE,
+	);
+	
+	// Get Qualified pages end
+	
+	//Provider portal pages
+	// School/Provider profile Edit page by Unitid ( old page was find-learning/detail/school/unitid/%)
+	$items['provider/profile/%'] = array(
+		'title' => 'Provider Profile',
+		'page callback' => 'vcn_providerprofile_edit_by_unitid',
+		'page arguments' => array(2), // provider unitid
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// School/Provider program Add page ( old page was find-learning/detail/programs/program_id/?unitid=%)
+	$items['provider/%/program'] = array(
+		'title' => 'Program',
+		'page callback' => 'vcn_provider_program_add',
+		'page arguments' => array(1),
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// School/Provider program Edit page ( old page was find-learning/detail/programs/program_id/%/cipcode/%/onetcode//unitid/%)
+	$items['provider/%/program/%/cipcode/%'] = array(
+		'title' => 'Program',
+		'page callback' => 'vcn_provider_program_edit',
+		'page arguments' => array(1,3,5), 
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+  
+  $items['provider/summary'] = array(
+	  'title' => 'Provider Portal',
+		'page callback' => 'vcn_provider_summary',
+	  'page arguments' => array(3), // provider unitid
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+  
+  $items['provider/programs'] = array(
+  	'title' => 'Programs',
+		'page callback' => 'vcn_provider_programs',
+    'page arguments' => array(3), // provider unitid
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	//Provider portal pages end
+	
+	// Help page
+	
+	$items['help'] = array(
+		'title' => 'Frequently Asked Questions',
+		'page callback' => 'vcn_help',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Resources page
+	
+	$items['resources'] = array(
+		'title' => 'Resources',
+		'page callback' => 'vcn_resources',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Community groups page
+	
+	$items['community/groups'] = array(
+		'title' => 'Community Groups',
+		'page callback' => 'vcn_communitygroups',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Office Locator page
+	
+	$items['office-locator'] = array(
+		'title' => 'Office Locator',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('vcnofficelocator_form'),
+		'file' => 'includes/vcnofficelocator.inc',
+		'file path' => drupal_get_path('module', 'vcnofficelocator'),
+		'access callback' => TRUE,
+	);
+	
+	// Office Locator page end
+	
+	// Top 10 by xyz pages
+	
+	$items['top10byjobs'] = array(
+		'title' => 'Top 10 Most In Demand '.vcn_get_industry_name().' Careers',
+		'page callback' => 'vcn_top10_by_jobs',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	$items['top10bygrowth'] = array(
+		'title' => 'Top 10 Fastest Growing '.vcn_get_industry_name().' Careers',
+		'page callback' => 'vcn_top10_by_growth',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	$items['top10bypay'] = array(
+		'title' => 'Top 10 Salaries for '.vcn_get_industry_name().' Careers',
+		'page callback' => 'vcn_top10_by_pay',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Top 10 by xyz pages end
+	
+  // Career overview by onetcode
+	$items['careeroverview/onetcode/%'] = array(
+    'title' => 'Career Overview',
+	  'page callback' => 'vcn_career_overview_by_onetcode', // callback at vcnoccupation.module
+	  'page arguments' => array(2), // onetcode	  
+	  'access callback' => TRUE,
+	);
+	
+	// Online courses pages
+	$items['online-courses/take-online'] = array(
+    'title' => 'Take a Course Online',
+	  'page callback' => 'vcn_take_online',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(0),
+	  'access callback' => TRUE,
+	  'type' => MENU_NORMAL_ITEM,
+	);
+	
+	$items['online-courses/non-credit-courses'] = array(
+	  'title' => 'Refresher Courses',
+	  'page callback' => 'vcn_non_credit_courses',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'access callback' => TRUE,
+	);
+	
+	$items['online-courses/non-credit-specialized-courses'] = array(
+    'title' => 'Specialized Courses',
+	  'page callback' => 'vcn_non_credit_specialized_courses',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'access callback' => TRUE,
+	);
+	
+	$items['online-courses/hit'] = array(
+	  'title' => vcn_get_industry_name().' Information Technology Instructional Program',
+	  'page callback' => 'vcn_hit',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'access callback' => TRUE,
+	);
+	
+	$items['online-courses'] = array(
+	  'title' => 'Take a Course Online',
+	  'page callback' => 'vcn_online_courses',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(1, 2),
+	  'access callback' => TRUE,
+	);
+	// Online courses pages end
+	
+	// Match your education (Choose a career) to careers pages
+	
+	$items['educationmatch'] = array(
+		'title' => 'Match Your Education to Careers',
+		'page callback' => 'vcn_education_match',
+		'file' => 'includes/vcnmenucallback.inc',
+		'access callback' => TRUE,
+	);
+	
+	// Match your education (Choose a career) to careers pages end
+	
+  // Onet Assessment pages
+  
+	$items['interest-profiler'] = array(
+	  'title' => 'Match Your Interests to Careers',
+	  'page callback' => 'vcn_onet_assessment',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(2, 4),
+	  'access callback' => TRUE,
+	);
+	
+	$items['interest-profiler-results'] = array(
+	  'title' => 'Match Your Interests to Careers',
+	  'page callback' => 'vcn_onet_assessment_results',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(),
+	  'access callback' => TRUE,
+	);
+	
+	$items['interest-profiler-details'] = array(
+	  'title' => 'Match Your Interests to Careers',
+	  'page callback' => 'vcn_onet_assessment_details',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(1),
+	  'access callback' => TRUE,
+	);
+
+	$items['interest-profiler-info'] = array(
+		'title' => 'Match Your Interests to Careers',
+		'page callback' => 'vcn_onet_assessment_info',
+		'file' => 'includes/vcnmenucallback.inc',
+		'page arguments' => array(),
+		'access callback' => TRUE,
+	);
+	
+	// Onet Assessment pages end
+	
+	// Rest Custom CMS pages
+  
+	$items['career-data-cms'] = array(
+	  'page callback' => 'vcn_rest_custom_cms',
+	  'file' => 'includes/vcnmenucallback.inc',
+	  'page arguments' => array(1, 2),
+    'access arguments' => array('alter REST content'),
+	  'access callback' => TRUE,
+	);
+	
+	// Rest Custom CMS pages
+	
+	// Find a job pages
+	
+	$items['findwork'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork',
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-autocomplete'] = array(
+		'page callback' => 'vcn_autocomplete_callback',
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'file' => 'includes/vcngeneral.inc',
+	);
+	
+	$items['findwork-results'] = array(
+			'title' => 'Find a Job',
+			'page callback' => 'vcn_findwork_results',			
+			'access callback' => TRUE,
+			'file path' => drupal_get_path('module', 'vcnfindwork'),
+			'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results/search-term/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_search',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results/search-term/%/zip/%/distance/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_search_with_zipcode',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results/career/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_career',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results/career/%/zip/%/distance/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_career_with_zipcode',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results-feedback/search-term/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_feedback_searchterm',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results-feedback/search-term/%/zip/%/distance/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_feedback_searchterm_with_zipcode',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results-feedback/career/%/career-title/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_feedback_career',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	$items['findwork-results-feedback/career/%/career-title/%/zip/%/distance/%'] = array(
+		'title' => 'Find a Job',
+		'page callback' => 'vcn_findwork_results_feedback_career_with_zipcode',
+		'page arguments' => array(2,4,6,8),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnfindwork'),
+		'file' => 'includes/vcnfindwork.inc',
+	);
+	
+	// Find a job pages end
+	
+	//menus for data tables and rest integration. In most cases these URLs need to be invoked through the JS files
+	
+
+	$items['rest-dt-getqualified-programs/onetcode/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_callback',//vcn_rest_datatable',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-getqualified-programs/onetcode/%/zip/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_zip_callback',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-getqualified-programs/onetcode/%/zip/%/distance/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_zip_callback',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-getqualified-programs/onetcode/%/awlevel/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_award_callback',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-getqualified-programs/onetcode/%/awlevel/%/zip/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_award_zip_callback',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-getqualified-programs/onetcode/%/awlevel/%/zip/%/distance/%'] = array(
+		'page callback' => 'vcn_getqualified_onetcode_award_zip_callback',
+		'page arguments' => array(2,4,6,8),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcngetqualified'),
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$items['rest-dt-pla-military-credits/branch/%'] = array(
+		'page callback' => 'vcnpla_military_credits',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credits.inc',		
+	);
+	
+	$items['rest-dt-pla-military-credits/branch/%/search-term/%'] = array(
+		'page callback' => 'vcnpla_military_credits_search_term',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credits.inc',
+	);
+	
+	$items['rest-dt-pla-professional-training/organization/%'] = array(
+		'page callback' => 'vcnpla_professional_training',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training.inc',
+	);
+	
+	$items['rest-dt-pla-professional-training/organization/%/search-term/%'] = array(
+		'page callback' => 'vcnpla_professional_training_search_term',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training.inc',
+	);
+	
+	$items['rest-dt-pla-national-exams/organization/%'] = array(
+		'page callback' => 'vcnpla_national_exams',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exams.inc',
+	);
+	
+	$items['rest-dt-pla-national-exams/organization/%/search-term/%'] = array(
+		'page callback' => 'vcnpla_national_exams_search_term',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exams.inc',
+	);
+	
+	$items['rest-dt-careergrid'] = array(
+		'page callback' => 'vcn_careergrid_rest',
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'file' => 'includes/vcncareergrid.inc',
+	);
+	
+	$items['rest-dt-careergrid/education-level/%/work-type/%'] = array(
+		'page callback' => 'vcn_careergrid_rest',
+		'page arguments' => array(2,4),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'file' => 'includes/vcncareergrid.inc',
+	);
+	
+	$items['rest-dt-careergrid/education-level/%/work-type/%/search-term/%'] = array(
+		'page callback' => 'vcn_careergrid_rest',
+		'page arguments' => array(2,4,6),
+		'access callback' => TRUE,
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'file' => 'includes/vcncareergrid.inc',
+	);
+	
+	//end of menus for tables and rest integration
+	
+	// Ajax calls
+	
+	// Return Job count by onetcode and zipcode
+	$items['jobcountbyonetandzip/ajax'] = array(
+			'title' => 'Job Count',
+			'page callback' => 'vcn_job_count_by_onet_and_zip_ajax_callback',
+			'page arguments' => array(2,3,4),
+			'file' => 'includes/vcnfindwork.inc',
+			'file path' => drupal_get_path('module', 'vcnfindwork'),
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	// Zipcode validation // Returns AJAX commands if the user has JavaScript turned on. 
+	$items['zipcode-validation/ajax'] = array(
+		'title' => 'Zipcode Validation Ajax Callback',
+		'page callback' => 'vcn_zipcode_validation_ajax_callback',
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	// Zipcode validation // Returns a Non-JavaScript alternative.
+	$items['zipcode-validation/nojs'] = array(
+		'title' => 'Zipcode Validation Ajax Callback',
+		'page callback' => 'vcn_zipcode_validation_ajax_callback',
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	// Tell US Comment // Returns AJAX commands if the user has JavaScript turned on.
+	$items['tell-us-comment/ajax'] = array(
+		'title' => 'Tell US Comment Ajax Callback',
+		'page callback' => 'vcn_tell_us_comment_ajax_callback',			
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	// Tell US Comment // Returns a Non-JavaScript alternative.
+	$items['tell-us-comment/nojs'] = array(
+		'title' => 'Tell US Comment Ajax Callback',
+		'page callback' => 'vcn_tell_us_comment_ajax_callback',			
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+
+	// Save/Target CMA Notebook Items
+	// %: 3 task = save/target, 4 item_type = career/program/certification/license, 
+	// 	  5 Itemid(career-onet/program/certification/license ID), 6 sub_item_id(onetcode), 7 secondary_info = cipcode/state_fip
+	$items['cma/ajax/save-target-notebook-item'] = array(
+		'title' => 'CMA Save/Target notebook item',
+		'page callback' => 'vcn_save_target_notebook_item_ajax_callback',
+		'page arguments' => array(3,4,5,6,7),
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+
+	
+	// Get CMA saved career list and count // Returns AJAX commands if the user has JavaScript turned on.
+	$items['get-cma-saved-careers/ajax/%'] = array(
+		'title' => 'CMA saved career list and count',
+		'page callback' => 'vcn_get_cma_saved_careers_ajax_callback',
+		'page arguments' => array(2), // vcnuserid/cmaid
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),		
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	// Get CMA saved career list and count // Returns a Non-JavaScript alternative.
+	$items['get-cma-saved-careers/nojs/%'] = array(
+		'title' => 'CMA saved career list and count',
+		'page callback' => 'vcn_get_cma_saved_careers_ajax_callback',
+		'page arguments' => array(2), // vcnuserid/cmaid
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	// Get CMA targeted career list and count // Returns AJAX commands if the user has JavaScript turned on.
+	$items['get-cma-targeted-career/ajax/%'] = array(
+		'title' => 'CMA targeted career list and count',
+		'page callback' => 'vcn_get_cma_targeted_career_ajax_callback',
+		'page arguments' => array(2), // vcnuserid/cmaid
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	// Get CMA targeted career list and count // Returns a Non-JavaScript alternative.
+	$items['get-cma-targeted-career/nojs/%'] = array(
+		'title' => 'CMA targeted career list and count',
+		'page callback' => 'vcn_get_cma_targeted_career_ajax_callback',
+		'page arguments' => array(2), // vcnuserid/cmaid
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['vcnuser-onetcode/update/%'] = array (
+		'title' => 'Update session value with targeted career',
+		'page callback' => 'vcn_update_vcnuser_onetcode',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+  
+	// set the counselor user's session for their selected userid so they can view that user's CMA
+	$items['set-cma-counselor-user-id/ajax/%'] = array(
+		'title' => 'CMA targeted career list and count',
+		'page callback' => 'vcn_set_cma_counselor_user_id_ajax_callback',
+		'page arguments' => array(2), // vcnuserid/cmaid
+		'file' => 'includes/vcngeneral.inc',
+		'file path' => drupal_get_path('module', 'vcngeneral'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+  
+	/* PLA menus*/
+	
+	$items['pla/getting-started'] = array (
+		'title' => 'Earn College Credit: Home',
+		'page callback' => 'vcn_pla_getting_started',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/vcnpla.inc',
+		'file path' => drupal_get_path('module', 'vcnpla'),
+	);
+	
+	$items['pla/college-courses'] = array (
+		'title' => 'Earn College Credit: College Courses',
+		'page callback' => 'vcn_pla_college_courses',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/vcnpla_college_courses.inc',
+		'file path' => drupal_get_path('module', 'vcnpla'),
+	);
+	
+	$items['pla/military-credit'] = array (
+		'title' => 'Earn College Credit: Military Credit',
+		'page callback' => 'vcn_pla_military_credit',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/vcnpla_military_credits.inc',
+		'file path' => drupal_get_path('module', 'vcnpla'),
+	);
+	
+	$items['pla/professional-training'] = array (
+		'title' => 'Earn College Credit: Professional Training',
+		'page callback' => 'vcn_pla_professional_training',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/vcnpla_professional_training.inc',
+		'file path' => drupal_get_path('module', 'vcnpla'),
+	);
+	
+	$items['pla/national-exams'] = array (
+		'title' => 'Earn College Credit: National Exams',
+		'page callback' => 'vcn_pla_national_exams',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'includes/vcnpla_national_exams.inc',
+		'file path' => drupal_get_path('module', 'vcnpla'),
+	);	
+	
+	$items['pla/my-learning-inventory'] = array (
+		'title' => 'Earn College Credit: My Learning Inventory',
+		'page callback' => 'vcn_pla_mylearning_inventory',
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_mylearning_inventory.inc',
+	);
+	
+	$items['pla/college-course-details/%'] = array (
+		'title' => 'Earn College Credit: College Course Details',
+		'page callback' => 'vcn_pla_college_course_details',
+		'page arguments' => array(2),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_college_courses_detail.inc',
+	);
+	
+	$items['pla/military-credit-details/%/%/%'] = array (
+		'title' => 'Earn College Credit: Military Courses Details',
+		'page callback' => 'vcn_pla_military_credit_details',
+		'page arguments' => array(2,3,4),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credit_details.inc',
+	);
+	
+	$items['pla/military-credit-details/my-learning-inventory/%/%/%'] = array (
+		'title' => 'Earn College Credit: Military Courses Details',
+		'page callback' => 'vcn_pla_military_credit_details_from_mylearning_inventory',
+		'page arguments' => array(3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credit_details.inc',
+	);
+	
+	$items['pla/military-credit-details/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: Military Courses Details',
+		'page callback' => 'vcn_pla_military_credit_details_with_additional_params',
+		'page arguments' => array(2,3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credit_details.inc',
+	);
+	
+	$items['pla/military-credit-details/%/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: Military Courses Details',
+		'page callback' => 'vcn_pla_military_credit_details_with_additional_params',
+		'page arguments' => array(2,3,4,5,6),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_military_credit_details.inc',
+	);
+	
+	$items['pla/professional-training-details/%/%/%'] = array (
+		'title' => 'Earn College Credit: Professional Training Details',
+		'page callback' => 'vcn_pla_professional_training_details',
+		'page arguments' => array(2,3,4),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training_details.inc',
+	);
+	
+	$items['pla/professional-training-details/my-learning-inventory/%/%/%'] = array (
+		'title' => 'Earn College Credit: Professional Training Details',
+		'page callback' => 'vcn_pla_professional_training_details_from_mylearning_inventory',
+		'page arguments' => array(3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training_details.inc',
+	);
+	
+	$items['pla/professional-training-details/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: Professional Training Details',
+		'page callback' => 'vcn_pla_professional_training_details_with_additional_params',
+		'page arguments' => array(2,3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training_details.inc',
+	);
+	
+	$items['pla/professional-training-details/%/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: Professional Training Details',
+		'page callback' => 'vcn_pla_professional_training_details_with_additional_params',
+		'page arguments' => array(2,3,4,5,6),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_professional_training_details.inc',
+	);
+	
+	$items['pla/national-exam-details/%/%/%'] = array (
+		'title' => 'Earn College Credit: National Exams Details',
+		'page callback' => 'vcn_pla_national_exam_details',
+		'page arguments' => array(2,3,4),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exam_details.inc',
+	);
+	
+	$items['pla/national-exam-details/my-learning-inventory/%/%/%'] = array (
+		'title' => 'Earn College Credit: National Exams Details',
+		'page callback' => 'vcn_pla_national_exam_details_from_mylearning_inventory',
+		'page arguments' => array(3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exam_details.inc',
+	);
+	
+	$items['pla/national-exam-details/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: National Exams Details',
+		'page callback' => 'vcn_pla_national_exam_details_with_additional_params',
+		'page arguments' => array(2,3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exam_details.inc',
+	);
+	
+	$items['pla/national-exam-details/%/%/%/%/%'] = array (
+		'title' => 'Earn College Credit: National Exams Details',
+		'page callback' => 'vcn_pla_national_exam_details_with_additional_params',
+		'page arguments' => array(2,3,4,5,6),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_national_exam_details.inc',
+	);
+	
+	$items['pla/save-courses/%/%/%/%'] = array (
+		'title' => 'PLA: Save Courses',
+		'page callback' => 'vcn_pla_save_courses',
+		'page arguments' => array(2,3,4,5),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['pla/remove-courses/ajax/%'] = array(
+		'title' => 'CMA remove credit courses',
+		'page callback' => 'vcn_remove_credit_courses_ajax_callback',
+		'page arguments' => array(3), // usercourseid			
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);	
+	
+	$items['pla/view-my-learning-inventory'] = array(
+		'title' => 'My Learning Inventory',
+		'page callback' => 'vcn_view_my_learning_inventory',			
+		'file path' => drupal_get_path('module', 'vcnpla'),
+		'file' => 'includes/vcnpla_pdf.inc',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['pla/view-my-cover-letter'] = array(
+			'title' => 'My Cover Letter',
+			'page callback' => 'vcn_view_my_cover_letter',
+			'file path' => drupal_get_path('module', 'vcnpla'),
+			'file' => 'includes/vcnpla_pdf.inc',
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
+	
+	/* End of PLA */
+	
+	/* CMA */
+	
+	$items['cma/profile'] = array(
+		'title' => 'Career Management Account',			
+		'page callback' => 'vcn_cma_profile',			
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,				
+	);
+	
+	$items['cma/career-wishlist'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_career_wishlist',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/careers'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_careers',			
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,		
+	);
+	
+	$items['cma/programs'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_programs',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/certifications'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_certifications',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/licenses'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_licenses',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/college-credit'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_college_credit',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/employment-history'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_employment_history',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/employment-history/add'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_employment_history_add',			
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/employment-history/%'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_employment_history_update',
+		'page arguments' => array(2),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/job-scouts'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_job_scouts',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/local-jobs'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_local_jobs',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/local-jobs/edit/%'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_local_job_update',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,	
+	);
+	
+	$items['cma/local-jobs/add'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_local_job_add',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/network-contacts'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_network_contacts',
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/network-contacts/edit/%'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_network_contact_update',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/network-contacts/add'] = array(
+		'title' => 'Career Management Account',
+		'page callback' => 'vcn_cma_network_contact_add',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/local-jobs-detail/%'] = array(
+			'title' => 'Career Management Account',
+			'page callback' => 'vcn_cma_local_jobs_detail',
+			'page arguments' => array(2),
+			'file' => 'includes/vcncma.inc',
+			'file path' => drupal_get_path('module', 'vcncma'),
+			'access callback' => TRUE,
+	);
+	
+	$items['cma/network-contacts-detail/%'] = array(
+			'title' => 'Career Management Account',
+			'page callback' => 'vcn_cma_network_contacts_detail',
+			'page arguments' => array(2),
+			'file' => 'includes/vcncma.inc',
+			'file path' => drupal_get_path('module', 'vcncma'),
+			'access callback' => TRUE,
+	);
+	
+	$items['cma/target-career'] = array(
+			'title' => 'Career Management Account',
+			'page callback' => 'vcn_cma_target_career',
+			'file' => 'includes/vcncma.inc',
+			'file path' => drupal_get_path('module', 'vcncma'),
+			'access callback' => TRUE,
+	);
+	
+	$items['cma/target-program'] = array(
+			'title' => 'Career Management Account',
+			'page callback' => 'vcn_cma_target_program',
+			'file' => 'includes/vcncma.inc',
+			'file path' => drupal_get_path('module', 'vcncma'),
+			'access callback' => TRUE,
+	);
+  
+	// CMA AJAX calls
+	$items['cma/ajax/remove-notebook-item/%/%'] = array(
+		'title' => 'CMA remove notebook item',
+		'page callback' => 'vcn_remove_notebook_item_ajax_callback',
+		'page arguments' => array(3,4), // item_type = career/program/certification/license, notebookid 
+		'file' => 'includes/vcncma_ajax.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['cma/remove-employment-history/ajax/%'] = array(
+		'title' => 'CMA remove employment history',
+		'page callback' => 'vcn_remove_employment_history_ajax_callback',
+		'page arguments' => array(3), // useremploymentid
+		'file' => 'includes/vcncma_ajax.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	
+	$items['cma/remove-job/ajax/%'] = array(
+		'title' => 'Career Management Account : Job scout delete',
+		'page callback' => 'vcn_cma_delete_from_job_scouts',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/jobscout-update-subscription/ajax/%'] = array(
+		'title' => 'Career Management Account : Job scout update subscription',
+		'page callback' => 'vcn_cma_job_scouts_update_subscription',
+		'page arguments' => array(3),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+	$items['cma/save-jobsearch/%/%/%/%'] = array(
+		'title' => 'Career Management Account : Save job search',
+		'page callback' => 'vcn_cma_save_job_search',
+		'page arguments' => array(2,3,4,5),
+		'file' => 'includes/vcncma.inc',
+		'file path' => drupal_get_path('module', 'vcncma'),
+		'access callback' => TRUE,
+	);
+	
+  $items['cma/course-completed/course/%'] = array(
+		'title' => 'Course Completed',
+		'page callback' => 'vcn_cma_course_completed_ajax_callback',
+		'page arguments' => array(3), 
+		'file' => 'includes/vcncma_ajax.inc',
+    'file path' => drupal_get_path('module', 'vcncma'),
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+  
+  $items['cma/remove-local-job/ajax/%'] = array(
+  	'title' => 'Career Management Account : Local Job delete',
+  	'page callback' => 'vcn_cma_delete_local_job',
+  	'page arguments' => array(3),
+  	'file' => 'includes/vcncma.inc',
+  	'file path' => drupal_get_path('module', 'vcncma'),
+  	'access callback' => TRUE,
+  );
+  
+  $items['cma/remove-network-contact/ajax/%'] = array(
+  	'title' => 'Career Management Account : Network Contacts',
+  	'page callback' => 'vcn_cma_delete_network_contact',
+  	'page arguments' => array(3),
+  	'file' => 'includes/vcncma.inc',
+  	'file path' => drupal_get_path('module', 'vcncma'),
+  	'access callback' => TRUE,
+  );
+  
+	/* End of CMA */
+	
+	/* VCN Career Grid */
+	
+	$items['careergrid'] = array(
+		'title' => 'VCN Career Grid',
+		'page callback' => 'vcn_career_grid',
+		'file' => 'includes/vcncareergrid.inc',
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'access callback' => TRUE		
+	);
+	
+	$items['careergrid/education-level/%/work-type/%'] = array(
+		'title' => 'VCN Career Grid',
+		'page callback' => 'vcn_career_grid',
+		'page arguments' => array(2,4),
+		'file' => 'includes/vcncareergrid.inc',
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'access callback' => TRUE
+	);
+	
+	$items['careergrid/education-level/%/work-type/%/search-term/%'] = array(
+		'title' => 'VCN Career Grid',
+		'page callback' => 'vcn_career_grid_search_term',
+		'page arguments' => array(2,4,6),
+		'file' => 'includes/vcncareergrid.inc',
+		'file path' => drupal_get_path('module', 'vcncareergrid'),
+		'access callback' => TRUE
+	);
+	
+	/* End of VCN Career Grid*/
+	
+	/* Menu item to calculate minimum education for a Career, required for AJAX Calls */
+	
+	$items['calculate-min-education/onetcode/%'] = array(
+		'page callback' => 'vcn_calculate_min_edu_for_career',
+		'page arguments' => array(2),
+		'access callback' => TRUE,		
+	);
+	
+	/* end of Menu item to calculate minimum education for a Career, required for AJAX Calls */
+	
+	$items['unset-session-onetcode'] = array(
+		'page callback' => 'vcnuser_unset_onetcode_session',
+		'access callback' => TRUE,
+	);
+	
+	return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+
+function vcnmenu_theme() {
+	$theme = array();
+	
+	
+	// Get Started page theme variable
+	$theme['vcn_get_started_template'] = array(
+			'template' => 'templates/vcngetstarted',
+			'file' => 'includes/vcngetstarted.inc',
+			'path' => drupal_get_path('module', 'vcngetstarted'),			
+			//'arguments' => array('form' => NULL),
+			'render element' => 'form',
+	);
+	
+	// Choose a Career page theme variable
+	$theme['vcn_explore_careers_template'] = array(
+		'template' => 'templates/vcnchooseacareer',
+		'file' => 'includes/vcnchooseacareer.inc',
+		'path' => drupal_get_path('module', 'vcnchooseacareer'),
+		'arguments' => array(),
+	);
+	
+	// career details theme variable
+	$theme['vcn_careerdetails_template'] = array(
+		'template' => 'templates/vcncareerdetails',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_overview_template'] = array(
+		'template' => 'templates/vcncareerdetails-overview',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_salary_outlook_template'] = array(
+		'template' => 'templates/vcncareerdetails-salary-outlook',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_on_the_job_template'] = array(
+		'template' => 'templates/vcncareerdetails-on-the-job',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_education_training_template'] = array(
+		'template' => 'templates/vcncareerdetails-education-training',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_skills_tools_template'] = array(
+		'template' => 'templates/vcncareerdetails-skills-tools',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);
+	
+	$theme['vcn_careerdetails_resources_template'] = array(
+		'template' => 'templates/vcncareerdetails-resources',
+		'file' => 'includes/vcncareerdetails.inc',
+		'path' => drupal_get_path('module', 'vcncareerdetails'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL, 'tabid' => NULL, 'zipcode' => NULL),
+	);	
+	
+	// Career pathway by worktype page theme variable
+	$theme['vcn_career_ladder_by_worktype_template'] = array(
+		'template' => 'templates/vcncareerladderbyworktype',			
+		'path' => drupal_get_path('module', 'vcncareerladder'),
+		'arguments' => array(),
+		'variables' => array('worktype' => NULL),
+	);
+	
+	// Career pathway by onetcode page theme variable
+	$theme['vcn_career_ladder_by_onetcode_template'] = array(
+		'template' => 'templates/vcncareerladderbyonetcode',
+		'path' => drupal_get_path('module', 'vcncareerladder'),
+		'arguments' => array(),
+		'variables' => array('onetcode' => NULL),
+	);
+	
+	//Provider portal pages
+	// School/Provider profile Edit page
+	$theme['vcn_providerprofile_edit_by_unitid_template'] = array(
+		'file' => 'includes/vcnprovider.inc',
+		'template' => 'templates/vcnproviderprofileeditbyunitid',			
+		'path' => drupal_get_path('module', 'vcnprovider'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+	
+	// School/Provider program Edit page
+	$theme['vcn_provider_program_edit_template'] = array(
+		'file' => 'includes/vcnprovider.inc',
+		'template' => 'templates/vcnprogramdetailedit',
+		'path' => drupal_get_path('module', 'vcnprovider'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+  
+  $theme['vcn_provider_summary_template'] = array(
+		'template' => 'templates/vcnprovidersummary',
+		'file' => 'includes/vcnprovider.inc',
+		'path' => drupal_get_path('module', 'vcnprovider'),
+		'arguments' => array(),
+    'variables' => array('unitid' => NULL),
+	);
+  
+  $theme['vcn_provider_programs_template'] = array(
+		'template' => 'templates/vcnproviderprograms',
+		'file' => 'includes/vcnprovider.inc',
+		'path' => drupal_get_path('module', 'vcnprovider'),
+		'arguments' => array(),
+    'variables' => array('unitid' => NULL),
+	);
+	//Provider portal pages end
+	
+	// Help page theme variable
+	$theme['vcn_help_template'] = array(
+		'template' => 'templates/vcnhelp',
+		'path' => drupal_get_path('module', 'vcnhelp'),
+		'arguments' => array(),
+	);
+	
+	// Resources page theme variable
+	$theme['vcn_resources_template'] = array(
+		'template' => 'templates/vcnresources',
+		'path' => drupal_get_path('module', 'vcnresources'),
+		'arguments' => array(),
+	);
+	
+	// Community groups page theme variable
+	$theme['vcn_communitygroups_template'] = array(
+		'template' => 'templates/vcncommunitygroups',
+		'path' => drupal_get_path('module', 'vcncommunitygroups'),
+		'arguments' => array(),
+	);	
+
+	// Top 10 by xyz pages theme variables
+	$theme['vcn_top10_by_jobs_template'] = array(
+		'template' => 'templates/vcntop10byjobs',
+		'path' => drupal_get_path('module', 'vcntop10'),
+		'arguments' => array(),
+	);
+	
+	$theme['vcn_top10_by_growth_template'] = array(
+		'template' => 'templates/vcntop10bygrowth',
+		'path' => drupal_get_path('module', 'vcntop10'),
+		'arguments' => array(),
+	);
+	
+	$theme['vcn_top10_by_pay_template'] = array(
+		'template' => 'templates/vcntop10bypay',
+		'path' => drupal_get_path('module', 'vcntop10'),
+		'arguments' => array(),
+	);
+	// Top 10 by xyz pages theme variables end
+		
+	// Online courses pages theme variables
+	$theme['vcn_take_online_template'] = array(
+	  'template' => 'templates/vcntakeonline', // your template file called vcn_take_online.tpl.php
+	  'file' => 'includes/vcnonlinecourses.inc',
+	  'path' => drupal_get_path('module', 'vcnonlinecourses'),
+	  'arguments' => array(),
+	  'variables' => array('var' => NULL),
+	);
+	
+	$theme['vcn_take_online_bystate_template'] = array(
+	  'template' => 'templates/vcntakeonlinebystate', // your template file called vcn_take_online.tpl.php
+		'file' => 'includes/vcnonlinecourses.inc',
+		'path' => drupal_get_path('module', 'vcnonlinecourses'),
+		'arguments' => array(),
+		'variables' => array('var' => NULL),
+			
+	);
+	
+	$theme['vcn_non_credit_courses_template'] = array(
+	  'template' => 'templates/vcnnoncreditcourses',
+	  'file' => 'includes/vcnonlinecourses.inc',
+	  'path' => drupal_get_path('module', 'vcnonlinecourses'),
+	  'arguments' => array(),
+	);
+	
+	$theme['vcn_non_credit_specialized_courses_template'] = array(
+	  'template' => 'templates/vcnnoncreditspecializedcourses',
+	  'file' => 'includes/vcnonlinecourses.inc',
+	  'path' => drupal_get_path('module', 'vcnonlinecourses'),
+	  'arguments' => array(),
+	);
+	
+	$theme['vcn_hit_template'] = array(
+	  'template' => 'templates/vcnhit',
+	  'file' => 'includes/vcnonlinecourses.inc',
+	  'path' => drupal_get_path('module', 'vcnonlinecourses'),
+	  'arguments' => array(),
+	);
+	
+	$theme['vcn_online_courses_template'] = array(
+	  'template' => 'templates/vcnonlinecourses', 
+	  'file' => 'includes/vcnonlinecourses.inc',
+	  'path' => drupal_get_path('module', 'vcnonlinecourses'),
+	  'arguments' => array(),
+	  'variables' => array(
+	    'idkey' => NULL,
+	    'idval' => NULL,
+	  ),	
+	);
+	// Online courses pages theme variables end
+	
+	// Match your education pages theme variables
+	$theme['vcn_education_match_template'] = array(
+		'template' => 'templates/vcneducationmatch',
+		'path' => drupal_get_path('module', 'vcneducationmatch'),			
+	);
+	// Match your education pages theme variables end
+	
+	// Onet assessment theme variables
+	$theme['vcn_onet_assessment_template'] = array(
+	  'template' => 'templates/vcnonetassessment',
+	  'path' => drupal_get_path('module', 'vcnonetassessment'),
+	  'variables' => array('industry' => NULL, 'limit' => NULL),
+	);
+	
+	$theme['vcn_onet_assessment_results_template'] = array(
+		'template' => 'templates/vcnonetassessmentresults',
+		'path' => drupal_get_path('module', 'vcnonetassessment'),
+		'variables' => array(),
+	);
+
+	$theme['vcn_onet_assessment_details_template'] = array(
+		'template' => 'templates/vcnonetassessmentdetails',
+		'path' => drupal_get_path('module', 'vcnonetassessment'),
+		'variables' => array('onetcode'),
+	);
+	
+	$theme['vcn_onet_assessment_info_template'] = array(
+		'template' => 'templates/vcnonetassessmentinfo',
+		'path' => drupal_get_path('module', 'vcnonetassessment'),
+		'variables' => array(),
+	);
+	// Onet assessment theme variables end
+	
+	// Rest custom CMS theme variables 
+	$theme['vcn_rest_custom_cms_template'] = array(
+		'template' => 'templates/vcnrestcustomcms',
+		'path' => drupal_get_path('module', 'vcnrestcustomcms'),
+		'variables' => array('industry' => NULL, 'onetcode' => NULL),
+	);
+	// Rest custom CMS theme variables end
+	
+	//Get Qualified
+	
+	$theme['vcn_getqualified'] = array(
+		'variables' => vcn_getqualified_calculate_url_params(),
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified',
+	);
+	
+	$theme['vcn_getqualified_requirements'] = array(
+		'variables' => vcn_getqualified_calculate_url_params(),
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified-requirements',
+		'file' => 'includes/vcngetqualified_requirements.inc',
+	);
+	
+	$theme['vcn_getqualified_certifications'] = array(
+		'variables' => vcn_getqualified_calculate_url_params(),
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified-certifications',
+		'file' => 'includes/vcngetqualified_certifications.inc',
+	);
+	
+	$theme['vcn_getqualified_licenses'] = array(
+		'variables' => vcn_getqualified_calculate_url_params(),
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified-licenses',
+		'file' => 'includes/vcngetqualified_licenses.inc',
+	);
+	
+	$theme['vcn_getqualified_programs'] = array(
+		'variables' => vcn_getqualified_calculate_url_params(),
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified-programs',
+		'file' => 'includes/vcngetqualified_programs.inc',
+	);
+	
+	$theme['vcn_getqualified_sidebar'] = array(
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcngetqualified-sidebar',
+	);
+	
+	$theme['vcn_user_selections_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'template' => 'templates/vcn-user-selections-form'
+	);
+	
+	$theme['vcn_financial_aid_by_unitid_template'] = array(
+		'template' => 'templates/vcnfinancialaidbyunitid',
+		'file' => 'includes/vcngetqualified_financialaid_detail.inc',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'arguments' => array(),
+		'variables' => array('unitid' => NULL),
+	);
+	
+	// School/Provider detail page by Unitid
+	$theme['vcn_schooldetail_by_unitid_template'] = array(
+		'template' => 'templates/vcnschooldetailbyunitid',
+		'file' => 'includes/vcngetqualified_school_detail.inc',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'arguments' => array(),
+		'variables' => array('unitid' => NULL),
+	);
+	
+	// Program detail page
+	$theme['vcn_program_detail_template'] = array(
+		'template' => 'templates/vcnprogramdetail',
+		'file' => 'includes/vcngetqualified_program_detail.inc',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'arguments' => array(),
+		'variables' => array('programid' => NULL, 'cipcode' => NULL, 'onetcode' => NULL),
+	);
+	
+	// Certification detail page
+	$theme['vcn_certification_detail_template'] = array(
+		'template' => 'templates/vcncertificationdetail',
+		'file' => 'includes/vcngetqualified_certification_detail.inc',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'arguments' => array(),
+		'variables' => array('certificationid' => NULL, 'onetcode' => NULL),
+	);
+	
+	// License detail page
+	$theme['vcn_license_detail_template'] = array(
+		'template' => 'templates/vcnlicensedetail',
+		'file' => 'includes/vcngetqualified_license_detail.inc',
+		'path' => drupal_get_path('module', 'vcngetqualified'),
+		'arguments' => array(),
+		'variables' => array('licenseid' => NULL, 'location' => NULL, 'onetcode' => NULL),
+	);
+	
+	
+	//end find Get Qualified
+	
+	//PLA
+	
+	$theme['vcn_pla_getting_started'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-getting-started'		
+	);
+	
+	$theme['vcnpla_college_courses_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnpla').'/templates',
+		'template' => 'vcnpla-college-courses',
+	);
+	
+	$theme['vcnpla_military_credit_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnpla').'/templates',
+		'template' => 'vcnpla-military-credit',
+	);
+	
+	$theme['vcnpla_professional_training_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnpla').'/templates',
+		'template' => 'vcnpla-professional-training',
+	);
+	
+	$theme['vcnpla_national_exams_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnpla').'/templates',
+		'template' => 'vcnpla-national-exams',
+	);
+	
+	$theme['vcn_pla_mylearning_inventory'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-mylearning-inventory'
+	);	
+	
+	$theme['vcn_pla_college_course_details'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-college-course-details'
+	);
+	
+	$theme['vcn_pla_military_credit_details'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-military-credit-details'
+	);
+	
+	$theme['vcn_pla_professional_training_details'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-professional-training-details'
+	);
+	
+	$theme['vcn_pla_national_exam_details'] = array(
+		'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+		'template' => 'vcnpla-national-exam-details'
+	);
+	
+	$theme['vcn_pla_sidebar'] = array(
+			'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+			'template' => 'vcnpla-sidebar'
+	);
+	
+	$theme['vcn_view_my_learning_inventory'] = array(
+			'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+			'template' => 'vcnpla-my-learning-inventory-pdf'
+	);
+	
+	$theme['vcn_view_my_cover_letter'] = array(
+			'path' => drupal_get_path('module', 'vcnpla').'/templates/',
+			'template' => 'vcnpla-my-cover-letter'
+	);
+	
+	//end PLA
+	
+	/* CMA */	
+	
+	$theme['vcn_cma_profile_form_template'] = array(
+		'template' => 'templates/vcncma-profile',
+		'file' => 'includes/vcncma.inc',
+		'file' => 'includes/vcncma_profile.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+	
+	$theme['vcn_cma_career_wishlist_template'] = array(
+		'template' => 'templates/vcncma-career-wishlist',
+		'file' => 'includes/vcncma.inc',
+		//'file' => 'includes/vcncma_career_wishlist.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);	
+	
+	$theme['vcn_cma_careers_template'] = array(			
+		'template' => 'templates/vcncma-careers',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_programs_template'] = array(
+		'template' => 'templates/vcncma-programs',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_certifications_template'] = array(
+		'template' => 'templates/vcncma-certifications',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_licenses_template'] = array(
+		'template' => 'templates/vcncma-licenses',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_college_credit_template'] = array(
+		'template' => 'templates/vcncma-college-credit',
+		'file' => 'includes/vcncma.inc',
+		'file' => 'includes/vcncma_college_credit.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_employment_history_template'] = array(
+		'template' => 'templates/vcncma-employment-history',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);	
+	
+	$theme['vcn_cma_employment_history_form_template'] = array(
+		'template' => 'templates/vcncma-employment-history-update',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+	
+	$theme['vcn_cma_job_scouts_template'] = array(
+		'template' => 'templates/vcncma-job-scouts',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_local_jobs_template'] = array(
+		'template' => 'templates/vcncma-local-jobs',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_local_jobs_form_template'] = array(
+		'template' => 'templates/vcncma-local-jobs-form',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+	
+	$theme['vcn_cma_network_contacts_template'] = array(
+		'template' => 'templates/vcncma-network-contacts',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_network_contacts_form_template'] = array(
+		'template' => 'templates/vcncma-network-contacts-form',
+		'file' => 'includes/vcncma.inc',
+		'path' => drupal_get_path('module', 'vcncma'),
+		'arguments' => array('form' => NULL),
+		'render element' => 'form',
+	);
+	
+	$theme['vcn_cma_network_contacts_detail'] = array(
+		'template' => 'templates/vcncma-network-contacts-detail',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_local_jobs_detail'] = array(
+		'template' => 'templates/vcncma-local-jobs-detail',
+		'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_target_career_template'] = array(
+			'template' => 'templates/vcncma-target-career',
+			'file' => 'includes/vcncma.inc',
+			'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	$theme['vcn_cma_target_program_template'] = array(
+			'template' => 'templates/vcncma-target-program',
+			'file' => 'includes/vcncma.inc',
+			'path' => drupal_get_path('module', 'vcncma'),
+	);
+	
+	/* END of CMA */
+	
+	/* Career Grid*/
+	
+	$theme['vcncareergrid_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcncareergrid').'/templates',
+		'template' => 'vcncareergrid',
+	);
+	
+	/* End of Career Grid*/
+	
+	/* MY VCN Account Setup Box */
+	
+	$theme['vcn_account_setup_box'] = array(
+			'path' => drupal_get_path('module', 'vcngeneral').'/templates/',
+			'template' => 'vcn-account-setup-box',
+	);
+	
+	/*End MY VCN Account Setup Box */
+	
+	/*Advacned Career Tool*/
+	
+	$theme['vcn_advanced_career_tools'] = array(
+		'path' => drupal_get_path('module', 'vcnchooseacareer').'/templates/',
+		'template' => 'vcn-advanced-career-tools',
+	);
+	
+	/*End Advacned Career Tool*/
+	
+	/* Find work/job */
+	
+	$theme['vcn_findwork_overview'] = array(
+		//'render element' => 'form', //$theme['vcn_findwork_form']
+		'path' => drupal_get_path('module', 'vcnfindwork').'/templates',
+		'template' => 'vcn-findwork',	
+	);
+	
+	$theme['vcn_findwork_results_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnfindwork').'/templates',
+		'template' => 'vcn-findwork-results',
+	);
+	
+	$theme['vcn_findwork_tools'] = array(			
+		'path' => drupal_get_path('module', 'vcnfindwork').'/templates',
+		'template' => 'vcn-findwork-tools',
+	);
+	
+	/* End Find work/job */
+	
+	return $theme;
+}

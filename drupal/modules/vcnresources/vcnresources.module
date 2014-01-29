@@ -1,0 +1,67 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php
+
+/**
+ * Implementation of hook_help().
+ */
+function vcnresources_help($path, $arg) {
+	if ($path == 'admin/help#vcnresources') {
+		return t('Functionality related to VCN Resources.');
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /resources (Resources)
+ */
+function vcnresources_preprocess_vcn_resources_template(&$variables) {
+
+	$variables['pdfpath'] =  vcn_drupal7_base_path().drupal_get_path("theme", "vcnstark");
+	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	//$variables['resources'] = vcn_node_text_by_urlalias("resources-text");
+	$variables['max_listing'] = 10;
+	/* REST Call */
+	
+	if (empty($variables['industry'])) {
+		$variables['industry'] = vcn_get_industry();
+	}
+	
+	// Partner Sites = 1, Career Exploration = 2, healthcare =  3, National Associations related to HealthCare = 4
+	// Federal Resources = 5, Community Group = 6, Videos = 7, 8 = Research Studies, 9 = Fact Sheets 
+	
+	 $variables['category'] = $GLOBALS['resource_category'];
+	 $variables['order'] = array("resource_name");
+	
+	// get the list of Resources //'order' => ''
+	$params = array('industry' => $variables['industry'], 'category' => $variables['category'], 'order' => $variables['order'], 'page' => 'resourses');
+	$content = vcn_rest_wrapper('vcnresourcessvc', 'vcnresources', 'list', $params);
+	$resourceslist = $content->resourceslist;
+	$variables['resourceslist'] = $resourceslist;
+		
+	if (count($resourceslist->item)>0) {
+	  for ($i = 0; $i < count($resourceslist->item); $i++) {
+	  	$key = "cat".$resourceslist->item[$i]->resourcecategoryid;
+	  	$resourceslist_by_cat[$key]["catname"] = $resourceslist->item[$i]->categoryname;
+	  	$resourceslist_by_cat[$key][] = array($resourceslist->item[$i]->resourcename,$resourceslist->item[$i]->resourcelink,$resourceslist->item[$i]->resourcelinktype,$resourceslist->item[$i]->resourcemouseovertext);
+	  }
+	}
+	$variables['resourceslist_by_cat'] = isset($resourceslist_by_cat) ? $resourceslist_by_cat : array();
+	
+	/* End REST Call */
+
+}

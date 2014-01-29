@@ -1,0 +1,1449 @@
+<?php /*
+The Virtual Career Network (VCN) is an "open source, open content" workforce services and online learning delivery platform built and operated by the American Association of Community Colleges (AACC) under a grant from the Employment and Training Administration (ETA) of the United States Department of Labor (DOL).
+
+Copyright (C) 2012 American Association of Community Colleges
+
+This file is part of the source code for the Virtual Career Network.
+
+The Virtual Career Network is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+The Virtual Career Network is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program.  If not, see http://www.gnu.org/licenses/.
+*/ ?>
+
+
+<?php 
+/**
+ * Implementation of hook_help().
+ */
+function vcncma_help($path, $arg) {
+	if ($path == 'admin/help#vcncma') {
+		return t('Functionality related to VCN Career Management Account.');
+	}
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/career-wishlist
+ */
+function vcncma_preprocess_vcn_cma_career_wishlist_template(&$variables) {
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "careerwishlist";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+
+	$variables['cma_career_wishlist'] = "";
+	//$variables['cma_career_wishlist'] = theme('vcn_cma_careers_template');	
+	//$variables['cma_career_wishlist'] .= theme('vcn_cma_certifications_template');
+	//$variables['cma_career_wishlist'] .= theme('vcn_cma_licenses_template');
+	//$variables['cma_career_wishlist'] .= theme('vcn_cma_programs_template');
+  
+  $variables['tab_counselor_class'] = '';
+  if (vcn_cma_is_councelor_viewing_student_data()) {
+    $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+  }
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/careers
+ */
+function vcncma_preprocess_vcn_cma_careers_template(&$variables) {	
+	$variables['career-wishlist'] = "1";
+	$variables['selectedTabIndex'] = $selectedTabIndex = "careers";
+	vcn_cma_include_variables($variables);
+	
+	$vcn_tabs = vcn_cma_get_tabs_list($variables); 	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE, $variables['disable_inactive_tab']);	
+
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	//$variables[''] = vcn_node_text_by_urlalias("");
+	
+  $variables['tab_counselor_class'] = '';
+      
+	$variables['cma_no_careers_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_careers.js', 'file');
+		
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    
+    // check if user is in "save mode". If not then show the counselor student user drop down 
+    $variables['vcn_counselor_show_drop_down'] = false;
+    vcncma_get_user_state($variables);
+    if ($variables['link_as_per_user_state']) {
+      $variables['vcn_counselor_show_drop_down'] = true;
+      if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+        $userId = $_SESSION['vcn_counselor_student_id'];
+      }
+    }
+    
+		$params = array('userid' => $userId, 'industry' => $variables['industry']);
+		$cma_careers_list = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-careers-in-detail', $params, 'xml', 'post', false);
+		$cma_careers_list_array = array();
+		$zipcode = vcnuser_get_zip();
+		$cma_careers_count = count($cma_careers_list->item);
+		$variables['cma_careers_count'] = $cma_careers_count;
+		
+		foreach($cma_careers_list->item as $career) {
+			$cma_careers_list_array[] = array(
+					'notebookid' => (int)$career->notebookid,
+					'userid' => (int)$career->userid,
+					'itemrank' => (int)$career->itemrank,
+					'title' => (string)$career->title,
+					'onetcode' => (string)$career->onetcode,
+					'typicaleduid' => (int)$career->typicaleduid,
+					'typicaledutext' => (string)$career->typicaledutext,
+					'laytitle' => (string)$career->laytitle,
+					'pct25_hourly' => empty($career->pct25hourly) ? null : (float)$career->pct25hourly,
+					'pct75_hourly' => empty($career->pct75hourly) ? null : (float)$career->pct75hourly,
+					'pct25_annual' => empty($career->pct25annual) ? null : (int)$career->pct25annual,
+					'pct75_annual' => empty($career->pct75annual) ? null : (int)$career->pct75annual,
+					'short_desc' => empty($career->shortdesc) ? null : (string)$career->shortdesc.'...',
+					'zipcode' => $zipcode,
+					'cma_careers_count' => $cma_careers_count
+			);
+		}
+		
+		$cma_careers_list_json = json_encode($cma_careers_list_array);
+		drupal_add_js(array('vcncma_careers' => array('careers_data' => $cma_careers_list_json, 
+                                                  'councelor_viewing_student_data' => $is_councelor_viewing_student_data,
+                                                  'user_not_in_save_mode' => $variables['link_as_per_user_state']
+                                                 ),
+                       ),array('type' => 'setting'));
+		
+		if (!empty($cma_careers_list_array)) {
+			$variables['cma_no_careers_saved'] = FALSE;
+		} else {
+			$variables['cma_no_careers_saved'] = TRUE;
+		}
+		
+    if ($variables['link_as_per_user_state'] && $is_councelor_viewing_student_data) {
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+	}
+  
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/programs
+ */
+function vcncma_preprocess_vcn_cma_programs_template(&$variables) {
+	$variables['career-wishlist'] = "1";
+	$variables['selectedTabIndex'] = $selectedTabIndex = "programs";	
+	vcn_cma_include_variables($variables);
+	
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE, $variables['disable_inactive_tab']);	
+
+  $variables['tab_counselor_class'] = '';
+  
+	$variables['cma_no_programs_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_programs.js', 'file');		
+		
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    
+    // check if user is in "save mode". If not then show the counselor student user drop down 
+    $variables['vcn_counselor_show_drop_down'] = false;
+    vcncma_get_user_state($variables);
+    if ($variables['link_as_per_user_state']) {
+      $variables['vcn_counselor_show_drop_down'] = true;
+      if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+        $userId = $_SESSION['vcn_counselor_student_id'];
+      }
+    }
+    
+		$params = array('userid' => $userId, 'industry' => $variables['industry'], 'cipcodeyear' => vcn_get_cipcode_year());
+		$cma_programs_list = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-programs-in-detail', $params, 'xml', 'post', false);
+		$cma_programs_list_array = array();
+		
+		foreach($cma_programs_list->cmaprograms->item as $program) {
+			$cma_programs_list_array[] = array(
+					'notebookid' => (int)$program->notebookid,
+					'userid' => (int)$program->userid,
+					'itemrank' => (int)$program->itemrank,
+					'itemid' => (string)$program->itemid,
+					'cipcode' => (string)$program->secondaryinfo,
+					'subitemid' => (string)$program->subitemid,
+					'awardlevel' => (int)$program->awardlevel,
+					'programcode' => (string)$program->programcode,
+					'programid' => (int)$program->programid,
+					'ciptitle' => (string)$program->ciptitle,
+					'unitid' => (int)$program->unitid,
+					'instname' => (string)$program->instname,
+					'instaddress' => (string)$program->instaddress,
+					'instcity' => (string)$program->instcity,
+					'inststateabbrev' => (string)$program->inststateabbrev,
+					'instzip' => (string)$program->instzip,
+					'instgeneraltelephone' => vcn_format_phone((string)$program->instgeneraltelephone),
+					'educationcategoryname' => (string)$program->educationcategoryname,
+					'educationcategoryid' => (string)$program->educationcategoryid,
+					'programname' => (string)$program->programname,
+			);
+		}
+		
+		$cma_programs_list_json = json_encode($cma_programs_list_array);
+		drupal_add_js(array('vcncma_programs' => array('programs_data' => $cma_programs_list_json,
+                                                   'councelor_viewing_student_data' => $is_councelor_viewing_student_data,
+                                                   'user_not_in_save_mode' => $variables['link_as_per_user_state']
+                                             )),array('type' => 'setting'));
+		
+		if (!empty($cma_programs_list_array)) {
+			$variables['cma_no_programs_saved'] = FALSE;
+		} else {
+			$variables['cma_no_programs_saved'] = TRUE;
+		}
+    
+    if ($variables['link_as_per_user_state'] && $is_councelor_viewing_student_data) {
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+	}
+  
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/certifications
+ */
+function vcncma_preprocess_vcn_cma_certifications_template(&$variables) {
+	$variables['career-wishlist'] = "1";
+	$variables['selectedTabIndex'] = $selectedTabIndex = "certifications";
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE, $variables['disable_inactive_tab']);	
+
+  $variables['tab_counselor_class'] = '';
+  
+	$variables['cma_no_certifications_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_certifications.js', 'file');
+
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    
+    // check if user is in "save mode". If not then show the counselor student user drop down 
+    $variables['vcn_counselor_show_drop_down'] = false;
+    vcncma_get_user_state($variables);
+    if ($variables['link_as_per_user_state']) {
+      $variables['vcn_counselor_show_drop_down'] = true;
+      if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+        $userId = $_SESSION['vcn_counselor_student_id'];
+      }
+    }
+    
+		$params = array('userid' => $userId, 'industry' => $variables['industry']);
+		$cma_certifications_list = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-certification-items', $params, 'xml', 'post', false);
+		$cma_certifications_list_array = array();
+		
+		$shortdesc_limit = 300;
+		foreach($cma_certifications_list->item as $certification) {
+			$certification_info = vcnCertificationDataService::getCertificationById($certification->itemid);
+			$certification_info = isset($certification_info->data->certifications) ? $certification_info->data->certifications : $certification_info;
+			
+			if(isset($certification_info->certname) && $certification_info->certname != "") {
+				// excerpt short description at word boundary
+				$shortdesc = $certification_info->certdescription;
+				if (strlen($shortdesc) > $shortdesc_limit) {
+					$spacepos = strpos($shortdesc, ' ', $shortdesc_limit);
+					if ($spacepos >= $shortdesc_limit) {
+						$shortdesc = strip_tags(substr($certification_info->certdescription, 0, $spacepos)) . ' ...';
+					}
+				} else {
+  				$shortdesc = (string)$certification_info->certdescription;
+  			}
+  			
+				$certification_name = (string)$certification_info->certname;
+				$certification_organization = (string)$certification_info->certorg->orgname;
+				
+				$cma_certifications_list_array[] = array(
+						'itemrank' => (int)$certification->itemrank,
+						'notebookid' => (int)$certification->notebookid,
+						'itemid' => (string)$certification->itemid,
+						'certification_name' => $certification_name,
+						'certification_organization' => $certification_organization,
+						'certification_description' => $shortdesc,
+						'onetcode' => (string)$certification->onetcode
+				);
+			} /*else {
+				$certification_name = null;
+				$shortdesc = null;
+				$certification_organization = null;
+			}*/
+		}
+		
+		$cma_certifications_list_json = json_encode($cma_certifications_list_array);
+		drupal_add_js(array('vcncma_certifications' => array('certifications_data' => $cma_certifications_list_json,
+                                                         'councelor_viewing_student_data' => $is_councelor_viewing_student_data,
+                                                         'user_not_in_save_mode' => $variables['link_as_per_user_state']
+                                                        )),array('type' => 'setting'));
+		
+		if (!empty($cma_certifications_list_array)) {
+			$variables['cma_no_certifications_saved'] = FALSE;
+		} else {
+			$variables['cma_no_certifications_saved'] = TRUE;
+		}
+		
+    if ($variables['link_as_per_user_state'] && $is_councelor_viewing_student_data) {
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+	}
+  
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/licenses
+ */
+function vcncma_preprocess_vcn_cma_licenses_template(&$variables) {
+	$variables['career-wishlist'] = "1";
+	$variables['selectedTabIndex'] = $selectedTabIndex = "licenses";
+	vcn_cma_include_variables($variables);
+	
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);	
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE, $variables['disable_inactive_tab']);	
+
+  $variables['tab_counselor_class'] = '';
+  
+	$variables['cma_no_licenses_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_licenses.js', 'file');
+
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    
+    // check if user is in "save mode". If not then show the counselor student user drop down 
+    $variables['vcn_counselor_show_drop_down'] = false;
+    vcncma_get_user_state($variables);
+    if ($variables['link_as_per_user_state']) {
+      $variables['vcn_counselor_show_drop_down'] = true;
+      if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+        $userId = $_SESSION['vcn_counselor_student_id'];
+      }
+    }
+
+		$params = array('userid' => $userId, 'industry' => $variables['industry']);
+		$cma_licenses_list = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-license-items', $params, 'xml', 'post', false);
+		$cma_licenses_list_array = array();
+		
+		$shortdesc_limit = 300;
+		foreach ($cma_licenses_list->item as $license) {
+			$stateAbbrev = vcnStateUtil::getAbbrevByFips($license->stfips);
+			$license_info = vcnLicenseDataService::getLicenseById($license->onetcode, $license->itemid, $stateAbbrev);
+			$license_info = isset($license_info->data->licenses) ? $license_info->data->licenses : $license_info;
+			
+			
+			if(isset($license_info->lictitle) && $license_info->lictitle != "") {
+				// excerpt short description at word boundary
+				$shortdesc = $license_info->licdesc;
+				if (strlen($shortdesc) > $shortdesc_limit) {
+  				$spacepos = strpos($shortdesc, ' ', $shortdesc_limit);
+  				if ($spacepos >= $shortdesc_limit) {
+  					$shortdesc = strip_tags(substr($license_info->licdesc, 0, $spacepos)) . ' ...';
+  				}
+  			} else {
+  				$shortdesc = (string)$license_info->licdesc;
+  			}
+  			
+  			$cma_licenses_list_array[] = array(
+  					'itemrank' => (int)$license->itemrank,
+  					'notebookid' => (int)$license->notebookid,
+  					'itemid' => (string)$license->itemid,
+  					'license_title' => (string)$license_info->lictitle,
+  					'license_agency' => (string)$license_info->licauth->name1,
+  					'license_description' => $shortdesc,
+  					'license_state' => (string)$stateAbbrev,
+  					'onetcode' => (string)$license->onetcode,
+  			);
+  		}
+		}
+		
+		$cma_licenses_list_json = json_encode($cma_licenses_list_array);
+		drupal_add_js(array('vcncma_licenses' => array('licenses_data' => $cma_licenses_list_json,
+                                                   'councelor_viewing_student_data' => $is_councelor_viewing_student_data,
+                                                   'user_not_in_save_mode' => $variables['link_as_per_user_state']
+                                                  )),array('type' => 'setting'));
+		
+		if (!empty($cma_licenses_list_array)) {
+			$variables['cma_no_licenses_saved'] = FALSE;
+		} else {
+			$variables['cma_no_licenses_saved'] = TRUE;
+		}
+		
+    if ($variables['link_as_per_user_state'] && $is_councelor_viewing_student_data) {
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+	}
+  
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/college-credit
+ */
+function vcncma_preprocess_vcn_cma_college_credit_template(&$variables) {
+	
+	drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_college_credit.js', 'file');
+	
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "collegecredit";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+
+  $variables['tab_counselor_class'] = '';
+  
+	$variables['cma_no_collegecredits_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+    
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+      $userId = $_SESSION['vcn_counselor_student_id'];
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+    
+		$params = array('userid' => $userId); // optional params coursedetail=true coursetype=college_courses/military_courses/professional_courses/national_courses
+		$cma_collegecredits_list = vcn_rest_wrapper('vcnplasvc', 'vcnpla', 'get-credit-courses-by-userid', $params, 'xml', 'post', false);
+		
+		$cma_collegecredits_list_array = vcn_cma_collegecredit_list($cma_collegecredits_list);
+		$cma_collegecredits_list_json = json_encode($cma_collegecredits_list_array);
+		drupal_add_js(array('vcncma_collegecredits' => array('collegecredits_data' => $cma_collegecredits_list_json,
+                                                         'councelor_viewing_student_data' => $is_councelor_viewing_student_data
+                                                        )),array('type' => 'setting'));
+		
+		if (!empty($cma_collegecredits_list_array)) {
+			$variables['cma_no_collegecredits_saved'] = FALSE;
+		} else {
+			$variables['cma_no_collegecredits_saved'] = TRUE;
+		}
+	}
+  
+  $variables['is_councelor_viewing_student_data'] = vcn_cma_is_councelor_viewing_student_data();
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/employment-history
+ */
+function vcncma_preprocess_vcn_cma_employment_history_template(&$variables) {
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "emphistory";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);	
+
+  $variables['tab_counselor_class'] = '';
+  
+	$variables['cma_no_employment_history_saved'] = TRUE;
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_employment_history.js', 'file');
+
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+      $userId = $_SESSION['vcn_counselor_student_id'];
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+    
+		$params = array('userid' => $userId);
+		$cma_employment_history_list = vcn_rest_wrapper('vcncmasvc', 'vcncmaemployment', 'get-employment-history', $params, 'xml', 'post', false);
+		$cma_employment_history_list_array = array();
+		
+		$current_date = date('Y-m-d');
+		$current_date_time = strtotime($current_date);
+		
+		foreach($cma_employment_history_list->item as $employment_history) {
+			if ((string)$employment_history->enddate == '0000-00-00' || (string)$employment_history->enddate == '') {
+				$enddate_sorting = $current_date; //if end date is not provided, setting it to today's date
+				$enddate_display = 'Present';
+			} else {
+				$end_date_time = strtotime((string)$employment_history->enddate);
+				if ($end_date_time >= $current_date_time) {
+					$enddate_sorting = $current_date;
+					$enddate_display = 'Present';
+				} else {
+					$enddate_sorting = (string)$employment_history->enddate;
+					$enddate_display = $enddate_sorting;
+				}
+			}
+			$cma_employment_history_list_array[] = array(
+				'useremploymentid' => (int)$employment_history->useremploymentid,
+				'employername' => (string)$employment_history->employername,
+				'jobtitle' => (string)$employment_history->jobtitle,
+				'startdate' => (string)$employment_history->startdate,
+				'enddate_sorting' => $enddate_sorting,
+				'enddate_display' => $enddate_display
+			);
+		}
+		
+		$cma_employment_history_list_json = json_encode($cma_employment_history_list_array);
+		drupal_add_js(array('vcncma_employment_history' => array('employment_history_data' => $cma_employment_history_list_json,
+                                                             'councelor_viewing_student_data' => $is_councelor_viewing_student_data
+                                                            )),array('type' => 'setting'));
+		
+		if (!empty($cma_employment_history_list_array)) {
+			$variables['cma_no_employment_history_saved'] = FALSE;
+		} else {
+			$variables['cma_no_employment_history_saved'] = TRUE;
+		}
+
+	}
+  
+  $variables['is_councelor_viewing_student_data'] = vcn_cma_is_councelor_viewing_student_data();
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/job-scouts
+ */
+function vcncma_preprocess_vcn_cma_job_scouts_template(&$variables) {
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "jobscouts";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+
+  $variables['tab_counselor_class'] = '';
+  
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_job_scouts.js', 'file');
+
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+      $userId = $_SESSION['vcn_counselor_student_id'];
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+    
+		$params = array('userid' => $userId, 'industry' => $variables['industry']);
+		$cma_job_scouts_list = vcn_rest_wrapper('vcncmasvc', 'vcncmajobscouts', 'get-cma-jobscouts', $params, 'xml', 'post', false);
+		$cma_job_scouts_list_array = array();
+		
+		$industry_name = vcn_get_industry_name();
+		
+		foreach($cma_job_scouts_list->item as $job_scout) {
+			$onetcode = empty($job_scout->onetcode) ? null : (string)$job_scout->onetcode;
+			
+			if ($onetcode) {
+				$keyword_url = null;
+				$sort_title = (string)$job_scout->title;
+			} else {
+				$keyword_url = str_replace('/', '~', (string)$job_scout->keyword);
+				$keyword_url = str_replace('\\', '*', $keyword_url);
+				$sort_title = (string)$job_scout->keyword;
+			}
+			
+			if ((string)$job_scout->activeyn == 'y') {
+				$subscribe_unsubscribe = 'Unsubscribe';
+			} else {
+				$subscribe_unsubscribe = 'Subscribe';
+			}
+			
+			$cma_job_scouts_list_array[] = array(
+					'onetcode' => $onetcode,
+					'zipcode' => (string)$job_scout->zip,
+					'distance' => (int)$job_scout->distance,
+					'keyword' => (string)$job_scout->keyword,
+					'title' => (string)$job_scout->title,
+					'datesaved' => (string)$job_scout->datesaved,
+					'activeyn' => (string)$job_scout->activeyn,
+					'jobscoutid' => (int)$job_scout->jobscoutid,
+					'industry_name' => $industry_name,
+					'subscribe_unsubscribe' => $subscribe_unsubscribe,
+					'keyword_url' => $keyword_url,
+					'sort_title' => $sort_title,
+			);
+			
+		}
+		
+		$cma_job_scouts_list_json = json_encode($cma_job_scouts_list_array);
+		drupal_add_js(array('vcncma_job_scouts' => array('job_scouts_data' => $cma_job_scouts_list_json,
+                                                     'councelor_viewing_student_data' => $is_councelor_viewing_student_data
+                                                     )),array('type' => 'setting'));
+		
+		if (!empty($cma_job_scouts_list_array)) {
+			$variables['cma_no_job_scouts_saved'] = FALSE;
+		} else {
+			$variables['cma_no_job_scouts_saved'] = TRUE;
+		}
+    
+    $variables['is_councelor_viewing_student_data'] = vcn_cma_is_councelor_viewing_student_data();
+	}
+
+}
+
+
+/**
+ * Implementation of hook_preprocess_template().
+ * cma/local-jobs
+ */
+function vcncma_preprocess_vcn_cma_local_jobs_template(&$variables) {
+
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "localjobs";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['cma_no_local_jobs_saved'] = FALSE;
+	$cma_local_jobs_list_array = array();
+
+  $variables['tab_counselor_class'] = '';
+  
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_local_jobs.js', 'file');
+		
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+      $userId = $_SESSION['vcn_counselor_student_id'];
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+    
+		$params = array('userid' => $userId);
+		$cma_local_jobs_list = vcn_rest_wrapper('vcncmasvc', 'vcncmalocaljobs', 'get-cma-local-jobs', $params, 'xml', 'post', false);
+		$cma_local_jobs_list_array = array();
+		
+		foreach($cma_local_jobs_list->item as $local_job) {
+			$cma_local_jobs_list_array[] = array(
+				'job_title' => (string)$local_job->jobtitle,
+				'job_url' => (string)$local_job->joburl,
+				'employer_name' => (string)$local_job->employername,
+				'employer_url' => (string)$local_job->employerurl,
+				'contact_name' => (string)$local_job->contactname,
+				'contact_phone' => (string)$local_job->contactphone,
+				'contact_email' => (string)$local_job->contactemail,
+				'local_job_id' => (int)$local_job->userjobid,
+			);
+		}
+
+		$cma_local_jobs_list_json = json_encode($cma_local_jobs_list_array);
+		drupal_add_js(array('vcncma_local_jobs' => array('local_jobs_data' => $cma_local_jobs_list_json,
+                                                     'councelor_viewing_student_data' => $is_councelor_viewing_student_data
+                                                     )),array('type' => 'setting'));
+		
+		if (!empty($cma_local_jobs_list_array)) {
+			$variables['cma_no_local_jobs_saved'] = FALSE;
+		} else {
+			$variables['cma_no_local_jobs_saved'] = TRUE;
+		}
+		
+    $variables['is_councelor_viewing_student_data'] = vcn_cma_is_councelor_viewing_student_data();
+	}
+
+}
+
+
+/**
+ * Implementation of hook_preprocess_template().
+ * cma/local-jobs
+ */
+function vcncma_preprocess_vcn_cma_network_contacts_template(&$variables) {
+
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "networkcontacts";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	$variables['cma_no_network_contacts_saved'] = FALSE;
+	$cma_network_contacts_list_array = array();
+
+  $variables['tab_counselor_class'] = '';
+  
+	if($variables['userid'] > 0) {
+		drupal_add_js(drupal_get_path('module', 'vcncma') .'/js/vcncma_network_contacts.js', 'file');
+
+    $is_councelor_viewing_student_data = vcn_cma_is_councelor_viewing_student_data();
+    
+    $userId = $variables['userid'];
+    if ($is_councelor_viewing_student_data && isset($_SESSION['vcn_counselor_student_id']) && strlen($_SESSION['vcn_counselor_student_id'])) {
+      $userId = $_SESSION['vcn_counselor_student_id'];
+      $variables['tab_counselor_class'] = 'vcn-cma-counselor-tab-class';
+    }
+    
+		$params = array('userid' => $userId);
+		$cma_network_contacts_list = vcn_rest_wrapper('vcncmasvc', 'vcncmanetworkcontacts', 'get-cma-network-contacts', $params, 'xml', 'post', false);
+		$cma_network_contacts_list_array = array();
+
+		foreach($cma_network_contacts_list->item as $network_contact) {
+			$cma_network_contacts_list_array[] = array(
+					'first_name' => (string)$network_contact->firstname,
+					'last_name' => (string)$network_contact->lastname,
+					'company_name' => (string)$network_contact->companyname,
+					'company_title' => (string)$network_contact->companytitle,
+					'phone_work' => (string)$network_contact->phonework,
+					'phone_mobile' => (string)$network_contact->phonemobile,
+					'email' => (string)$network_contact->email,
+					'user_contact_id' => (int)$network_contact->usercontactid,
+			);
+		}
+
+		$cma_network_contacts_list_json = json_encode($cma_network_contacts_list_array);
+		drupal_add_js(array('vcncma_network_contacts' => array('network_contacts_data' => $cma_network_contacts_list_json,
+                                                           'councelor_viewing_student_data' => $is_councelor_viewing_student_data
+                                                          )),array('type' => 'setting'));
+
+		if (!empty($cma_network_contacts_list_array)) {
+			$variables['cma_no_network_contacts_saved'] = FALSE;
+		} else {
+			$variables['cma_no_network_contacts_saved'] = TRUE;
+		}
+
+    $variables['is_councelor_viewing_student_data'] = vcn_cma_is_councelor_viewing_student_data();
+	}
+
+}
+
+
+
+/**
+ * Implementation of vcn_cma_employment_history_form (callback function from hook_menu).
+ */
+function vcn_cma_employment_history_form($form, &$form_state, $action_type, $user_employment_id) {
+
+	$form['#theme'][] = 'vcn_cma_employment_history_form_template';
+	$form['#attached'] = array(
+			module_load_include("inc","vcncma","includes/vcncma_employment_history"),
+			'js' => array(
+					drupal_get_path('module', 'vcncma').'/js/vcncma_employment_history_form.js',
+			),
+	);
+	
+	$form['action_type'] = array (
+			'#type' => 'hidden',
+			'#value' => $action_type,
+	);
+	
+	$form['user_employment_id'] = array (
+			'#type' => 'hidden',
+			'#value' => $user_employment_id,
+	);
+	
+	if ($action_type == 'update') {
+		$employment_history = vcn_get_cma_employment_history_detail_info($user_employment_id);
+		$form['allow_edit'] = array(
+			'#type' =>'hidden',
+			'#value' => empty($employment_history) ? FALSE : TRUE
+		);
+	}
+	
+	$form['employer_name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Employer Name:'),
+			'#default_value' => isset($employment_history->employername) ?	$employment_history->employername  : '',
+			'#size' => 60,
+			'#maxlength' => 100,
+			'#required' => TRUE,
+	);
+	
+	/*$form['address1'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Street Address:'),
+			'#default_value' => isset($employment_history->address1) ?	$employment_history->address1  : '',
+			'#rows' => 2,
+			'#cols' => 60,
+			'#maxlength' => 200,
+			'#required' => FALSE,
+	);
+	
+	$form['address2'] = array(
+			'#type' => 'textarea',
+			'#title' => t('City,State (Province),ZIP (Postal)/Country:'),
+			'#default_value' => isset($employment_history->address2) ?	$employment_history->address2  : '',
+			'#rows' => 2,
+			'#cols' => 60,
+			'#maxlength' => 200,
+			'#required' => FALSE,
+	);
+	
+	$states = vcnStateUtil::getStatesList();
+	
+	$states_options = array();
+	for($s=1;$s<=51;$s++) {
+		$skey = $states[$s]["abbrev"];
+		$states_options[$skey] = $states[$s]["name"];
+		//$states_options[$skey] = $states[$s]["abbrev"]." - ".$states[$s]["name"];
+	}
+	
+	$form['provider_state'] = array(
+			'#type' => 'select',
+			'#title' => t('State:'),
+			'#options' => $states_options,
+			'#default_value' => (string) $form['#providerdetail']->state,
+	);*/
+	
+	$form['address1'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Street Address:'),
+			'#default_value' => isset($employment_history->address1) ?	$employment_history->address1  : '',
+			'#size' => 60,
+			'#maxlength' => 200,
+			'#required' => FALSE,
+	);
+	
+	$form['address2'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Address2:'),
+			'#default_value' => isset($employment_history->address2) ?	$employment_history->address2  : '',
+			'#size' => 60,
+			'#maxlength' => 200,
+			'#required' => FALSE,
+	);
+	
+	$form['city'] = array(
+			'#title' => t('City:'),
+			'#type' => 'textfield',
+			'#default_value' => isset($employment_history->city) ?	$employment_history->city  : '',
+			'#size' => 60,
+			'#maxlength' => 100,
+	);	
+	
+	$form['state'] = array(
+			'#title' => t('State:'),
+			'#type' => 'textfield',
+			'#default_value' => isset($employment_history->state) ?	$employment_history->state  : '',
+			'#size' => 10,
+			'#maxlength' => 100,
+	);
+	
+	$form['zipcode'] = array(
+			'#title' => t('Zipcode:'),
+			'#type' => 'textfield',
+			'#default_value' => isset($employment_history->zipcode) ?	$employment_history->zipcode  : '',
+			'#size' => 10,
+			'#maxlength' => 10,
+	);
+	
+	$form['country'] = array(
+			'#title' => t('Country:'),
+			'#type' => 'textfield',
+			'#default_value' => isset($employment_history->country) ?	$employment_history->country  : '',
+			'#size' => 10,
+			'#maxlength' => 100,
+	);
+	
+	$form['contact_name'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Contact Name:'),
+			'#default_value' => isset($employment_history->contactname) ?	$employment_history->contactname  : '',
+			'#size' => 60,
+			'#maxlength' => 100,
+			'#required' => FALSE,
+	);
+	
+	$form['contact_phone'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Contact Phone:'),
+			'#default_value' => isset($employment_history->contactphone) ?	$employment_history->contactphone  : '',
+			'#size' => 60,
+			'#maxlength' => 10,
+			'#required' => FALSE,
+	);
+	
+	$form['contact_email'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Contact Email:'),
+			'#default_value' => isset($employment_history->contactemail) ?	$employment_history->contactemail  : '',
+			'#size' => 60,
+			'#maxlength' => 200,
+			'#required' => FALSE,
+	);
+	
+	$form['job_title'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Job Title:'),
+			'#default_value' => isset($employment_history->jobtitle) ?	$employment_history->jobtitle  : '',
+			'#size' => 60,
+			'#maxlength' => 150,
+			'#required' => TRUE,
+	);
+	
+	$form['responsibilities'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Responsibility:'),
+			'#default_value' => isset($employment_history->responsibilities) ?	$employment_history->responsibilities  : '',
+			'#rows' => 4,
+			'#cols' => 100,
+			'#maxlength' => 500,
+			'#required' => TRUE,
+	);
+	
+	$form['start_date'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Start Date yyyy-mm-dd:'),
+			'#default_value' => isset($employment_history->startdate) ? $employment_history->startdate  :	'',
+			'#size' => 60,
+			'#maxlength' => 10,
+			'#required' => TRUE,
+	);
+	 
+	$form['end_date'] = array(
+			'#type' => 'textfield',
+			'#title' => t('End Date yyyy-mm-dd (blank if still there):'),
+			'#default_value' => (isset($employment_history->enddate) && $employment_history->enddate != '0000-00-00' &&	$employment_history->enddate != '') ?	$employment_history->enddate  : '',
+			'#size' => 60,
+			'#maxlength' => 10,
+			'#required' => FALSE,
+	);
+	
+	$form['professional_achievements'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Professional Achievements:'),
+			'#default_value' => isset($employment_history->professionalachievements) ?	$employment_history->professionalachievements  : '',
+			'#rows' => 4,
+			'#cols' => 100,
+			'#maxlength' => 500,
+			'#required' => FALSE,
+	);	
+		
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Save'),
+			//'#weight' => 10,
+			'#validate' => array('vcn_cma_employment_history_form_validate'),
+			'#submit' => array('vcn_cma_employment_history_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcncma-employment-history-submit-button'),
+					'title' => "Save"
+			),
+	);
+	
+	$form['cancel'] = array(
+			'#type' => 'button',
+			'#value' => t('Cancel'),
+			//'#attributes' => array('class' => 'vcn-button','title' => 'Cancel','onClick' => 'location.replace("'. vcn_drupal7_base_path() .'cma/employment-history"); return false;'),
+			//'#post_render'=>array('change_button_type'),
+			'#title' => t('Cancel'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcncma-employment-history-submit-button'),
+					'title' => "Cancel",
+					//'onClick' => 'location.replace("'. vcn_drupal7_base_path() .'cma/employment-history"); return false;'
+					'onClick' => 'history.go(-1); return false;'
+			),
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/employment-history/add or /cma/employment-history/%
+ */
+function vcncma_preprocess_vcn_cma_employment_history_form_template(&$variables) {
+
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "emphistory";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+
+	if($variables['userid'] > 0) {
+		$form = $variables['form'];
+		
+		if ($form['action_type']['#value'] == 'update') { //if it is an update, check if user has permission to update the employer history
+			$variables['allow_edit_add'] = $form['allow_edit']['#value'];
+		} else if ($form['action_type']['#value'] == 'add') {
+			$variables['allow_edit_add'] = TRUE; //always allow user to add a new Local job
+		}
+		
+		$variables['form_submit'] = render($form['submit']);
+		$variables['form_cancel'] = render($form['cancel']);
+		$variables['form_fields'] = drupal_render_children($form);
+	}
+		
+}
+
+
+/**
+ * Implementation of vcn_cma_profile_form (callback function from hook_menu).
+ */
+function vcn_cma_profile_form($form, &$form_state) {	
+	
+	$form['#theme'][] = 'vcn_cma_profile_form_template';	 
+	$form['#attached'] = array(
+			module_load_include("inc","vcncma","includes/vcncma_profile"),
+			'js' => array(
+					drupal_get_path('module', 'vcncma').'/js/vcncma_profile.js',
+			),
+	);	
+	$form['#userinfo'] =  vcn_get_cma_user_info();
+
+	$form['first_name'] = array(			
+			'#title' => t('First Name:'),
+			'#type' => 'textfield',			
+			'#size' => 50,
+			//'#default_value' => (string) $form['#userinfo']->firstname,	// (string) $form['#a']->name,
+			'#default_value' => isset($form['#userinfo']->firstname) ? vcn_custom_aes_decrypt($form['#userinfo']->firstname) : '',
+			'#maxlength' => 30,
+	);	
+	$form['last_name'] = array(			
+			'#title' => t('Last Name:'),
+			'#type' => 'textfield',			
+			'#size' => 50,			
+			//'#default_value' => (string) $form['#userinfo']->lastname,			
+			'#default_value' => isset($form['#userinfo']->lastname) ? vcn_custom_aes_decrypt($form['#userinfo']->lastname) : '',
+			'#maxlength' => 30,
+	);
+	$form['zipcode'] = array(
+			'#title' => t('Zipcode:'),
+			'#type' => 'textfield',
+			//'#required' => TRUE,
+			'#default_value' => '',
+			'#size' => 25,
+			'#default_value' => (string) $form['#userinfo']->zipcode,
+			'#maxlength' => 10,
+	);
+	
+	$form['submit'] = array(
+			'#type' => 'submit',
+			'#value' => t('Save'),
+			'#weight' => 10,
+			'#validate' => array('vcn_cma_profile_form_validate'),
+			'#submit' => array('vcn_cma_profile_form_submit'),
+			'#attributes' => array(
+					'class' => array('vcn-button', 'vcncma-profile-submit-button'),
+					'title' => "Save"
+			),
+	);
+
+	return $form;
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/profile
+ */
+function vcncma_preprocess_vcn_cma_profile_form_template(&$variables) {
+	
+	vcn_cma_include_variables($variables);
+	
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "profile";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);	
+	
+	if($variables['userid'] > 0) {
+		$form = $variables['form'];				
+		$variables['form_first_name'] = render($form['first_name']);
+		$variables['form_last_name'] = render($form['last_name']);
+		$variables['form_zipcode'] = render($form['zipcode']);			
+		$variables['form_submit'] = render($form['submit']);
+		$variables['form_hidden'] = drupal_render_children($form);		
+	}
+}
+
+/**
+ * 
+ */
+
+function vcn_cma_local_jobs_form($form, &$form_state, $action_type, $local_job_id = 0) {
+	
+	$userinfo = vcn_get_user_info();
+	
+	$form['#theme'][] = 'vcn_cma_local_jobs_form_template';
+	
+	$form['#attached'] = array(
+			module_load_include("inc","vcncma","includes/vcncma_local_jobs"),
+			'js' => array(
+				drupal_get_path('module', 'vcncma').'/js/vcncma_local_jobs_form.js',
+			),
+	);
+	
+	$form['#userinfo'] = $userinfo;
+	
+	if ($local_job_id > 0) {
+		$form['local_jobs_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $local_job_id,		
+		);
+		
+		$params = array('userid' => $userinfo['vcn_user_id'], 'localjobid' => $local_job_id);
+		$cma_local_job = vcn_rest_wrapper('vcncmasvc', 'vcncmalocaljobs', 'get-cma-local-job-by-id', $params, 'xml', 'post', false);
+		
+		$form['local_jobs_allow_edit'] = array(
+			'#type' =>'hidden',
+			'#value' => empty($cma_local_job->item) ? FALSE : TRUE	
+		);
+	}
+	
+	$form['local_jobs_action_type'] = array(
+		'#type' => 'hidden',
+		'#value' => $action_type,
+	);
+	
+	$form['local_jobs_job_title'] = array(
+		'#title' => t('Job Title:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->jobtitle : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['local_jobs_job_url'] = array(
+		'#title' => t('Job URL:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->joburl : '',
+		'#size' => 50,
+	);
+	
+	$form['local_jobs_employer_name'] = array(
+		'#title' => t('Employer Name:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->employername : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['local_jobs_employer_url'] = array(
+		'#title' => t('Employer URL:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->employerurl : '',
+		'#size' => 50,
+	);
+	
+	$form['local_jobs_contact_name'] = array(
+		'#title' => t('Contact Name:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->contactname : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['local_jobs_contact_phone'] = array(
+		'#title' => t('Contact Phone:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->contactphone : '',
+		'#size' => 50,
+		'#maxlength' => 20,
+	);
+	
+	$form['local_jobs_contact_email'] = array(
+		'#title' => t('Contact E-mail:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->contactemail : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['local_jobs_note'] = array(
+		'#title' => t('Note:'),
+		'#type' => 'textarea',
+		'#default_value' => ($action_type == 'update') ? $cma_local_job->item->note : '',
+		'#rows' => 4,
+		'#cols' => 100,
+		'#maxlength' => 500,
+		'#required' => FALSE,
+	);
+	
+	$form['local_jobs_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+		'#validate' => array('vcn_cma_local_jobs_form_validate'),
+		'#submit' => array('vcn_cma_local_jobs_form_submit'),
+		'#attributes' => array(
+			'class' => array('vcn-button', 'vcncma-local-jobs-submit-button'),
+			'title' => 'Save'
+		),
+	);
+	
+	$form['local_jobs_cancel'] = array(
+		'#type' => 'button',
+		'#value' => t('Cancel'),
+		'#title' => t('Cancel'),
+		'#attributes' => array(
+			'class' => array('vcn-button', 'vcncma-local-jobs-submit-button'),
+			'title' => 'Cancel',
+			//'onClick' => 'location.replace("'. vcn_drupal7_base_path() .'cma/local-jobs"); return false;'  history.go(-1);
+			'onClick' => 'history.go(-1); return false;'  
+		),
+	);
+	
+	return $form;
+	
+}
+
+
+function vcncma_preprocess_vcn_cma_local_jobs_form_template(&$variables) {
+	
+	vcn_cma_include_variables($variables);
+	
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "localjobs";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+	
+	$form = $variables['form'];
+	
+	if ($form['local_jobs_action_type']['#value'] == 'update') { //if it is an update, check if user has permission to update the local job
+		$variables['local_jobs_allow_edit_add'] = $form['local_jobs_allow_edit']['#value'];
+	} else if ($form['local_jobs_action_type']['#value'] == 'add') {
+		$variables['local_jobs_allow_edit_add'] = TRUE; //always allow user to add a new Local job
+	}
+	
+	$variables['local_jobs_job_title'] = render($form['local_jobs_job_title']);
+	$variables['local_jobs_job_url'] = render($form['local_jobs_job_url']);
+	$variables['local_jobs_employer_name'] = render($form['local_jobs_employer_name']);
+	$variables['local_jobs_employer_url'] = render($form['local_jobs_employer_url']);
+	$variables['local_jobs_contact_name'] = render($form['local_jobs_contact_name']);
+	$variables['local_jobs_contact_phone'] = render($form['local_jobs_contact_phone']);
+	$variables['local_jobs_contact_email'] = render($form['local_jobs_contact_email']);
+	$variables['local_jobs_note'] = render($form['local_jobs_note']);
+	$variables['local_jobs_submit'] = render($form['local_jobs_submit']);
+	$variables['local_jobs_cancel'] = render($form['local_jobs_cancel']);
+	$variables['children'] = drupal_render_children($form);
+	
+}
+
+function vcn_cma_network_contacts_form($form, &$form_state, $action_type, $user_contact_id = 0) {
+	
+	$userinfo = vcn_get_user_info();
+	
+	$form['#theme'][] = 'vcn_cma_network_contacts_form_template';
+	
+	$form['#attached'] = array(
+			module_load_include("inc","vcncma","includes/vcncma_network_contacts"),
+			'js' => array(
+					drupal_get_path('module', 'vcncma').'/js/vcncma_network_contacts_form.js',
+			),
+	);
+	
+	$form['#userinfo'] = $userinfo;
+	
+	if ($user_contact_id > 0) {
+		$form['user_contact_id'] = array(
+			'#type' => 'hidden',
+			'#value' => $user_contact_id,
+		);
+	
+		$params = array('userid' => $userinfo['vcn_user_id'], 'usercontactid' => $user_contact_id);
+		$cma_network_contact = vcn_rest_wrapper('vcncmasvc', 'vcncmanetworkcontacts', 'get-cma-network-contact-by-id', $params, 'xml', 'post', false);
+	
+		$form['network_contacts_allow_edit'] = array(
+			'#type' =>'hidden',
+			'#value' => empty($cma_network_contact->item) ? FALSE : TRUE
+		);
+	}
+	
+	$form['network_contacts_action_type'] = array(
+		'#type' => 'hidden',
+		'#value' => $action_type,
+	);
+	
+	$form['network_contacts_first_name'] = array(
+		'#title' => t('First Name:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->firstname : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['network_contacts_last_name'] = array(
+		'#title' => t('Last Name:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->lastname : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['network_contacts_company_name'] = array(
+		'#title' => t('Company Name:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->companyname : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['network_contacts_company_title'] = array(
+		'#title' => t('Company Title:'),
+		'#type' => 'textfield',
+		'#required' => TRUE,
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->companytitle : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['network_contacts_phone_work'] = array(
+		'#title' => t('Work Phone:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->phonework : '',
+		'#size' => 50,
+		'#maxlength' => 20,
+	);
+	
+	$form['network_contacts_phone_mobile'] = array(
+		'#title' => t('Mobile:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->phonemobile : '',
+		'#size' => 50,
+		'#maxlength' => 20,
+	);
+	
+	$form['network_contacts_email'] = array(
+		'#title' => t('E-mail:'),
+		'#type' => 'textfield',
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->email : '',
+		'#size' => 50,
+		'#maxlength' => 30,
+	);
+	
+	$form['network_contacts_note'] = array(
+		'#title' => t('Note:'),
+		'#type' => 'textarea',
+		'#default_value' => ($action_type == 'update') ? $cma_network_contact->item->note : '',
+		'#rows' => 4,
+		'#cols' => 100,
+		'#maxlength' => 500,
+		'#required' => FALSE,
+	);
+	
+	$form['network_contacts_submit'] = array(
+		'#type' => 'submit',
+		'#value' => t('Save'),
+		'#validate' => array('vcn_cma_network_contacts_form_validate'),
+		'#submit' => array('vcn_cma_network_contacts_form_submit'),
+		'#attributes' => array(
+				'class' => array('vcn-button', 'vcncma-network-contacts-submit-button'),
+				'title' => 'Save'
+		),
+	);
+	
+	$form['network_contacts_cancel'] = array(
+		'#type' => 'button',
+		'#value' => t('Cancel'),
+		'#title' => t('Cancel'),
+		'#attributes' => array(
+				'class' => array('vcn-button', 'vcncma-network-contacts-submit-button'),
+				'title' => 'Cancel',
+				//'onClick' => 'location.replace("'. vcn_drupal7_base_path() .'cma/network-contacts"); return false;'
+				'onClick' => 'history.go(-1); return false;'
+		),
+	);
+	
+	return $form;
+	
+}
+
+function vcncma_preprocess_vcn_cma_network_contacts_form_template(&$variables) {
+
+	vcn_cma_include_variables($variables);
+
+	$vcn_tabs = vcn_cma_get_tabs_list($variables);
+	$selectedTabIndex = "networkcontacts";
+	$variables['vcn_tabs_header'] = vcn_tabs_header($vcn_tabs['vcn_tabs_list'], $vcn_tabs['vcn_tabs_keys'], $selectedTabIndex, FALSE);
+
+	$form = $variables['form'];
+
+	if ($form['network_contacts_action_type']['#value'] == 'update') { //if it is an update, check if user has permission to update the network contact
+		$variables['network_contacts_allow_edit_add'] = $form['network_contacts_allow_edit']['#value'];
+	} else if ($form['network_contacts_action_type']['#value'] == 'add') {
+		$variables['network_contacts_allow_edit_add'] = TRUE; //always allow user to add a new Local job
+	}
+
+	$variables['network_contacts_first_name'] = render($form['network_contacts_first_name']);
+	$variables['network_contacts_last_name'] = render($form['network_contacts_last_name']);
+	$variables['network_contacts_company_name'] = render($form['network_contacts_company_name']);
+	$variables['network_contacts_company_title'] = render($form['network_contacts_company_title']);
+	$variables['network_contacts_phone_work'] = render($form['network_contacts_phone_work']);
+	$variables['network_contacts_phone_mobile'] = render($form['network_contacts_phone_mobile']);
+	$variables['network_contacts_email'] = render($form['network_contacts_email']);
+	$variables['network_contacts_note'] = render($form['network_contacts_note']);
+	$variables['network_contacts_submit'] = render($form['network_contacts_submit']);
+	$variables['network_contacts_cancel'] = render($form['network_contacts_cancel']);
+	$variables['children'] = drupal_render_children($form);
+
+}
+
+function vcncma_preprocess_vcn_cma_network_contacts_detail(&$variables) {
+	$userinfo = vcn_get_user_info();
+	$user_contact_id = $variables['user_contact_id'];
+	$params = array('userid' => $userinfo['vcn_user_id'], 'usercontactid' => $user_contact_id);
+	$vcncma_network_contact = vcn_rest_wrapper('vcncmasvc', 'vcncmanetworkcontacts', 'get-cma-network-contact-by-id', $params, 'xml', 'post', false);
+	
+	$variables['user_contact_id'] = isset($vcncma_network_contact->item->usercontactid) ? $vcncma_network_contact->item->usercontactid : NULL;
+	$variables['userid'] = isset($vcncma_network_contact->item->userid) ? $vcncma_network_contact->item->userid : NULL;
+	$variables['firstname'] = isset($vcncma_network_contact->item->firstname) ? $vcncma_network_contact->item->firstname : NULL;
+	$variables['lastname'] = isset($vcncma_network_contact->item->lastname) ? $vcncma_network_contact->item->lastname : NULL;
+	$variables['companyname'] = isset($vcncma_network_contact->item->companyname) ? $vcncma_network_contact->item->companyname : NULL;
+	$variables['companytitle'] = isset($vcncma_network_contact->item->companytitle) ? $vcncma_network_contact->item->companytitle : NULL;
+	$variables['phonework'] = isset($vcncma_network_contact->item->phonework) ? $vcncma_network_contact->item->phonework : NULL;
+	$variables['phonemobile'] = isset($vcncma_network_contact->item->phonemobile) ? $vcncma_network_contact->item->phonemobile : NULL;
+	$variables['email'] = isset($vcncma_network_contact->item->email) ? $vcncma_network_contact->item->email : NULL;
+	$variables['note'] = isset($vcncma_network_contact->item->note) ? $vcncma_network_contact->item->note : NULL;
+	
+}
+
+function vcncma_preprocess_vcn_cma_local_jobs_detail(&$variables) {
+	$userinfo = vcn_get_user_info();
+	$local_job_id = $variables['local_job_id'];
+	
+	$params = array('userid' => $userinfo['vcn_user_id'], 'localjobid' => $local_job_id);
+	$vcncma_local_job = vcn_rest_wrapper('vcncmasvc', 'vcncmalocaljobs', 'get-cma-local-job-by-id', $params, 'xml', 'post', false);
+
+	$variables['local_job_id'] = isset($vcncma_local_job->item->userjobid) ? $vcncma_local_job->item->userjobid : NULL;
+	$variables['userid'] = isset($vcncma_local_job->item->userid) ? $vcncma_local_job->item->userid : NULL;
+	$variables['jobtitle'] = isset($vcncma_local_job->item->jobtitle) ? $vcncma_local_job->item->jobtitle : NULL;
+	$variables['joburl'] = isset($vcncma_local_job->item->joburl) ? $vcncma_local_job->item->joburl : NULL;
+	$variables['employername'] = isset($vcncma_local_job->item->employername) ? $vcncma_local_job->item->employername : NULL;
+	$variables['employerurl'] = isset($vcncma_local_job->item->employerurl) ? $vcncma_local_job->item->employerurl : NULL;
+	$variables['contactname'] = isset($vcncma_local_job->item->contactname) ? $vcncma_local_job->item->contactname : NULL;
+	$variables['contactphone'] = isset($vcncma_local_job->item->contactphone) ? $vcncma_local_job->item->contactphone : NULL;
+	$variables['contactemail'] = isset($vcncma_local_job->item->contactemail) ? $vcncma_local_job->item->contactemail : NULL;
+	$variables['note'] = isset($vcncma_local_job->item->note) ? $vcncma_local_job->item->note : NULL;
+
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/target-career
+ */
+function vcncma_preprocess_vcn_cma_target_career_template(&$variables) {
+	$variables['cma-target'] = 1;	
+	vcn_cma_include_variables($variables);
+	
+	if($variables['targeted_career_count'] < 1) { // No career targeted, redirect user to home page.
+		//$url = $GLOBALS['vcn_config_http_or_https'] . '://' . $_SERVER['SERVER_NAME'] . vcn_drupal7_base_path();
+		//header('Location: ' . $url);
+		drupal_access_denied();
+		die(); // To stop execution for theme processors.
+	}
+	
+	$onetcode = (string)$variables['vcnuser_get_targeted_career']->onetcode;
+	$careerImg = (string)$variables['vcnuser_get_targeted_career']->careerimageyn;
+	if (isset($careerImg) && strtoupper($careerImg) == 'Y') {
+		$variables['image_name'] = 'photo.'.vcn_derive_imagename_from_onetcode($onetcode).'.jpg';
+	} else {  // if career image doesn't exist then put in a stock image
+		$variables['image_name'] = 'photo.none.png';
+	}
+}
+
+/**
+ * Implementation of hook_preprocess().
+ * /cma/target-program
+ */
+function vcncma_preprocess_vcn_cma_target_program_template(&$variables) {
+	$variables['cma-target'] = 2;
+	vcn_cma_include_variables($variables);	
+	
+	if($variables['targeted_program_count'] < 1) { // No program targeted, redirect user to home page.
+		//$url = $GLOBALS['vcn_config_http_or_https'] . '://' . $_SERVER['SERVER_NAME'] . vcn_drupal7_base_path();
+		//header('Location: ' . $url);
+		drupal_access_denied();
+		die(); // To stop execution for theme processors.		
+	}
+}
