@@ -26,77 +26,85 @@ function vcn_get_onet_assessment_scores($save_results=false) {
 	
 	$userAnswersArr = array();
   $userAnswersTypesArr = array();
+ 
+  if (!$GLOBALS['vcn_user_id']) {
+    vcnuser_get_user_cma_info(true);
+  }
   
-  if ($GLOBALS['is_user_logged_in'] && !isset($_SESSION['user_answers'][0])) {
-    $params = array('userid' => $GLOBALS['vcn_user_id']);
-    $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-cma-user-assessment-values', $params);
-    if (strlen($content->item->assessmentvalues)) {
-      $assessmentArr = json_decode($content->item->assessmentvalues);
-      $_SESSION['user_answers'] = $assessmentArr->user_answers;
-      $_SESSION['user_answers_types'] = $assessmentArr->user_answers_types;   
+  $params = array('userid' => $GLOBALS['vcn_user_id']);
+  $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-cma-user-assessment-values', $params, 'xml', 'post', false);
+  if (strlen($content->item->assessmentvalues)) {
+    $assessmentArr = json_decode($content->item->assessmentvalues);   
+   
+    $userAnswersArr = $assessmentArr->user_answers;
+    $userAnswersTypesArr = $assessmentArr->user_answers_types;
+    $scoreRealistic = $assessmentArr->score_realistic;
+    $scoreInvestigative = $assessmentArr->score_investigative;
+    $scoreArtistic = $assessmentArr->score_artistic;
+    $scoreSocial = $assessmentArr->score_social;
+    $scoreEnterprising = $assessmentArr->score_enterprising;
+    $scoreConventional = $assessmentArr->score_conventional;
+  }
+  
+  if (isset($_GET['q0']) && strlen($_GET['q0'])) {
+    for ($i = 0; $i < 60; $i++) {
+      $userAnswer = null;
+
+      if (isset($_GET['q' . $i]) && strlen($_GET['q' . $i])) {
+        $userAnswer = $_GET['q' . $i];
+      }
+
+      $userAnswersArr[$i] = $userAnswer;
+
+      $userAnswerType = null;
+
+      if (isset($_GET['t' . $i]) && strlen($_GET['t' . $i])) {
+        $userAnswerType = $_GET['t' . $i];
+      }
+
+      $userAnswersTypesArr[$i] = $userAnswerType;
+
+      if (!is_null($userAnswer) && $userAnswerType) {
+        switch ($userAnswerType) {
+          case '1':
+            $scoreRealistic += (int)$userAnswer;
+            break;
+          case '2':
+            $scoreInvestigative += (int)$userAnswer;
+            break;
+          case '3':
+            $scoreArtistic += (int)$userAnswer;
+            break;
+          case '4':
+            $scoreSocial += (int)$userAnswer;
+            break;
+          case '5':
+            $scoreEnterprising += (int)$userAnswer;
+            break;
+          case '6':
+            $scoreConventional += (int)$userAnswer;
+            break;
+        }
+      }
     }
   }
   
-  for ($i = 0; $i < 60; $i++) {
-		$userAnswer = null;
-		
-		if (isset($_GET['q' . $i]) && strlen($_GET['q' . $i])) {
-		  $userAnswer = $_GET['q' . $i];
-		} else if (isset($_SESSION['user_answers']) && isset($_SESSION['user_answers'][$i])) {
-		  $userAnswer = $_SESSION['user_answers'][$i];  
-		}
-		
-		$userAnswersArr[$i] = $userAnswer;
-		
-    $userAnswerType = null;
-    
-		if (isset($_GET['t' . $i]) && strlen($_GET['t' . $i])) {
-			$userAnswerType = $_GET['t' . $i];
-		} else {
-      if (isset($_SESSION['user_answers_types']) && isset($_SESSION['user_answers_types'][$i])) {
-		    $userAnswerType = $_SESSION['user_answers_types'][$i];  
-		  }
+  $resultsArr = false;
+  if (count($userAnswersArr) > 0) {
+    $resultsArr = array();
+    $resultsArr['user_answers'] = $userAnswersArr;
+    $resultsArr['user_answers_types'] = $userAnswersTypesArr;
+    $resultsArr['score_realistic'] = $scoreRealistic;
+    $resultsArr['score_investigative'] = $scoreInvestigative;
+    $resultsArr['score_artistic'] = $scoreArtistic;
+    $resultsArr['score_social'] = $scoreSocial;
+    $resultsArr['score_enterprising'] = $scoreEnterprising;
+    $resultsArr['score_conventional'] = $scoreConventional;
+
+    if ($GLOBALS['vcn_user_id'] && $save_results) {   
+      $params = array('userid' => $GLOBALS['vcn_user_id'], 'assessmentvalues' => json_encode($resultsArr));
+      $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'update-cma-user-assessment-values', $params);
     }
-    
-    $userAnswersTypesArr[$i] = $userAnswerType;
-    
-    if (!is_null($userAnswer) && $userAnswerType) {
-      switch ($userAnswerType) {
-        case '1':
-          $scoreRealistic += (int)$userAnswer;
-          break;
-        case '2':
-          $scoreInvestigative += (int)$userAnswer;
-          break;
-        case '3':
-          $scoreArtistic += (int)$userAnswer;
-          break;
-        case '4':
-          $scoreSocial += (int)$userAnswer;
-          break;
-        case '5':
-          $scoreEnterprising += (int)$userAnswer;
-          break;
-        case '6':
-          $scoreConventional += (int)$userAnswer;
-          break;
-      }
-    }
-	}
-  
-  $resultsArr = array();
-  $resultsArr['user_answers'] = $userAnswersArr;
-  $resultsArr['user_answers_types'] = $userAnswersTypesArr;
-  $resultsArr['score_realistic'] = $scoreRealistic;
-  $resultsArr['score_investigative'] = $scoreInvestigative;
-  $resultsArr['score_artistic'] = $scoreArtistic;
-  $resultsArr['score_social'] = $scoreSocial;
-  $resultsArr['score_enterprising'] = $scoreEnterprising;
-  $resultsArr['score_conventional'] = $scoreConventional;
-  
-  if ($GLOBALS['is_user_logged_in'] && $save_results) {   
-    $params = array('userid' => $GLOBALS['vcn_user_id'], 'assessmentvalues' => json_encode($resultsArr));
-    $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'update-cma-user-assessment-values', $params);
   }
   
   return $resultsArr;
@@ -118,38 +126,58 @@ function vcn_get_onet_assessment_career_matches_by_scores($industry, $scoreReali
   
 	$content = vcn_rest_wrapper('vcnonetassessmentsvc', 'vcnonetassessment', 'matching-careers', $params);
   
-  $careers = array();
+  $careers_of_current_industry = array();
   
-  if ($content) {
+  if ($content->finalcorrelationcoefficientsarrindustry) {
     for ($i = 0; $i < $limit; $i++) {
-      if ($content->career[$i]) {
-        $imageName = 'photo.' . vcn_derive_imagename_from_onetcode($content->career[$i]->onetcode) . '.jpg';
+      if ($content->finalcorrelationcoefficientsarrindustry->item[$i]) {
+        $imageName = 'photo.' . vcn_derive_imagename_from_onetcode($content->finalcorrelationcoefficientsarrindustry->item[$i]->onetcode) . '.jpg';
 
         // if career image doesn't exist then put in a stock image
-        if (!isset($content->career[$i]->careerimageyn) || $content->career[$i]->careerimageyn == 'N') {
+        if (!isset($content->finalcorrelationcoefficientsarrindustry->item[$i]->careerimageyn) || $content->finalcorrelationcoefficientsarrindustry->item[$i]->careerimageyn == 'N') {
           $imageName = 'photo.none.png';
         }
 
         $imageUrl = vcn_image_path() . 'career_images/' . $imageName;
 
-        $detailsUrl = vcn_drupal7_base_path() . 'careers/' . $content->career[$i]->onetcode;
+        $detailsUrl = vcn_drupal7_base_path() . 'careers/' . $content->finalcorrelationcoefficientsarrindustry->item[$i]->onetcode;
 
         if (vcn_external_client_calling_interest_profiler()) {
-          $detailsUrl = vcn_drupal7_base_path() . 'interest-profiler-details/' . $content->career[$i]->onetcode . '/industry/' . $variables['industry'];
+          $detailsUrl = vcn_drupal7_base_path() . 'interest-profiler-details/' . $content->finalcorrelationcoefficientsarrindustry->item[$i]->onetcode . '/industry/' . $variables['industry'];
         }
 
-        $careers[] = array(
-          'onetcode' => $content->career[$i]->onetcode,
-          'title' => $content->career[$i]->title,
-          'description' => $content->career[$i]->description,
+        $careers_of_current_industry[] = array(
+          'onetcode' => $content->finalcorrelationcoefficientsarrindustry->item[$i]->onetcode,
+          'title' => $content->finalcorrelationcoefficientsarrindustry->item[$i]->title,
+          'description' => $content->finalcorrelationcoefficientsarrindustry->item[$i]->description,
           'image_url' => $imageUrl,
           'details_url' => $detailsUrl,
+          'rank' => $content->finalcorrelationcoefficientsarrindustry->item[$i]->rank,
         );
       }
     }
   }
   
-  return $careers;
+  $careers_of_other_industry = array();
+  
+  if ($content->finalcorrelationcoefficientsarrother) {
+  	for ($i = 0; $i < $limit; $i++) {
+  		if ($content->finalcorrelationcoefficientsarrother->item[$i]) {
+  			  
+  			$careers_of_other_industry[] = array(
+  					'onetcode' => $content->finalcorrelationcoefficientsarrother->item[$i]->onetcode,
+  					'title' => $content->finalcorrelationcoefficientsarrother->item[$i]->title,
+  					//'description' => $content->finalcorrelationcoefficientsarrother->item[$i]->description,
+  					//'image_url' => '',
+  					//'details_url' => '',
+  					'rank' => $content->finalcorrelationcoefficientsarrother->item[$i]->rank,
+  			);
+  		}
+  	}
+  }
+  
+  return array("careers_of_current_industry" => $careers_of_current_industry,
+      			"careers_of_other_industry" => $careers_of_other_industry);
 }
 
 function vcn_get_onet_assessment_career_matches($limit=10) {
@@ -160,9 +188,10 @@ function vcn_get_onet_assessment_career_matches($limit=10) {
 	}
   
   $userScoresArr = vcn_get_onet_assessment_scores();
- 
+
   if ($userScoresArr && is_array($userScoresArr) && $userScoresArr['user_answers_types'][0]) {
-    $careers = vcn_get_onet_assessment_career_matches_by_scores($industry, $userScoresArr['score_realistic'], $userScoresArr['score_investigative'], $userScoresArr['score_artistic'], $userScoresArr['score_social'], $userScoresArr['score_enterprising'], $userScoresArr['score_conventional'], $limit);
+    $careers_list = vcn_get_onet_assessment_career_matches_by_scores($industry, $userScoresArr['score_realistic'], $userScoresArr['score_investigative'], $userScoresArr['score_artistic'], $userScoresArr['score_social'], $userScoresArr['score_enterprising'], $userScoresArr['score_conventional'], $limit);
+    $careers = $careers_list['careers_of_current_industry'];
   } else {
     $careers = null;
   }

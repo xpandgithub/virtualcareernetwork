@@ -148,7 +148,7 @@ function vcn_pla_targeted_notebook_info(&$variables){
 					$targetProgramName = $rec->programname;
 				}
 				if (strlen($rec->programaward)) {
-					$targetProgramAward = $rec->programaward;
+					$targetProgramAward = $rec->ipedcategorydescription;
 				}
 				if (strlen($rec->school)) {
 					$targetProgramSchool = $rec->school;

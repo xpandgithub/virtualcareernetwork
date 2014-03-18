@@ -915,7 +915,7 @@ div.header-links ul.menu li.leaf {
   margin:0; 
   padding:0; 
   height:37px; 
-  width:11px; 
+  width:10px; 
 }
 
 #vcn-header-links-end-dark { 
@@ -925,7 +925,7 @@ div.header-links ul.menu li.leaf {
   margin:0; 
   padding:0; 
   height:37px; 
-  width:11px; 
+  width:10px; 
 }
 
 #vcn-header-links-front { 
@@ -1283,6 +1283,20 @@ ul.vcn-footer-links {
 
 .foundation-footer-logo img{    
   width:155px;    
+}
+
+#vcn-transit .dol-seal {
+  padding-left: 0px;
+  padding-right: 15px;
+}
+
+#vcn-transit .dol-seal img {
+  width: 66px;
+}
+
+#vcn-transit .foundation-footer-logo img{    
+  width:auto;
+  height: 71px;    
 }
 
 /* 
@@ -3918,6 +3932,10 @@ ul.tertiary li.active a:hover .tab {
   font-size: 10px;
 }
 
+.font-size-11 {
+  font-size: 11px;
+}
+
 .font-size-20 {
 	font-size: 20px;
 }
@@ -4130,16 +4148,16 @@ table.top10data td {
 	text-align: center;
 }
 .profiler-result-outer-container {
-	width: 900px;
+	/*width: 900px;*/
 	margin: 0 auto;
 }
 .profiler-result-inner-container-left {
 	float: left; 
-	width: 130px;
+	width: 18%;
 }
 .profiler-result-inner-container-right {
 	float: left; 
-	width: 700px;
+	width: 80%;
 }
 .profiler-result-career-image {
 	width: 100px;
@@ -4178,6 +4196,12 @@ table.top10data td {
 .profiler-info-container-right {
 	margin: 0 0 0 30px;
 }
+.vcn-profiler-result-header {
+  font-size: 16px;
+}
+.vcn-profiler-result .vcn-left-sidebar .vcn-sidebar-tools-box {
+  background-color: #FFFFFF;
+}
 /* 
 * This is a temporary class to hide header footer for getting started popup 
 */
@@ -4197,6 +4221,10 @@ table.top10data td {
 .faq-video-play, .faq-video-play option{
   background: url('../images/vcn/buttons/play-small.png') no-repeat; 
   padding-left:20px;
+}
+
+.faq-ques-ans {
+	margin: 0 0 30px 0;
 }
 /*
 * FAQ/Help End
@@ -4861,14 +4889,14 @@ hr.divider {
 	}
 }
 */
-.program-detail-edit #program-bottom input, .program-detail-edit #program-bottom select, .program-detail-edit #program-bottom textarea {  
+.program-detail-edit #program-bottom input, .program-detail-edit #program-bottom select, .program-detail-edit textarea {  
   box-sizing:content-box;  
   -moz-box-sizing:content-box;
   -webkit-box-sizing:content-box; 
   width:702px;
 }
 
-.program-detail-edit #program-bottom textarea {
+.program-detail-edit textarea {
   resize: none;
 }
 
@@ -4903,7 +4931,7 @@ hr.divider {
   width:150px;  
 }
 
-.program-detail-edit #program-bottom .program-contact input {
+.program-detail-edit .program-contact input {
   width:280px;
   margin-right: 10px
 }
@@ -5293,28 +5321,29 @@ hr.divider {
 }
 
 #vcnfindwork-jobs-results-header {
-  float: left;
-  width: 50%;
-  padding: 5px 0 0 0;
-}
-
-#vcnfindwork-results-header-save-job-search {
 	overflow: hidden;
 }
 
+#vcnfindwork-jobs-results-text {
+  float: left;
+  width: 70%;
+  padding: 5px 0 0 0;
+}
+
 #vcnfindwork-jobs-results-cma {
-	float: right;
-	width: 45%;	
+	float: left;
+	overflow: hidden;
+	width: 30%;
 }
 
 #vcnfindwork-save-job-text {
 	float: right;
-	margin: -3px 2px 0 0;
 }
 
 #vcnfindwork-save-job-image {
 	float: right;
 	cursor: pointer;
+	margin: 0 0 0 5px;
 }
 
 #vcnfindwork-submit-form-button {
@@ -5469,6 +5498,7 @@ img#save-to-job-scout {
   border-left: 1px solid #BFBFBF;
   border-right: 1px solid #BFBFBF;  
   border-bottom: 1px solid #BFBFBF;
+  width: 100%;
 }
 
 table.dataTable thead th {
@@ -5655,7 +5685,8 @@ table.dataTable tr.row_selected td.sorting_3 {
 #vcn-getqualified-physical-requirements, 
 #vcn-getqualified-medical-requirements, 
 #vcn-getqualified-typical-education-requirements,
-#vcn-getqualified-prior-experience-requirements {
+#vcn-getqualified-prior-experience-requirements,
+.vcn-getqualified-legal-requirements {
     margin: 0 0 0 5px;
     padding: 0 5px;
 }
@@ -5763,7 +5794,7 @@ table.dataTable tr.row_selected td.sorting_3 {
 	line-height: 20px;
 	margin: 0 0 15px;
 	padding: 8px 0px 8px 12px;
-	overflow: auto;
+	overflow: hidden;
 }
 
 #vcn-user-selections label {
@@ -5794,7 +5825,7 @@ table.dataTable tr.row_selected td.sorting_3 {
 }
 
 #vcn-user-selections-edu-level-parent {
-	overflow: auto;
+	overflow: hidden;
 }
 
 #vcn-user-selections-edu-level {
@@ -5812,10 +5843,6 @@ div.form-item-user-onetcode select#edit-user-onetcode {
 
 #vcn-user-selections-edu-level .vcn-user-selections-show-on-load {
 	margin: 5px 0px 5px 0px;
-}
-
-#vcn-user-selections-submit .vcn-user-selections-show-on-load {
-	margin: 0px 0px 0px 50px;
 }
 
 #vcn-user-selections-edu-level-note {
@@ -5898,7 +5925,6 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   text-decoration: none;
 }
 
-
 #igen-header-bottombar { 
   width: 100%;
   height: auto;  
@@ -5917,40 +5943,10 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   font-weight: bold;
   text-decoration: none;
 }
-.igen-home-img {
-  border:1px solid #c6c6c6;
-}
-.igen-home-submain-left {    
-    float: left;
-    width: 49%;
-    padding-top:40px;
-}
-.igen-home-submain-right {
-    float: right;
-    padding: 30px 0px 0px 40px;
-    width: 45%;
-    
-    color: #5a5a5a;
-    font-size: 18px; 
-    line-height: 1.8em;    
-}
-.igen-home-submain-right > div:first-child {
-	font-size: 25px; 
-	line-height: 1.6em; 
-	padding-bottom:20px;
-}
-.igen-home-submain-left-box {
-    float: left;
-    width: 50%;
-    background-color: transparent;
-    text-align: center;
-}
-.igen-home-submain-box-text {
-  margin: 0 21px;
-}
+
 #fp-container-pagination {
   position: absolute;
-  top: 330px;
+  top: 310px;
   right:50px;
 }
 #fp-container-pagination a {  
@@ -5968,39 +5964,6 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   background: url('../images/vcn/buttons/bullet-24-24-0.png') no-repeat scroll left bottom transparent;
 }
 
-#igen-home-start-img {
-  text-align: center;
-}
-
-#igen-home-start-text {
-  margin: 30px 0px; 
-  font-size: 14px;  
-  line-height: 25px;
-}
-
-#igen-home-bottom {
-  background-color:#D1E3CD;
-  text-align: center;
-  width: 100%;   
-  height:186px;
-  margin: 30px 0px 0px 0px; 
-}
-
-#igen-home-bottom > div {  
-  background-color: #EAFDE7;
-  display: inline-block;
-  height: 141px;
-  padding: 0;
-  text-align: center;
-  vertical-align: middle;
-  margin: 23px 8px;
-  width: 212px;    
-}
-
-#igen-home-bottom img { 
-  margin-top: 35px;
-}
-
 .vcn-user-links {
   color: #ffffff;
 }
@@ -6009,6 +5972,12 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   text-decoration: underline;
 }
 
+#vcn-igen #industry-home-tagline-text1 {
+  color: #2CA521;
+}
+#vcn-igen #industry-home-tagline-button {
+  background-color: #2CA521;
+}
 /* IGEN HEADER END */
 
 /*********************** INDUSTRY ***************************/
@@ -6156,20 +6125,62 @@ div.form-item-user-onetcode select#edit-user-onetcode {
 }
 .industry-home-submain-left {    
     float: left;
-    width: 49%;
+    width: 44%;
     padding-top:40px;
 }
 .industry-home-submain-right {
     float: right;
-    padding: 30px 0px 0px 40px;
-    width: 45%;
+    padding: 40px 0px 0px 40px;
+    width: 50%;
     
     color: #5a5a5a;
     font-size: 18px; 
     line-height: 1.8em;    
 }
+
+.why-industry-play-button {
+    cursor: pointer;
+    left: 36px;
+    margin: -50px 0 0;
+    position: relative;
+    top: -58px;
+    z-index: 3;
+}
+
+#vcn-healthcare .industry-home-submain-left {
+  width: 47%;
+  padding-top: 55px;
+}
+
+#vcn-healthcare .industry-home-submain-right {
+  width: 48%;
+  padding: 35px 0 0 40px;
+}
+
+#vcn-aarp .industry-home-submain-left {       
+  width: 43%;
+}
+
+#vcn-aarp .industry-home-submain-right {       
+  width: 52%;
+}
+
+#vcn-igen .industry-home-submain-left {       
+  width: 49%;
+  padding-top: 70px;
+}
+
+#vcn-igen .industry-home-submain-right {       
+  width: 45%;
+  padding: 30px 0px 0px 40px;
+}
+
+#vcn-igen .industry-home-submain-right > div:first-child {
+  font-size: 25px; 
+}
+
 .industry-home-submain-right > div:first-child {
-	font-size: 25px; 
+	font-size: 30px;
 	line-height: 1.6em; 
 	padding-bottom:20px;
 }
@@ -6234,7 +6245,7 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   position: absolute; 
   left: 45px; 
   top: 127px; 
-  font-size: 32px; 
+  font-size: 28px; 
   font-weight: bold; 
   font-family: Arial;
 }
@@ -6251,6 +6262,10 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   -moz-border-radius: 10px; 
   border-radius: 10px; 
   color: white;
+}
+
+#vcn-healthcare #industry-home-tagline-button {
+   top: 230px; 
 }
 
 #industry-home-tagline-button-line1 {
@@ -6751,7 +6766,7 @@ div.form-item-user-onetcode select#edit-user-onetcode {
 .vcncareerdetails fieldset > div {
     margin: 0px 10px;
 }
-.vcncareerdetails-fieldset-subtitle{
+.vcncareerdetails-fieldset-subtitle, .vcn-getqualified-requirements-subtitle {
   font-size: 14px;
   font-weight: bold;
   padding: 10px 0;
@@ -6804,6 +6819,19 @@ div.form-item-user-onetcode select#edit-user-onetcode {
 .paragraph-formatting {
   white-space: pre-line;
 }
+
+.career-legal-requirements-disclaimer {
+    margin: 0px 0px 10px 0px;
+}
+
+#career-legal-requirements {
+	overflow: hidden;
+}
+
+.vcncareerdetails-overview #career-legal-requirements {
+	margin: 0px 10px 20px 10px;
+}
+
 /* End of career detail */
 
 /* page zoom for accessibility */
@@ -7034,6 +7062,80 @@ div.form-item-user-onetcode select#edit-user-onetcode {
 }
 
 /* Get Started END*/
+
+/* About us */
+
+.vcn-about-us-logo-container {
+  margin: 25px 50px 25px 0;
+}
+
+.vcn-about-us-logo {
+  float: left; 
+  width: 250px; 
+  text-align: left;
+}
+
+.vcn-about-us-logo-text {
+  float: left; 
+  width: 600px;
+}
+
+/* About END */
+
+/* new to vcn */
+
+.new-to-vcn-content{  
+  border-radius: 5px;   
+  width: 20%;
+}
+.new-to-vcn-content > div:first-child {
+  background-color: @bg_color;
+  padding: 10px 0 5px;
+}
+.new-to-vcn-content > div:first-child + div{
+  font-size: 14px;
+  font-weight: bold;
+  background-color: @bg_color;
+  color: #FFFFFF;
+  padding: 0 0 10px;
+}
+.new-to-vcn-content > div:first-child + div + div{
+  background-color: @bg_color_light;
+  margin: 10px 0 0;
+  padding: 5px;
+  text-align: center;
+}
+.new-to-vcn-next{     
+  padding: 10px 75px;  
+}
+.new-to-vcn{
+  background-color: #ffffff;
+  margin: 15px;
+  padding: 10px;  
+}
+.new-to-vcn-content img {
+  width: 80px;
+  height: 80px;
+}
+
+/* new to vcn end */
+
+
+.vcn-arrow-top-box {
+    background-color: @bg_color;
+    height: 15px;
+    margin: 0 7.5px;
+    width: 15px;
+}
+.vcn-arrow-bottom {
+    width: 0; 
+  	height: 0;     
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    
+    border-top: 15px solid @bg_color;
+}
+
 .vcn-arrow-right {
   width: 0; 
   height: 0; 
@@ -7076,11 +7178,79 @@ div.form-item-user-onetcode select#edit-user-onetcode {
   margin-bottom: 0;
 }
 
-#vcn-aarp .industry-home-submain-left {       
-    width: 50%;
+/* Theming login and registration pages */
+
+#vcn-login-register .vcn-tabs-blueheader {
+	height: auto !important;
 }
 
-#vcn-aarp .industry-home-submain-right {   
-    padding: 45px 0 0 40px;
-    width: 44%;
+#vcn-login-register-form-wrapper {
+	clear: both;
+	border: 1px solid #0099AF;
+	border-radius: 0px 0px 8px 8px;
+	padding: 0px 0px 0px 10px;
+	background-color: #FFFFFF;
 }
+
+#vcn-login-register fieldset {
+  background-color: #F2F2F2;
+  border: 1px solid #D3D3D3;
+  margin: 10px 15px 15px 10px;
+  padding: 0.5em;
+
+  position: relative\9;
+  margin: 20px 6px\9;
+}
+
+#vcn-login-register fieldset legend {
+  font-size: 14px;
+  font-weight: bold;
+
+  position: absolute\9; /* IE 8 and below */
+  top: -0.8em\9;
+  left: 0.5em\9;
+}
+
+#vcn-login-register fieldset > div {
+  margin: 10px 10px;
+}
+
+#vcn-login-register .form-type-password-confirm .description {
+  position: relative;
+  top: -10px;
+}
+
+.vcn-login-register-form-buttons-wrapper {
+	overflow: hidden;
+	margin: 10px 0px 10px 5px;
+	clear: both;
+}
+
+#cma-profile fieldset {
+  background-color: #F2F2F2;
+  border: 1px solid #D3D3D3;
+  margin: 0px 10px 10px 10px;
+  padding: 0.5em;
+
+  position: relative\9;
+  margin: 20px 6px\9;
+}
+
+#cma-profile fieldset legend {
+  font-size: 14px;
+  font-weight: bold;
+
+  position: absolute\9; /* IE 8 and below */
+  top: -0.8em\9;
+  left: 0.5em\9;
+}
+
+#cma-profile fieldset > div {
+  margin: 10px 10px;
+}
+
+#vcn-login-register-form-wrapper .description {
+	padding: 0px 10px 0px 0px;
+}
+
+/* End of Theming login and registration pages */

@@ -60,7 +60,7 @@ function vcn_get_import_nodes_list() {
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Build a Resume", "node_body" => "findwork-resume", "node_text_format" => "php_code", "node_path_alias" => "findwork/resume", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "page", "node_title" => "Career Gateway", "node_body" => "jobseekers", "node_text_format" => "php_code", "node_path_alias" => "jobseekers", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
+	$nodelist[] = array("node_type" => "page", "node_title" => "Career Gateway", "node_body" => "jobseekers", "node_text_format" => "php_code", "node_path_alias" => "jobseekers", "node_search_industry_filter" => "1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Career Tools", "node_body" => "career-tools", "node_text_format" => "php_code", "node_path_alias" => "career-tools", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
@@ -80,7 +80,7 @@ function vcn_get_import_nodes_list() {
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Network Online", "node_body" => "findwork-network_online", "node_text_format" => "php_code", "node_path_alias" => "findwork/network_online", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "page", "node_title" => "New to VCN?", "node_body" => "new-to-vcn", "node_text_format" => "full_html", "node_path_alias" => "new-to-vcn", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
+	$nodelist[] = array("node_type" => "page", "node_title" => "New to VCN?", "node_body" => "new-to-vcn", "node_text_format" => "php_code", "node_path_alias" => "new-to-vcn", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "PLA Resources", "node_body" => "pla-resources", "node_text_format" => "php_code", "node_path_alias" => "pla/resources", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
@@ -96,8 +96,6 @@ function vcn_get_import_nodes_list() {
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Scholastic Aptitude Test", "node_body" => "sat-information", "node_text_format" => "php_code", "node_path_alias" => "sat-information", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "page", "node_title" => "Site Map", "node_body" => "site-map", "node_text_format" => "php_code", "node_path_alias" => "site-map", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
-	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Tool Kit", "node_body" => "tool-kit", "node_text_format" => "php_code", "node_path_alias" => "tool-kit", "node_search_industry_filter" => "1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => array(1));
 	
 	$nodelist[] = array("node_type" => "page", "node_title" => "Use Your Network", "node_body" => "findwork-use-network", "node_text_format" => "php_code", "node_path_alias" => "findwork/use_network", "node_search_industry_filter" => "", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
@@ -107,7 +105,10 @@ function vcn_get_import_nodes_list() {
 	$nodelist[] = array("node_type" => "page", "node_title" => "Why Transit", "node_body" => "why-industry", "node_text_format" => "full_html", "node_path_alias" => "why-industry", "node_search_industry_filter" => "4", "node_target_path" => "" ,"node_save_only_for_selected_industry" => array(4));
 	$nodelist[] = array("node_type" => "page", "node_title" => "Why Focus on 50+", "node_body" => "why-industry", "node_text_format" => "php_code", "node_path_alias" => "why-industry", "node_search_industry_filter" => "5", "node_target_path" => "" ,"node_save_only_for_selected_industry" => array(5));
 
+	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Site Map", "node_body" => "site-map-top", "node_text_format" => "php_code", "node_path_alias" => "site-map-top", "node_search_industry_filter" => "", "node_target_path" => "site-map" ,"node_save_only_for_selected_industry" => "");
 	
+	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Site Map", "node_body" => "site-map-bottom", "node_text_format" => "php_code", "node_path_alias" => "site-map-bottom", "node_search_industry_filter" => "", "node_target_path" => "site-map" ,"node_save_only_for_selected_industry" => "");
+		
 	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Career Pathway by onetcode text", "node_body" => "careerladder-byonet-text", "node_text_format" => "vcn_text", "node_path_alias" => "careerladder-byonet-text", "node_search_industry_filter" => "-1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
 	
 	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Choose A Career", "node_body" => "explorecareers-text", "node_text_format" => "php_code", "node_path_alias" => "explorecareers-text", "node_search_industry_filter" => "", "node_target_path" => "explorecareers" ,"node_save_only_for_selected_industry" => "");
@@ -122,11 +123,11 @@ function vcn_get_import_nodes_list() {
 	
 	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Earn College Credit for Prior Learning: Review Learning Inventory", "node_body" => "earn-college-credits-my-learning-inventory", "node_text_format" => "php_code", "node_path_alias" => "earn-college-credits-my-learning-inventory", "node_search_industry_filter" => "", "node_target_path" => "pla/my-learning-inventory" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job - Introduction", "node_body" => "find-job-intro", "node_text_format" => "php_code", "node_path_alias" => "find-job-intro", "node_search_industry_filter" => "-1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
+	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job - Introduction", "node_body" => "find-job-intro", "node_text_format" => "php_code", "node_path_alias" => "find-job-intro", "node_search_industry_filter" => "", "node_target_path" => "findwork" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job - Search for Jobs", "node_body" => "find-job-search-jobs", "node_text_format" => "php_code", "node_path_alias" => "find-job-search-jobs", "node_search_industry_filter" => "-1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
+	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job - Search for Jobs", "node_body" => "find-job-search-jobs", "node_text_format" => "php_code", "node_path_alias" => "find-job-search-jobs", "node_search_industry_filter" => "", "node_target_path" => "findwork" ,"node_save_only_for_selected_industry" => "");
 	
-	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job- Before you begin", "node_body" => "find-job-before-you-begin", "node_text_format" => "php_code", "node_path_alias" => "find-job-before-you-begin", "node_search_industry_filter" => "-1", "node_target_path" => "" ,"node_save_only_for_selected_industry" => "");
+	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Find a Job- Before you begin", "node_body" => "find-job-before-you-begin", "node_text_format" => "php_code", "node_path_alias" => "find-job-before-you-begin", "node_search_industry_filter" => "", "node_target_path" => "findwork" ,"node_save_only_for_selected_industry" => "");
 	
 	$nodelist[] = array("node_type" => "vcn_text", "node_title" => "Free Online Courses", "node_body" => "take-a-course-online-free-online-courses", "node_text_format" => "vcn_text", "node_path_alias" => "take-a-course-online-free-online-courses", "node_search_industry_filter" => "", "node_target_path" => "online-courses/take-online" ,"node_save_only_for_selected_industry" => "");
 	

@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License along with thi
 (function($) {
 	Drupal.behaviors.vcnpla_college_credit_uid = {
 		attach: function(context, settings) {
-			var drupal6_basepath = vcn_get_drupal6_base_path();
+			var drupal7_basepath = vcn_get_drupal7_base_path();
 			jQuery.ajax({
-			  url: drupal6_basepath+'cma/getuserid', 
+			  url: drupal7_basepath+'user/getcmauserid/ajax', 
 			  cache: false,
 			  async: false,
 			  dataType: "text",

@@ -44,15 +44,15 @@ You should have received a copy of the GNU General Public License along with thi
 						targeted_license = '<span class="strong"> (Targeted License)</span>';
 					}
 
-					$('td:eq(0)', nRow).html('<a href="'+basepath+'get-qualified/license/'+aData.itemid+'/location/'+aData.license_state+'/onetcode/'+aData.onetcode+'"><strong>'+ aData.license_title + '</strong></a>' + 
-							targeted_license + '<br/>' + aData.license_description);
 					$('td:eq(1)', nRow).html(aData.license_agency);
                                         
                                         if (councelor_viewing_student_data == true && user_not_in_save_mode == true) {
+                                          $('td:eq(0)', nRow).html('<strong>'+ aData.license_title + '</strong>' + targeted_license + '<br/>' + aData.license_description);
                                           $('td:eq(2)', nRow).html('<center><nobr>'+
                                                           '<input type="button" title="Delete" value="Delete" class="vcn-button grid-action-button vcn-button-disable" name="'+aData.notebookid+'" />'+
                                                           '</nobr></center>');
                                         } else {
+                                          $('td:eq(0)', nRow).html('<a href="'+basepath+'get-qualified/license/'+aData.itemid+'/location/'+aData.license_state+'/onetcode/'+aData.onetcode+'"><strong>'+ aData.license_title + '</strong></a>' + targeted_license + '<br/>' + aData.license_description);
                                           $('td:eq(2)', nRow).html('<center><nobr>'+
                                                           '<input type="button" title="Delete" value="Delete" class="cma-licenses-delete-this-row vcn-button grid-action-button" name="'+aData.notebookid+'" />'+
                                                           '</nobr></center>');

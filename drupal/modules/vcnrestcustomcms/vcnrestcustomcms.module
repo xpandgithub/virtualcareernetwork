@@ -27,7 +27,7 @@ function vcnrestcustomcms_help($path, $arg) {
 /**
  * Implementation of hook_permission().
  */
-function vcnrestcustomcms_permission() {
+/*function vcnrestcustomcms_permission() {
 	$perm = array(
 	  'alter REST content' => array(
       'title' => t('Edit content from REST database (i.e. career details)'),
@@ -37,7 +37,7 @@ function vcnrestcustomcms_permission() {
 	);
 	
 	return $perm;
-}
+}*/
 
 /**
  * Implementation of hook_preprocess().
@@ -91,9 +91,16 @@ function vcnrestcustomcms_preprocess_vcn_rest_custom_cms_template(&$variables) {
     $variables['onetcode'] = $onetcode;
    
 		if (isset($_POST['submitchanges']) && $_POST['submitchanges'] == 'Y') {
-      $params = array('onetcode' => $onetcode, 'description' => $_POST['description'], 'phyrequirements' => $_POST['phyrequirements'], 'medrequirements' => $_POST['medrequirements'], 'dayinlife' => $_POST['dayinlife'], 'edutraining' => $_POST['edutraining']);
+      $params = array('onetcode' => $onetcode, 
+                      'description' => $_POST['description'], 
+                      'physhealthrequirements' => $_POST['physhealthrequirements'], 
+                      'physhealthrequirementsurl' => $_POST['physhealthrequirementsurl'],
+                      'nationwidelegalrequirementdesc' => $_POST['nationwidelegalrequirementdesc'],
+                      'nationwidelegalrequirementurl' => $_POST['nationwidelegalrequirementurl'],
+                      'dayinlife' => $_POST['dayinlife'], 
+                      'edutraining' => $_POST['edutraining']);
 			$xContent = vcn_rest_wrapper('vcnrestcustomcmssvc', 'vcnrestcustomcms', 'update-career-details', $params);
-			vcnrestcustomcms_insert_delete_update($variables);
+			vcnrestcustomcms_insert_delete_update_resources($variables);
 		}
 		
 		$params = array('onetcode' => $onetcode);
@@ -132,8 +139,10 @@ function vcnrestcustomcms_preprocess_vcn_rest_custom_cms_template(&$variables) {
       $variables['no_data_found'] = false;
       $variables['career_title'] = (string)$career_data->careerdata->title[0];
       $variables['detailed_description'] = (string)$career_data->careerdata->detaileddescription[0];
-      $variables['physical_requirements'] = (string)$career_data->careerdata->physicalrequirement[0];
-      $variables['health_requirements'] = (string)$career_data->careerdata->healthrequirement[0];
+      $variables['phys_health_requirements'] = (string)$career_data->careerdata->physicalhealthrequirement[0];
+      $variables['phys_health_requirements_url'] = (string)$career_data->careerdata->physicalrequirementurl[0];
+      $variables['nationwide_legal_requirement_desc'] = (string)$career_data->careerdata->nationwidelegalrequirementdesc[0];
+      $variables['nationwide_legal_requirement_url'] = (string)$career_data->careerdata->nationwidelegalrequirementurl[0];
       $variables['academic_requirement'] = (string)$career_data->careerdata->academicrequirement[0];
       $variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];
     }
@@ -158,7 +167,7 @@ function vcnrestcustomcms_build_career_resources_dropdown($selectedCategoryId, $
 	return $sHtml;	
 }
 	
-function vcnrestcustomcms_insert_delete_update(&$variables) {
+function vcnrestcustomcms_insert_delete_update_resources(&$variables) {
 
   if (isset($_POST['submitchanges']) && $_POST['submitchanges'] == 'Y') {
 

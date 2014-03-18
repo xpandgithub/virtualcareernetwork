@@ -42,38 +42,31 @@ You should have received a copy of the GNU General Public License along with thi
 								<div class="allclear"></div>
 							</div>
 							
-							<?php if(isset($first_visit) && $first_visit != true){?>
-							<!-- <div id="vcnfindwork-results-header-save-job-search"></div> -->
-							
-							<div>
+							<?php if(isset($first_visit) && $first_visit != true): ?>
 								<div id="vcnfindwork-jobs-results-header">
-									<b><?php echo $num_records_found; ?></b><?php echo $jobs_found_text; ?>.
-									<?php if ($num_records_found == 0) { ?>
-										Please widen your search.
-									<?php }?>
-								</div>
-								<?php if ($GLOBALS['is_user_logged_in']) { ?>
-									<div id="vcnfindwork-jobs-results-cma">
-										<div id="vcnfindwork-save-job-image"><img id="save-to-job-scout" class="vcn-button save-target-icon" src="<?php echo vcn_image_path(); ?>buttons/save_icon2.png" alt="Save Button"/></div>
-										<div id="vcnfindwork-save-job-text">Save this job criteria <br/>to MyVCN Account</div>
+									<div id="vcnfindwork-jobs-results-text">
+										<b><?php echo $num_records_found; ?></b><?php echo $jobs_found_text; ?>
 									</div>
-								<?php } ?>
-								<div class="allclear"></div>
-							</div>
-							
-							<div id="vcnfindwork-results-data-table" class="clearall">
-								<table id = "vcnfindwork-results-table" class = "dttable">
-								<thead><tr><th class="dtheader sorting">Job Title</th><th class="dtheader sorting">Company</th><th class="dtheader sorting">Location</th><th class="dtheader sorting">Date Posted</th></tr></thead>
-								<tbody><tr><td colspan="4" class="dataTables_empty">Loading data from server</td></tr></tbody>
-								</table>
-							</div>				
-							
-							<div>								
-								<a id="vcnfindwork-results-feedback-link" href="">If this is not what you expected, <u>click here</u> to let us know.</a><br/><br/>							
-							</div>									
-							<?php }else {?>
-							<div><?php echo $first_visit_guide_text; ?></div>
-							<?php }?>													
+									<?php if ($GLOBALS['is_user_logged_in']): ?>
+										<div id="vcnfindwork-jobs-results-cma">
+											<div id="vcnfindwork-save-job-image"><img id="save-to-job-scout" class="vcn-button save-target-icon" src="<?php echo vcn_image_path(); ?>buttons/save_icon2.png" alt="Save Button"/></div>
+											<div id="vcnfindwork-save-job-text">Save this job criteria <br/>to MyVCN Account</div>
+										</div>
+									<?php endif; ?>
+									<div class="allclear"></div>
+								</div>
+								<div id="vcnfindwork-results-data-table" class="clearall">
+									<table id = "vcnfindwork-results-table" class = "dttable">
+									<thead><tr><th class="dtheader sorting">Job Title</th><th class="dtheader sorting">Company</th><th class="dtheader sorting">Location</th><th class="dtheader sorting">Date Posted</th></tr></thead>
+									<tbody><tr><td colspan="4" class="dataTables_empty">Loading data from server</td></tr></tbody>
+									</table>
+								</div>				
+								<div>								
+									<a id="vcnfindwork-results-feedback-link" href="javascript:void(0);">If this is not what you expected, <u>click here</u> to let us know.</a><br/><br/>							
+								</div>									
+							<?php else: ?>
+								<div><?php echo $first_visit_guide_text; ?></div>
+							<?php endif; ?>													
 							
 						<?php echo $children; ?>
 						</div>						

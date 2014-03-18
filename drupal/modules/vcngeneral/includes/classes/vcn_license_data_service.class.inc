@@ -52,7 +52,7 @@ abstract class vcnLicenseDataService  {
 
     // if no data coming from COS then check to see if VCN has any data
     $usingVcnData = false;
-    if (!$licenseItems->LICENSEID) {       
+    if (is_array($licenseItems) && count($licenseItems) < 1) {       
       $usingVcnData = true;
 
       $params = array('onetcode' => $onetcode, 'stfips' => $stfips);
@@ -60,7 +60,8 @@ abstract class vcnLicenseDataService  {
       $licenseItems = $licenseData->licenses->item;
     }
 
-    foreach ($licenseItems AS $items) {          
+    foreach ($licenseItems AS $items) {    
+      
       $id = !$usingVcnData ? trim((string)$items->LICENSEID) : trim((string)$items->licenseid);
 
       if ($id) {
@@ -149,35 +150,28 @@ abstract class vcnLicenseDataService  {
 	
 	}
 	
-	private function getSuppressedLicenseIds($onetcode, $location) {
+	static private function getSuppressedLicenseIds($onetcode, $location) {
 	
 		// this function will be used to suppress licenses that we've 
 		// defined in VCN db to suppress
 		
 		$outputArr = array();
 	
-		$conn = vcn_connect_to_db();
-		
 		$onetcode = mysql_real_escape_string($onetcode);
 		$stfips = vcnStateUtil::getFipsByUnknown($location);
 		
-		$sql = " SELECT license_id AS id
-		         FROM vcn_blacklist_license
-		         WHERE onetcode = '$onetcode'
-		         AND stfips = '$stfips'
-		         ORDER BY license_id ";
-		
 		try {
 			
-			$result = mysql_query($sql) or die("Error getting licenses: " . mysql_error());
-	
-		  while ($row = mysql_fetch_object($result)) {
-				$outputArr[] = (string)$row->id;
-			}
+			$params = array('onetcode' => $onetcode, 'stfips' => $stfips);
+      $content = vcn_rest_wrapper('vcntrainingsvc', 'vcnlicense', 'get-blacklist', $params);
+
+      if ($content && $content->licenses->item) {
+        foreach ($content->licenses->item as $license) {
+          $outputArr[] = (string)$license->licenseid;
+        }
+      }
 		
 		} catch (Exception $e) {
-			
-			$outputArr = $inputArr;
 			
 		}
 		

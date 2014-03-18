@@ -47,8 +47,7 @@ function vcngeneral_init() {
  * hook_preprocess_theme for Advanced Career Tools
  */
 
-function vcngeneral_preprocess_vcn_account_setup_box(&$variables) {	
-	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+function vcngeneral_preprocess_vcn_account_setup_box(&$variables) {		
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 
 	$user = vcn_get_user_info();	
@@ -71,13 +70,6 @@ function vcn_get_rest_apikey() {
   return $GLOBALS['vcn_config_rest_api_key'];
 }
 
-function vcn_get_rest_secret() {
-	if (!$GLOBALS['vcn_config_rest_secret']) {
-		die('No Rest secret set');
-	}
-  return $GLOBALS['vcn_config_rest_secret'];
-}
-
 function vcn_get_rest_server() {
 	if (!$GLOBALS['vcn_config_rest_server_name']) {
 		die('No Rest server name set');
@@ -87,18 +79,18 @@ function vcn_get_rest_server() {
 }
 
 function vcn_connect_to_db() {
-    //print "DB SERVER IS " . $GLOBALS['vcn_config_db_server_name'];
-	$dbserver = $GLOBALS['vcn_config_db_server_name'];
-	
-	$conn = mysql_connect($dbserver, 'hvcp', '')
-	or die("Error making database connection: ".mysql_error());
-	$db = mysql_select_db('hvcp',$conn)
-	or die("Error selecting database: ".mysql_error());
+  
+  // Removed the code from this function because we SHOULDN'T be making direct
+  // calls to the db from this code. We should always go to the REST services!
 
-	return $conn;
+	return false;
 }
 
 // various paths
+
+function vcn_base_url() {
+  return $GLOBALS['vcn_config_http_or_https'] . '://' . $GLOBALS['vcn_config_base_url'];
+}
 
 function vcn_theme_path() {
   return base_path() . "sites/all/themes/vcnstark/";
@@ -190,7 +182,8 @@ function vcn_validate_logged_in_user(){
 }
 
 function vcn_is_provider_user(){
-	$is_provider_user = ($GLOBALS['user_provider_id'] > 0) ? true : false;
+	global $user_info;
+	$is_provider_user = ($user_info['user_provider_id'] > 0) ? true : false;
 	return $is_provider_user;
 }
 
@@ -198,6 +191,13 @@ function vcn_is_user_logged_in() {
 	$user = vcn_get_user_info();
 	$is_user_logged_in = ($user['is_user_logged_in'] > 0) ? true : false;
 	return $is_user_logged_in;
+}
+
+function display_debug_detail(){	
+	if (isset($_GET['debug']) && array_search("administrator", $user->roles) == true) {
+		return true;
+	}
+	return false;	
 }
 
 function vcn_db_drupal6_settings() {
@@ -221,6 +221,11 @@ function vcn_db_rest_settings() {
 
 	return $db_settings;
 }
+
+function vcn_is_ajax_call(){	 
+	return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');	 
+}
+
 
 function vcn_get_cipcode_year() {
   return 2010;
@@ -541,7 +546,6 @@ function vcn_rest_wrapper($service, $module, $action, $params, $format='xml', $m
 
 		$rest = new vcnWebServices;
 
-		$rest->setSecret(vcn_get_rest_secret());
 		$rest->setBaseurl(vcn_get_rest_server());
 		$rest->setMethod($method);
 
@@ -596,7 +600,7 @@ function vcn_rest_wrapper($service, $module, $action, $params, $format='xml', $m
 		$data = $result->data ;
 	} else {
 		$data = NULL;
-		error_log(print_r($params, true), 3, ini_get('error_log'));
+		//error_log(print_r($params, true), 3, ini_get('error_log'));
     	handle_rest_error($cid . ' => ' . $statusText . ' - ' . $statusCode. ' - ' . $statusMessage, $service);
 	}
 
@@ -617,7 +621,7 @@ function handle_rest_error($error_msg, $service) {
             '  <p style="color:black; font-size:11px;"> &nbsp; &nbsp; &nbsp;REST Issue: ' . $error_msg . '</p>' .
             '</div>'; 
   }
-  error_log("Rest call failed: ".$error_msg.$service, 3, ini_get('error_log')); // To keep error detail in log file, if we are not able to reproduce it easily.
+  //error_log("Rest call failed: ".$error_msg.$service, 3, ini_get('error_log')); // To keep error detail in log file, if we are not able to reproduce it easily.
   // don't show error unless its a new REST call
   if (substr($service, 0, 3) == 'vcn') {
   	drupal_set_message('An error has occurred.  Please try again.'.$html, 'error');
@@ -974,15 +978,14 @@ function vcn_rest_datatable_get_data($page, $params, $display_na_if_null = FALSE
 
 function vcn_determine_vcn_subsite() {
 	// determine if this is a vcn subsite (like "osp") or standard vcn
-    $req_uri = $_SERVER['REQUEST_URI'];
+  $req_uri = $_SERVER['REQUEST_URI'];
 	$uri_exp = explode("/",$req_uri);
-	//print_r($uri_exp);
 	
 	$subsite = 'vcn';		
 	$industry_code =  vcn_get_industry_code();	
 	if($industry_code != ""){
 		$subsite = 'vcn-'.$industry_code;
-	} 
+	}
 	
 	if ($uri_exp[2]=='osp') {
 		$subsite = 'osp';
@@ -992,6 +995,14 @@ function vcn_determine_vcn_subsite() {
 		$subsite = 'osp';
 	} else if ($uri_exp[2]=='provider') { // all provider portal pages 
 		$subsite = 'provider';
+	} else if ($uri_exp[2]=='provider-register') { //provider registration page
+		$subsite = 'provider';
+	} else if (($uri_exp[2]=='user?type=provider')) { // provider login page
+		$subsite = 'provider';
+	} else if (isset($uri_exp[3])) { // provider forgot your password page
+		if (($uri_exp[3]=='password?type=provider')) {
+			$subsite = 'provider';
+		}
 	}
 	return $subsite;
 }
@@ -1013,17 +1024,9 @@ function vcn_determine_vcn_or_category2() {
 	return $cat2site;
 }
 
-function vcn_get_user_info() {
-	
-	$user = array();
-	$user['uid'] = $GLOBALS['d6_uid'];
-	$user['name'] = $GLOBALS['d6_name'];
-	$user['vcn_user_name'] = $GLOBALS['vcn_user_name'];
-	$user['mail'] = $GLOBALS['drupal_mail'];
-	$user['vcn_user_id'] = $GLOBALS['vcn_user_id']; // cma_id : for logged in and anonymous user
-	$user['is_user_logged_in'] = $GLOBALS['is_user_logged_in'];
-	
-	return $user;
+function vcn_get_user_info() {	
+	global $user_info; // created new global variable with all new values of drupal 7 user, just return that.
+	return $user_info;
 }
 
 function vcn_use_cache(&$variables) { 
@@ -1244,18 +1247,20 @@ function vcn_calculate_min_edu_for_career($onetcode, $echo_json = TRUE) {
 }
 
 function vcn_counselor_users_dropdown_should_display() {
-  // check if user has counselor role rid=?
-  $is_valid = vcn_user_has_role(9);
+  // check if user has counselor rolename=?
+  $is_valid = vcn_user_has_role("counselor");
   
   return $is_valid;
 }
 
-function vcn_user_has_role($roleId) {
+function vcn_user_has_role($roleName) {
   $has_role = false;
   
-  if (strlen($GLOBALS['d6_roles'])) {
-    $roles = explode(',', $GLOBALS['d6_roles']);
-    if (in_array((string)$roleId, $roles)) {
+  global $user_info;
+  
+  if (!empty($user_info['user_roles'])) {
+    $roles = $user_info['user_roles'];
+    if (in_array((string)$roleName, $roles)) {
       $has_role = true;
     }
   }

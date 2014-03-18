@@ -81,23 +81,32 @@ function vcn_program_detail_process(&$variables) {
 	if (vcn_chk_not_null($programdetails->totalcredits)) {
 		$variables['totalcredits'] = $programdetails->totalcredits;
 	}
-	if (vcn_chk_not_null($programdetails->totalcourses)) {
+	/*if (vcn_chk_not_null($programdetails->totalcourses)) {
 		$variables['totalcourses'] = $programdetails->totalcourses;
+	}*/
+	if (vcn_chk_not_null($programdetails->tuitioninstateindistrict)) {
+		$variables['tuitioninstateindistrict'] = (string)$programdetails->tuitioninstateindistrict;
 	}
-	/*if (vcn_chk_not_null($programdetails->tuitioninstate)) {
-		$variables['tuitioninstate'] = (string)$programdetails->tuitioninstate;
+	if (vcn_chk_not_null($programdetails->tuitioninstateoutdistrict)) {
+		$variables['tuitioninstateoutdistrict'] = (string)$programdetails->tuitioninstateoutdistrict;
+	}
+	if (vcn_chk_not_null($programdetails->tuitiononline)) {
+		$variables['tuitiononline'] = (string)$programdetails->tuitiononline;
 	}
 	if (vcn_chk_not_null($programdetails->tuitionoutstate)) {
-	$variables['tuitionoutstate'] = (string)$programdetails->tuitionoutstate;
-	}*/
+		$variables['tuitionoutstate'] = (string)$programdetails->tuitionoutstate;
+	}
 	if (vcn_chk_not_null($programdetails->othercost)) {
 		$variables['othercost'] = (string)$programdetails->othercost;
+	}
+	if (vcn_chk_not_null($programdetails->online)) {
+		$variables['online'] = (string)$programdetails->online;
 	}
 	$variables['otherrequirements'] = 'N/A';
 	if (vcn_chk_not_null($programdetails->otherrequirements)) {
 		$variables['otherrequirements'] = vcn_display_formatted_text(vcn_convert_urls_to_links((string)$programdetails->otherrequirements));
 	}
-	$variables['howtoapply'] = 'N/A';
+
 	if (vcn_chk_not_null($programdetails->howtoapply)) {
 		$variables['howtoapply'] = vcn_display_formatted_text(vcn_convert_urls_to_links((string)$programdetails->howtoapply));
 	} 	
@@ -121,12 +130,12 @@ function vcn_program_detail_process(&$variables) {
 		$variables['legalreq'] = vcn_display_formatted_text(vcn_convert_urls_to_links((string)$programdetails->legalreq)); 
 	}
 
-	if (count($programaccredited->item) > 0) {
+	/*if (count($programaccredited->item) > 0) {
 		$variables['paccredited'] = "";
 		foreach ($programaccredited->item as $creditor) {
 			$variables['paccredited'] .= "<div>".$creditor->name."</div>";
 		}
-	}
+	}*/
 
 	//Program required education
 	if (count($programreqeducation->item) > 0) {
@@ -149,14 +158,16 @@ function vcn_program_detail_process(&$variables) {
 	}
 
 	//Program Entrance Tests
+	$entrancetests_prog_array = array();
 	if (count($programentrancetests->item) > 0) {
-		$variables['entrancetests_prog'] = '<div class="strong allclear">Program Entrance Tests:<br/></div>
+		/*$variables['entrancetests_prog'] = '<div class="strong allclear">Program Entrance Tests:<br/></div>
 											<div class="program-edu-req strong allclear">
 												<div>&nbsp;</div>
 												<div>Minimum Score</div>
 												<div>Test Description</div>
-											</div>';
-		foreach ($programentrancetests->item as $test) {
+											</div>';*/	
+		
+		foreach ($programentrancetests->item as $test) {		
 			if (strlen($test->minscore) && (strtoupper($test->minscore) == 'NONE' || strtoupper($test->minscore) == 'N/A' || strtoupper($test->minscore) == 'NA')) {
 				$testminscore = '';
 			} else {
@@ -170,26 +181,35 @@ function vcn_program_detail_process(&$variables) {
 				$tname = $test->testname;
 			}
 				
-			$variables['entrancetests_prog'] .= '<div class="program-edu-req allclear">';
+			/*$variables['entrancetests_prog'] .= '<div class="program-edu-req allclear">';
 			$variables['entrancetests_prog'] .= '<div><b>'.$tname.'</b>&nbsp;</div>';
 			$variables['entrancetests_prog'] .= '<div>'.$testminscore.'&nbsp;</div>';
 			$variables['entrancetests_prog'] .= '<div>'.$test->testdescription.'&nbsp;</div>';
-			$variables['entrancetests_prog'] .= '</div>';
-				
-		}
+			$variables['entrancetests_prog'] .= '</div>';*/
+			
+			$entrancetests_prog_array[] = array(
+					'tname' => '<b>'.(string)$tname.'</b>',
+					'tminscore' => (string)$testminscore,
+					'tdesc' => (string)$test->testdescription,				
+			);				
+		}		
 	} else {
 		$variables['entrancetests_prog_na'] = 'N/A';
 	}
-
-
+	$entrancetests_prog_json = json_encode($entrancetests_prog_array);
+	drupal_add_js(array('vcngetqualified_program_entrancetests' => array('program_entrancetests_data' => $entrancetests_prog_json)),array('type' => 'setting'));
+	
+	
 	//Provider Entrance Tests
+	$entrancetests_prov_array = array();
 	if (count($providerentrancetests->item) > 0) {
-		$variables['entrancetests_prov'] = '<div class="strong allclear">Provider Entrance Tests:<br/></div>
+		/*$variables['entrancetests_prov'] = '<div class="strong allclear">Provider Entrance Tests:<br/></div>
 											<div class="program-edu-req strong allclear">
 												<div>&nbsp;</div>
 												<div>Minimum Score</div>
 												<div>Test Description</div>
-											</div>';
+											</div>';*/		
+		
 		foreach ($providerentrancetests->item as $test) {
 			if (strlen($test->minscore) && (strtoupper($test->minscore) == 'NONE' || strtoupper($test->minscore) == 'N/A' || strtoupper($test->minscore) == 'NA')) {
 				$testminscore = '';
@@ -204,25 +224,34 @@ function vcn_program_detail_process(&$variables) {
 				$tname = $test->testname;
 			}
 				
-			$variables['entrancetests_prov'] .= '<div class="program-edu-req allclear">';
+			/*$variables['entrancetests_prov'] .= '<div class="program-edu-req allclear">';
 			$variables['entrancetests_prov'] .= '<div><b>'.$tname.'</b>&nbsp;</div>';
 			$variables['entrancetests_prov'] .= '<div>'.$testminscore.'&nbsp;</div>';
 			$variables['entrancetests_prov'] .= '<div>'.$test->testdescription.'&nbsp;</div>';
-			$variables['entrancetests_prov'] .= '</div>';
-				
-		}
+			$variables['entrancetests_prov'] .= '</div>';*/
+			
+			$entrancetests_prov_array[] = array(
+					'tname' => '<b>'.(string)$tname.'</b>',
+					'tminscore' => (string)$testminscore,
+					'tdesc' => (string)$test->testdescription,
+			);				
+		}		
 	} else {
 		$variables['entrancetests_prov_na'] = 'N/A';
 	}
+	$entrancetests_prov_json = json_encode($entrancetests_prov_array);
+	drupal_add_js(array('vcngetqualified_provider_entrancetests' => array('provider_entrancetests_data' => $entrancetests_prov_json)),array('type' => 'setting'));
+	
 
 	//Program Required courses
+	$programreqcourses_array = array();
 	if (count($programreqcourses->item) > 0 && $programreqcourses->item[0]->coursetitle != "") {
-		$variables['requiredcourses_prog'] = '<div class="strong allclear">Program Prerequisite Courses:<br/></div>
+		/*$variables['requiredcourses_prog'] = '<div class="strong allclear">Program Prerequisite Courses:<br/></div>
 											  <div class="pro-required-courses strong allclear">
 												  <div>&nbsp;</div>
 												  <div>Course Level</div>
 												  <div>Minimum GPA</div>
-											  </div>';
+											  </div>';*/
 		foreach ($programreqcourses->item as $requiredcourses) {
 			if (($requiredcourses->courseid) > 0) {
 				switch (strtoupper($requiredcourses->courselevel)) {
@@ -246,25 +275,35 @@ function vcn_program_detail_process(&$variables) {
 				if(strlen($requiredcourses->description) > 0) {
 					$divider = ' - ';
 				}
-				$variables['requiredcourses_prog'] .= '<div class="pro-required-courses allclear">';
+				/*$variables['requiredcourses_prog'] .= '<div class="pro-required-courses allclear">';
 				$variables['requiredcourses_prog'] .= '<div><b>'.$requiredcourses->coursetitle.'</b>'.$divider.$requiredcourses->description.'&nbsp;</div>';
 				$variables['requiredcourses_prog'] .= '<div>'.$level.'&nbsp;</div>';
 				$variables['requiredcourses_prog'] .= '<div>'.$requiredcourses->mingpa.'&nbsp;</div>';
-				$variables['requiredcourses_prog'] .= '</div>';
+				$variables['requiredcourses_prog'] .= '</div>';*/
+				
+				$programreqcourses_array[] = array(
+						'cname' => '<b>'.(string)$requiredcourses->coursetitle.'</b>'.$divider.(string)$requiredcourses->description,
+						'level' => (string)$level,
+						'mingpa' => (string)$requiredcourses->mingpa,
+				);
 			}
 		}
 	} else {
 		$variables['requiredcourses_prog_na'] = 'N/A';
 	}
+	$programreqcourses_json = json_encode($programreqcourses_array);
+	drupal_add_js(array('vcngetqualified_programreqcourses' => array('programreqcourses_data' => $programreqcourses_json)),array('type' => 'setting'));
+	
 
 	//Provider Required courses
+	$providerreqcourses_array = array();
 	if (count($providerrequiredcourses->item) > 0 && $providerrequiredcourses->item[0]->coursetitle != "") {
-		$variables['requiredcourses_prov'] = '<div class="strong allclear"><br/>Provider Prerequisite Courses:<br/></div>
+		/*$variables['requiredcourses_prov'] = '<div class="strong allclear"><br/>Provider Prerequisite Courses:<br/></div>
 											  <div class="school-required-courses strong allclear">
 												  <div>&nbsp;</div>
 												  <div>Course Level</div>
 												  <div>Minimum GPA</div>
-											  </div>';
+											  </div>';*/
 		foreach ($providerrequiredcourses->item as $requiredcourses) {
 			if (($requiredcourses->courseid) > 0) {
 				switch (strtoupper($requiredcourses->courselevel)) {
@@ -288,34 +327,43 @@ function vcn_program_detail_process(&$variables) {
 				if(strlen($requiredcourses->description) > 0) {
 					$divider = ' - ';
 				}
-				$variables['requiredcourses_prov'] .= '<div class="school-required-courses allclear">';
+				/*$variables['requiredcourses_prov'] .= '<div class="school-required-courses allclear">';
 				$variables['requiredcourses_prov'] .= '<div><b>'.$requiredcourses->coursetitle.'</b>'.$divider.$requiredcourses->description.'&nbsp;</div>';
 				$variables['requiredcourses_prov'] .= '<div>'.$level.'&nbsp;</div>';
 				$variables['requiredcourses_prov'] .= '<div>'.$requiredcourses->mingpa.'&nbsp;</div>';
-				$variables['requiredcourses_prov'] .= '</div>';
+				$variables['requiredcourses_prov'] .= '</div>';*/
+				
+				$providerreqcourses_array[] = array(
+						'cname' => '<b>'.(string)$requiredcourses->coursetitle.'</b>'.$divider.(string)$requiredcourses->description,
+						'level' => (string)$level,
+						'mingpa' => (string)$requiredcourses->mingpa,
+				);
 			}
 		}
 	} else {
 		$variables['requiredcourses_prov_na'] = 'N/A';
 	}
+	$providerreqcourses_json = json_encode($providerreqcourses_array);
+	drupal_add_js(array('vcngetqualified_providerreqcourses' => array('providerreqcourses_data' => $providerreqcourses_json)),array('type' => 'setting'));
+	
 
 	//Provider detail
 	$variables['providerdetail'] = vcn_program_provider_detail_format($providerdetail);
 
-	if (strlen(trim($providerdetail->admissionurl))>4) {
+	if (strlen(trim($providerdetail->adminurl))>4 && $providerdetail->adminurlflag) {
 		$variables['applurl'] = vcn_build_link_window_opener($providerdetail->admissionurl, "Admissions", false, true);
 	}
 		
-	if (strlen(trim($providerdetail->faidurl))>4) {
+	if (strlen(trim($providerdetail->faidurl))>4 && $providerdetail->faidurlflag) {
 		$variables['faidurl'] = vcn_build_link_window_opener($providerdetail->faidurl, "Financial Aid (For this school)", false, true);
 	}
 
-	if (vcn_chk_not_null($providerdetail->transferpolicy)) {
+	/*if (vcn_chk_not_null($providerdetail->transferpolicy)) {
 		$variables['transferpolicy'] = (string)$providerdetail->transferpolicy;
 		if (vcn_chk_not_null($providerdetail->mingpafortransfer)) {
 			$variables['mingpafortransfer'] = (string)$providerdetail->mingpafortransfer;
 		}
-	}
+	}*/
 
 	$curriculum_program_courses = vcn_get_program_curriculum_courses($variables['programid']);
 	$variables['curriculum_program_courses'] = $curriculum_program_courses;
@@ -348,16 +396,16 @@ function vcn_program_detail_tabs(&$variables) {
 	//Program Overview , Program Requirements ,	General Admission Requirements , School Information , Entrance Tests , Required courses
 	$vcn_tabs_list = array();
 	$vcn_tabs_list[] = array("pover","Overview");
-	$vcn_tabs_list[] = array("preq","Program<br/>Requirements");
-	$vcn_tabs_list[] = array("pareq","How to Apply");
-	$vcn_tabs_list[] = array("sinfo","School<br/>Information");
+	$vcn_tabs_list[] = array("currcou","Curriculum<br/>Courses");
+	$vcn_tabs_list[] = array("sinfo","School / Cost / <br/>Financial aid ");
+	$vcn_tabs_list[] = array("preq","Program<br/>Requirements");	
 	$vcn_tabs_list[] = array("enttest","Entrance<br/>Tests");
 	$vcn_tabs_list[] = array("preqcou","Prerequisite<br/>Courses");
-	$vcn_tabs_list[] = array("currcou","Curriculum<br/>Courses");
+	$vcn_tabs_list[] = array("pareq","Application<br/>Support");
 	$vcn_tabs_list[] = array("otherreq","Other<br/>Information");
 
 	$variables['vcn_tabs_list'] = $vcn_tabs_list;
-	$variables['vcn_tabs_keys'] = array("pover","preq","pareq","sinfo","enttest","preqcou","currcou","otherreq");
+	$variables['vcn_tabs_keys'] = array("pover","currcou","sinfo","preq","enttest","preqcou","pareq","otherreq");
 
 	$variables['vcn_tabs_header'] = vcn_tabs_header($variables['vcn_tabs_list'], $variables['vcn_tabs_keys']);
 

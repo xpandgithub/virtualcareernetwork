@@ -40,9 +40,9 @@ function registerFromMoodleFrame() {
    // set location for a Create Account link inside the moodle frame so that when we return to the page after
    // creating the account, we remain on the framing page
    <?php if ($GLOBALS['is_user_logged_in']) : ?>
-     location = <?php print vcn_drupal6_base_path(); ?> + "logout?destination=user/register";
+     location = <?php print vcn_drupal7_base_path(); ?> + "user/logout?destination=user/register";
 	 <?php else : ?>
-	   location = <?php print vcn_drupal6_base_path(); ?> + "user/register";
+	   location = <?php print vcn_drupal7_base_path(); ?> + "user/register";
 	 <?php endif; ?>
 }
 
@@ -50,9 +50,9 @@ function forgotFromMoodleFrame() {
    // set location for a Create Account link inside the moodle frame so that when we return to the page after
    // creating the account, we remain on the framing page
    <?php if ($GLOBALS['is_user_logged_in']) : ?>
-	   location = <?php print vcn_drupal6_base_path(); ?> + "logout?destination=user/password";
+	   location = <?php print vcn_drupal7_base_path(); ?> + "user/logout?destination=user/password";
 	 <?php else : ?>
-	   location = <?php print vcn_drupal6_base_path(); ?> + "user/password";
+	   location = <?php print vcn_drupal7_base_path(); ?> + "user/password";
 	 <?php endif; ?>
 }
 </script>

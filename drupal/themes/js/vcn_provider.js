@@ -161,7 +161,7 @@ jQuery(document).ready(function(){
 		   
 		});
 	   if (coursevalidated == false){
-		   errormsg = errormsg + "<ul><li>Please enter a Course Name for School Prerequisite Courses for Admission</li></ul>";
+		   errormsg = errormsg + "<ul><li>Please enter a Course Title for School Prerequisite Courses for Admission</li></ul>";
 	   }		 
 	   
 	   if(validated == false){		  	
@@ -215,7 +215,7 @@ jQuery(document).ready(function(){
 			   
 			});
 		   if (testvalidated == false){
-			   errormsg = errormsg + "<ul><li>Please enter a Test Name for School Entrance Tests</li></ul>";
+			   errormsg = errormsg + "<ul><li>Please enter a Test Name for Entrance Test</li></ul>";
 		   }	
 	
 		   $('.coursename').each(function(){
@@ -230,7 +230,7 @@ jQuery(document).ready(function(){
 			   
 			});
 		   if (coursevalidated == false){
-			   errormsg = errormsg + "<ul><li>Please enter a Course Name for School Prerequisite Courses for Admission</li></ul>";
+			   errormsg = errormsg + "<ul><li>Please enter a Course Title for Prerequisite Courses for Admission</li></ul>";
 		   }		 
 		   
 		   if(validated == false){		  	

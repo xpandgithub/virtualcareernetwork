@@ -44,12 +44,12 @@ class VCN_Model_VCNLaytitle extends VCN_Model_Base_VCNBase {
       	if ($params['restriction'] == 'front_end') {
       		$sql = "SELECT DISTINCT o.onetcode AS onetcode, o.laytitle AS laytitle FROM onetsoc_laytitle o
       		JOIN vcn_occupation_industry i ON o.onetcode = i.onetcode
-      		WHERE i.industry_id = :industry_id AND UPPER(o.frontend_visible_yn) = 'Y' AND o.onetcode = :onetcode";
+      		WHERE i.industry_id = :industry_id AND UPPER(o.frontend_visible_yn) = 'Y' AND o.onetcode = :onetcode ORDER BY o.job_search_rank ASC, o.laytitle ASC";
       	}
       } else {
       	$sql = "SELECT DISTINCT o.onetcode AS onetcode, o.laytitle AS laytitle FROM onetsoc_laytitle o
       	JOIN vcn_occupation_industry i ON o.onetcode = i.onetcode
-      	WHERE i.industry_id = :industry_id AND UPPER(o.job_search_yn) = 'Y' AND o.onetcode = :onetcode LIMIT $limit";
+      	WHERE i.industry_id = :industry_id AND UPPER(o.job_search_yn) = 'Y' AND o.onetcode = :onetcode ORDER BY o.job_search_rank ASC, o.laytitle ASC LIMIT $limit";
       }
       
       
@@ -84,7 +84,7 @@ class VCN_Model_VCNLaytitle extends VCN_Model_Base_VCNBase {
 
       $sql = "SELECT DISTINCT o.onetcode AS onetcode, o.laytitle AS laytitle FROM onetsoc_laytitle o 
               JOIN vcn_occupation_industry i ON o.onetcode = i.onetcode 
-              WHERE i.industry_id = :industry_id AND UPPER(o.job_search_yn) = 'Y'";
+              WHERE i.industry_id = :industry_id AND UPPER(o.job_search_yn) = 'Y' ORDER BY o.job_search_rank ASC, o.laytitle ASC";
 
 
       $stmt = $db->prepare($sql);

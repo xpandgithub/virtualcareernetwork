@@ -19,4 +19,26 @@ You should have received a copy of the GNU General Public License along with thi
  *   Themes the vcn footer block
  */
 
-echo $footer_content; ?>
+echo $footer_content;
+
+if($footer_content == "") {
+?>
+<br/><br/><hr/> 
+<div id="copyright">	 
+  <a class="dol-seal" href="javascript:popit('http://dol.gov')" title="Department of Labor">
+	<img  alt="department of labor seal" src="<?php echo vcn_image_path() ?>site_logo_images/logo_dol.jpg" alt="Department of Labor" />
+  </a>
+	 
+  <p class="copyright-text">		  
+	The VCN sponsored by the U.S. Department of Labor, Employment and Training Administration 
+	under the leadership of the American Association of Community Colleges
+	<br /><br />
+	Copyright &copy; <?php echo date("Y")?> American Association of Community Colleges		  
+  </p>
+	 
+  <a class="aacc-seal" href="javascript:popit('http://www.aacc.nche.edu')" title="American Association of Community Colleges">
+	<img src="<?php echo vcn_image_path() ?>site_logo_images/aacc2.jpg" alt="American Association of Community Colleges" />
+  </a>  
+</div> 
+<div style="clear:both;"></div>
+<?php }?>

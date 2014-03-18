@@ -28,82 +28,67 @@ class VCN_WebServices extends Zend_Controller_Action {
 	protected $params;
 	protected $format;
 	protected $content_type;
-    protected $signature;
+  protected $signature;
     
    /**
     * Initialize web services and check apikey. Uses class params
     * @return void
     */
-	public function init()
-    {
-    	// turn off display
-    	$this->_helper->viewRenderer->setNoRender(true);
-	  	$this->_helper->getHelper('layout')->disableLayout();
-    	
-	  	// get the params
-    	$this->params = $this->getRequest()->getParams();
-  
+	public function init() {
+    // turn off display
+    $this->_helper->viewRenderer->setNoRender(true);
+    $this->_helper->getHelper('layout')->disableLayout();
+
+    // get the params
+    $this->params = $this->getRequest()->getParams();
+
  		// save some time, Check API KEY first!
-    	$this->config = new Zend_Config_Ini(APPLICATION_PATH ."/configs/application.ini", APPLICATION_ENV);
- 
-    	if (! $this->authAccepted())
-    	{
-           throw new Exception("authentication failed: ");
-    	}
-    	
-		$this->format = isset($this->params['format']) ? $this->params['format'] : 'xml';
+    $this->config = new Zend_Config_Ini(APPLICATION_PATH ."/configs/application.ini", APPLICATION_ENV);
+
+    $this->format = isset($this->params['format']) ? $this->params['format'] : 'xml';
 		if ($this->format == 'json') {
 			$this->content_type = 'text/html; charset=utf-8';
-		}
-		else {
+		} else {
 			$this->content_type = 'text/xml; charset=utf-8';
 		}
- 
+    
+    if (!$this->isAuthorized()) {
+
+      $this->status['status'] = 'failed';
+      $this->status['code'] = '5555';
+      $this->status['message'] = 'Authentication failed';
+      $this->status['rowcount'] = 0;
+
+      $this->result['status'] = $this->status;
+      $this->result['params'] = $this->params;
+      $this->result['data'] = array();
+      
+      $output = $this->getOutput($this->format, $this->result, 'result');
+	
+      $this->_response->setHeader('Content-Type', $this->format)->setBody($output);
+      
+      $front = Zend_Controller_Front::getInstance();
+      $front->returnResponse(true);
+      $this->_response->sendResponse();
     }
+ 
+  }
     
    /**
     * The authorization function to verify the apikey. Uses class params.
-    * @uses signArgs()
     * @return Boolean true/false
     */  	
-	private function authAccepted() {
-		//TODO
-		return true;
- 
-	 	$apikey = $this->apikey = isset($this->params['apikey']) ? $this->params['apikey'] : false;
- 	  	$this->auth = isset($this->params['auth']) ? $this->params['auth'] : false;
-	  	unset($this->params['auth']);
- 
-	  	if (!($apikey && $this->auth)) return false;
-	 
-   		$this->clientKey =  $this->config->webservice->$apikey->secret ;
- 	  	$signature = $this->signArgs($this->params);
-    	$this->signature = $signature;
- 
-    	unset($this->params['apikey']);
- 	 
-    	if ($signature == $this->auth)
-        	return true;
-         	
-  		return false;
-	}
-	
-   /**
-    * The api verification function for converting request arguments into encrypted string
-    * Pass in an array of arguments from request through auth_accepted() function
-	* @param array $args
-    * @return string MD5 encrypted args
-    */  	
-	private function signArgs($args) {
-  		ksort($args);
-    	$a = '';
-    	foreach($args as $k => $v)
-      	{
-      		if ( in_array($k, array('module','controller','action')) ) continue;
-         	$a .= $k . $v;
-    	}
-    	
-   		return md5($this->clientKey.$a);
+	private function isAuthorized() {
+		
+	  if (!isset($this->params['apikey']) && strlen(isset($this->params['apikey']))) {
+      return false;
+    }
+   
+    // determine if the client key matches
+    $model = new VCN_Model_VCNAdmin();
+		$authorized = $model->verifyClientApiKey($this->params);
+    
+  	return $authorized;
 	}
  	
    /**

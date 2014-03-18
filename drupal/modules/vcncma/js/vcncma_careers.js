@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License along with thi
 	Drupal.behaviors.vcncma_careers = {
 		attach: function(context, settings) {
 			var basepath = vcn_get_drupal7_base_path();
-                        var imagepath = vcn_get_images_basepath();
+            var imagepath = vcn_get_images_basepath();
 			var careers_data = Drupal.settings.vcncma_careers.careers_data;
-                        var councelor_viewing_student_data = Drupal.settings.vcncma_careers.councelor_viewing_student_data;
-                        var user_not_in_save_mode = Drupal.settings.vcncma_careers.user_not_in_save_mode;
+            var councelor_viewing_student_data = Drupal.settings.vcncma_careers.councelor_viewing_student_data;
+            var user_not_in_save_mode = Drupal.settings.vcncma_careers.user_not_in_save_mode;
 			var aaData = $.parseJSON(careers_data);
 			isUserLoggedIn = Drupal.settings.vcncma.isUserLoggedIn;
 			userid = Drupal.settings.vcncma.userid;
@@ -58,22 +58,18 @@ You should have received a copy of the GNU General Public License along with thi
 					var hourly_wage_pct75 = (aData.pct75_hourly) ? accounting.formatMoney(aData.pct75_hourly, '$', 0) : 'N/A';
 										
 					var findworkbutton;
+                                        var programs_in_title = '';
 					if (aData.zipcode) {
-						var programs_in_title = ' in '+ aData.zipcode;
-						programsbutton = '<input type="button" title="Education'+programs_in_title+'" value="Education" class="cma-careers-programs vcn-button grid-action-button" name="'+basepath+'get-qualified/programs/onetcode/'+aData.onetcode+'/zip/'+aData.zipcode+'" />';
-						findworkbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-careers-jobs vcn-button grid-action-button" name="'+basepath+'findwork-results/career/'+aData.onetcode+'/zip/'+aData.zipcode+'" />';
-					} else {
-						programsbutton = '<input type="button" title="Education" value="Education" class="cma-careers-programs vcn-button grid-action-button" name="'+basepath+'get-qualified/programs/onetcode/'+aData.onetcode+'" />';
-						findworkbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-careers-jobs vcn-button grid-action-button" name="'+basepath+'findwork-results/career/'+aData.onetcode+'" />';
+						programs_in_title = ' in '+ aData.zipcode;
 					}					
 					
 					var deletebutton;
 					var cma_careers_count = $('#cma-careers-count').val(); //defined as hidden element in vcncma-careers.tpl.php
 		
-                                        if((cma_careers_count > 2 && aData.itemrank == 1) || (councelor_viewing_student_data == true && user_not_in_save_mode == true)){
-                                          deletebutton = '<input type="button" title="Delete" value="Delete" class="cma-careers-delete-this-row vcn-button grid-action-button vcn-button-disable" name="'+aData.notebookid+'" />';
+                    if((cma_careers_count > 2 && aData.itemrank == 1) || (councelor_viewing_student_data == true && user_not_in_save_mode == true)){
+                    	deletebutton = '<input type="button" title="Delete" value="Delete" class="cma-careers-delete-this-row vcn-button grid-action-button vcn-button-disable" name="'+aData.notebookid+'" />';
 					} else {
-                                          deletebutton = '<input type="button" title="Delete" value="Delete" class="cma-careers-delete-this-row vcn-button grid-action-button" name="'+aData.notebookid+'" />';
+						deletebutton = '<input type="button" title="Delete" value="Delete" class="cma-careers-delete-this-row vcn-button grid-action-button" name="'+aData.notebookid+'" />';
 					}
 					
 					var targeted_career = '';
@@ -87,38 +83,69 @@ You should have received a copy of the GNU General Public License along with thi
                                          '<button title=\"Make this My Target\" class="vcn-button grid-action-button vcn-red-button" onclick="targetUserCareer(\''+aData.onetcode+'\',\''+isUserLoggedIn+'\',\''+userid+'\'); return false;" onkeypress="targetUserCareer(\''+aData.onetcode+'\',\''+isUserLoggedIn+'\',\''+userid+'\'); return false;" >Target</button>'+			            		
                                          '</span>' ;
                     }
-                      
+                    
+                    var programsbutton_name = basepath+'get-qualified/programs/onetcode/'+aData.onetcode; 
+                    var findworkbutton_name = basepath+'findwork-results/career/'+aData.onetcode;
+                    
+                    if (aData.zipcode) {
+                  	  programsbutton_name += '/zip/'+aData.zipcode;
+                  	  findworkbutton_name += '/zip/'+aData.zipcode;
+                    }
+                    
+                    var careerTitle = '<strong>'+aData.title+'</strong>';
+                    if (!councelor_viewing_student_data || !user_not_in_save_mode) {
+                      careerTitle = '<a href="'+basepath+'careers/'+aData.onetcode+'">'+careerTitle+'</a>';
+                      programsbutton = '<input type="button" title="Education'+programs_in_title+'" value="Education" class="cma-careers-programs vcn-button grid-action-button" name="'+programsbutton_name+'" />';
+                      findworkbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-careers-jobs vcn-button grid-action-button" name="'+findworkbutton_name+'" />';
+                    } else {
+                      programsbutton = '<input type="button" title="Education'+programs_in_title+'" value="Education" class="cma-careers-programs vcn-button grid-action-button vcn-button-disable" name="'+programsbutton_name+'" />';
+                      findworkbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-careers-jobs vcn-button grid-action-button vcn-button-disable" name="'+findworkbutton_name+'" />';
+                    }
+                    
                     var targeticon = '';
 					if (aData.itemrank == 1 || cma_careers_count == 1) {
 						targeticon = ' <img src="'+imagepath+'buttons/target_icon.png" style="vertical-align:middle;" title="Targeted Career" alt="Targeted Career"/> ';						
 					}
+					
+					if (cma_careers_count == 1) { // updating session onetcode when a career becomes a target because the user deletes the previously selected targeted career and this is the only career
+						// left in the CMA
+						$.ajax({url: basepath+'vcnuser-onetcode/update/'+aData.onetcode});
+					}
 
-                                        var laytitle = '';
-                                        if (aData.laytitle.length > 0) {
-                                          laytitle = '('+aData.laytitle+') ';
-                                        }
+                    var laytitle = '';
+                    if (aData.laytitle.length > 0) {
+                    	laytitle = '('+aData.laytitle+') ';
+                    }
                                         
 					$('td:eq(0)', nRow).html('<center><nobr>'+targeticon+'</nobr></center>');
-					$('td:eq(1)', nRow).html('<a href="'+basepath+'careers/'+aData.onetcode+'">'+targeted_career+'<strong>'+aData.title+'</strong></a>' +
-							'<br/>'+laytitle+aData.short_desc);
+					$('td:eq(1)', nRow).html(careerTitle+'<br/>'+laytitle+aData.short_desc);
 					$('td:eq(2)', nRow).html(annual_salary_pct25 +' - '+ annual_salary_pct75);
 					$('td:eq(3)', nRow).html(hourly_wage_pct25 +' - '+ hourly_wage_pct75);
 					$('td:eq(4)', nRow).html(aData.typicaledutext);
 					$('td:eq(5)', nRow).html('<center><nobr>'+programsbutton+' '+findworkbutton+'</nobr></center>');
 					$('td:eq(6)', nRow).html('<center>'+targetbutton+deletebutton+'</center>');
 					
-					
 				}
 			});
 			
 			$('#cma-careers-listing .cma-careers-programs').live('click', function(e) {
-				var programsurl = $(this).attr("name");
-				document.location.href = programsurl;							
+                          
+				var btnflag = $(this).hasClass("vcn-button-disable");
+				
+				if(btnflag == false) {
+					var programsurl = $(this).attr("name");
+					document.location.href = programsurl;	
+                }
 			});
 			
 			$('#cma-careers-listing .cma-careers-jobs').live('click', function(e) {
-				var joburl = $(this).attr("name");
-				document.location.href = joburl;							
+                          
+				var btnflag = $(this).hasClass("vcn-button-disable");
+				
+				if(btnflag == false) {
+					var joburl = $(this).attr("name");
+					document.location.href = joburl;	
+                }
 			});
 			
 			$('#cma-careers-listing .cma-careers-delete-this-row').live('click', function(e) {

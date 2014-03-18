@@ -29,19 +29,30 @@ You should have received a copy of the GNU General Public License along with thi
 	</fieldset>
 	<?php } ?>
 	
-	
 	<?php if(isset($interview_url) || isset($additional_interview_array)) { $data_exists = true; ?>
 	<fieldset>
 		<legend><b>Interview</b></legend>
 		<div>			
 			<?php if(isset($interview_url) && strlen($interview_url)) { ?>
-				<p>See a<?php vcn_build_link_window_opener($interview_url, 'career interview'); ?> with an actual <?php echo $careertitle; ?>.</p>
+				<p>See a
+				<?php if ($is_internal_file): ?>
+					<?php vcn_build_link_window_opener($interview_url, 'career interview', true, false); ?>
+				<?php else: ?>
+					<?php vcn_build_link_window_opener($interview_url, 'career interview'); ?>
+				<?php endif; ?>
+				with an actual <?php echo $careertitle; ?>.
+				</p>
 			<?php } ?>
 			
 			<?php if(isset($additional_interview_array)) { ?>
 				<?php foreach($additional_interview_array as $additional_interview) { ?>
 					<?php	$addInterviewUrl = (string)$additional_interview['interviewurl'][0]; ?>
-	                      	<p>See an<?php vcn_build_link_window_opener($addInterviewUrl, 'additional interview'); ?></p>	                  
+					<?php if (strpos($addInterviewUrl, 'http') !== 0): ?>
+						<?php $addInterviewUrl = vcn_drupal7_base_path().drupal_get_path("theme", "vcnstark").'/media/'.$addInterviewUrl; ?>
+						<p>See an<?php vcn_build_link_window_opener($addInterviewUrl, 'additional interview', true, false); ?></p>
+					<?php else: ?>
+						<p>See an<?php vcn_build_link_window_opener($addInterviewUrl, 'additional interview'); ?></p>
+					<?php endif; ?>	                  
 				<?php } ?>
 			<?php } ?>
 		</div>

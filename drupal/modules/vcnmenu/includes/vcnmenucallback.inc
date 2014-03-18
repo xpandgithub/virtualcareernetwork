@@ -78,6 +78,11 @@ function vcn_provider_programs($unitid) {
 }
 //Provider portal pages end
 
+// Site map callback function
+function vcn_site_map() {
+	return theme('vcn_site_map_template');
+}
+
 // Help callback function
 function vcn_help() {
 

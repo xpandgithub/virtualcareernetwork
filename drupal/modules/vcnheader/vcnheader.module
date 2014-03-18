@@ -171,14 +171,12 @@ function vcnheader_form_alter($form, &$form_state){
  * Custom function that gets the welcome message for the user which is displayed in the top right of the header
  */
 function vcnheader_get_welcome_message() {
+  global $user_info;
+  
   $message = '';
 
-  if (strlen($GLOBALS['d6_name'])) {
-  	if ($GLOBALS['is_drupal_username']) {
-  		$username = ucfirst($GLOBALS['d6_name']);
-  	} else {
-  		$username = ucfirst(vcn_custom_aes_decrypt($GLOBALS['d6_name']));
-  	}
+  if (strlen($user_info['name'])) {
+  	$username = ucfirst($user_info['name']);
     $username = strlen($username) > 12 ? substr($username, 0, 9) . ' ...' : $username;
   	$message = 'Hi, <a href="' . vcn_drupal7_base_path(). 'cma/profile">' . $username  . '</a>';
   }
@@ -233,6 +231,8 @@ function vcnheader_preprocess_vcnheader_aarp_block(&$variables) {
  */
 
 function vcnheader_preprocess_vcnheader_osp_block(&$variables) {
+	
+	global $user_info;
 
 	$variables['vcn_base_path'] = base_path();
 	 
@@ -255,19 +255,14 @@ function vcnheader_preprocess_vcnheader_osp_block(&$variables) {
 	$variables['current_drupal_version'] = $vcnAppProperties->getCurrentDrupalVersion();
 	$variables['current_moodle_version'] = $vcnAppProperties->getCurrentMoodleVersion();
 	
-	$variables['is_logged_in_user'] = $GLOBALS['is_user_logged_in'];
-	$variables['is_logged_in_user_text'] = ($variables['is_logged_in_user']) ? 'true' : 'false';
-	$variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-	$variables['has_notebook_items'] = ($GLOBALS['vcn_notebook_item_count'] > 0) ? true : false;
-	$variables['has_notebook_items_text'] = ($variables['has_notebook_items']) ? 'true' : 'false';
-	
-	$variables['is_provider_user'] = ($GLOBALS['user_provider_id'] > 0) ? true : false;
+	$variables['is_logged_in_user'] = $user_info['is_user_logged_in'];
+	$variables['is_logged_in_user_text'] = ($variables['is_logged_in_user']) ? 'true' : 'false';	
+	$variables['is_provider_user'] = ($user_info['user_provider_id'] > 0) ? true : false;
 	$variables['is_provider_user_text'] = ($variables['is_provider_user']) ? 'true' : 'false';
-	$variables['vcn_user_id'] = $GLOBALS['vcn_user_id'];
-	$variables['d6_user_id'] = $GLOBALS['d6_uid'];
-	$variables['d6_user_name'] = $GLOBALS['d6_name'];
-	$variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-	$variables['logged_in_user_default_zipcode'] = $GLOBALS['logged_in_user_default_zipcode'];
+	$variables['vcn_user_id'] = $user_info['vcn_user_id'];
+	$variables['drupal_user_id'] = $user_info['uid'];
+	$variables['drupal_user_name'] = $user_info['name'];	
+	$variables['logged_in_user_default_zipcode'] = $user_info['logged_in_user_default_zipcode'];
 	$variables['vcn_config_php_server_name'] = $GLOBALS['vcn_config_php_server_name'];
 
 }
@@ -277,9 +272,11 @@ function vcnheader_preprocess_vcnheader_osp_block(&$variables) {
  */
 
 function vcnheader_preprocess_vcnheader_provider_block(&$variables) {
+	
+  global $user_info;
   
   // Include vcnprovider.inc file
-	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
+  module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
   
   $variables['vcn_base_path'] = base_path();
   $variables['is_user_provider'] = vcn_validate_provider_user(false);
@@ -306,19 +303,14 @@ function vcnheader_preprocess_vcnheader_provider_block(&$variables) {
   $variables['current_drupal_version'] = $vcnAppProperties->getCurrentDrupalVersion();
   $variables['current_moodle_version'] = $vcnAppProperties->getCurrentMoodleVersion();
   
-  $variables['is_logged_in_user'] = $GLOBALS['is_user_logged_in'];
-  $variables['is_logged_in_user_text'] = ($variables['is_logged_in_user']) ? 'true' : 'false';
-  $variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-  $variables['has_notebook_items'] = ($GLOBALS['vcn_notebook_item_count'] > 0) ? true : false;
-  $variables['has_notebook_items_text'] = ($variables['has_notebook_items']) ? 'true' : 'false';
-  
-  $variables['is_provider_user'] = ($GLOBALS['user_provider_id'] > 0) ? true : false;
+  $variables['is_logged_in_user'] = $user_info['is_user_logged_in'];
+  $variables['is_logged_in_user_text'] = ($variables['is_logged_in_user']) ? 'true' : 'false';  
+  $variables['is_provider_user'] = ($user_info['user_provider_id'] > 0) ? true : false;
   $variables['is_provider_user_text'] = ($variables['is_provider_user']) ? 'true' : 'false';
-  $variables['vcn_user_id'] = $GLOBALS['vcn_user_id'];
-  $variables['d6_user_id'] = $GLOBALS['d6_uid'];
-  $variables['d6_user_name'] = $GLOBALS['d6_name'];
-  $variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-  $variables['logged_in_user_default_zipcode'] = $GLOBALS['logged_in_user_default_zipcode'];
+  $variables['vcn_user_id'] = $user_info['vcn_user_id'];
+  $variables['drupal_user_id'] = $user_info['uid'];
+  $variables['drupal_user_name'] = $user_info['name']; 
+  $variables['logged_in_user_default_zipcode'] = $user_info['logged_in_user_default_zipcode'];
   $variables['vcn_config_php_server_name'] = $GLOBALS['vcn_config_php_server_name'];
   
 }

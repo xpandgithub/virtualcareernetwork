@@ -73,9 +73,13 @@ function vcn_remove_employment_history_ajax_callback($useremploymentid) {
 function vcn_cma_course_completed_ajax_callback($course) {
   
   $success = 'false';
-  $user = vcn_get_user_info();
-	$vcnUserid = $user['vcn_user_id'];
-
+  
+  if (!$GLOBALS['vcn_user_id']) {
+  	vcnuser_get_user_cma_info(true);
+  }
+    
+  	$vcnUserid = $GLOBALS['vcn_user_id'];
+  	
 	if (!strlen($course)) {
 		return "Missing moodle course id";
 	}	

@@ -19,13 +19,13 @@ function vcn_cma_include_variables(&$variables) {
 	if (empty($variables['industry'])) {
 		$variables['industry'] = vcn_get_industry(); //$variables['industry_name'] = vcn_get_industry_name();
 	}
-	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+	
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_path'] = vcn_image_path();
 	//$variables['vcn_industry_image_path'] = vcn_industry_image_path();
 
 	$user = vcn_get_user_info();
-	$variables['d6userid'] = $user['uid'];
+	$variables['drupaluserid'] = $user['uid'];
 	$variables['userid'] = $user['vcn_user_id'];
 	$variables['is_user_logged_in'] = $user['is_user_logged_in'];
 	
@@ -225,7 +225,7 @@ function vcn_cma_nav_bar(&$variables) {	 //Navigation bar for "My VCN" (default)
 		if($variables['is_user_logged_in'] == TRUE) { // Go to my vcn is a link to fix d6 bounceback issue. floatright + div is too fix IE pie.htc issue with a link text and vcn-button css.
 			$nav_bar_buttons .= '<a title="Go to MyVCN" href="'.$variables['vcn_drupal7_base_path'].'cma/career-wishlist/my-vcn"><div class="vcn-button vcn-alink-button floatright">Go to MyVCN</div></a>';
 		}else {
-			$nav_bar_buttons .= '<a title="Go to MyVCN" href="'.$variables['vcn_drupal6_base_path'].'user"><div class="vcn-button vcn-alink-button floatright">Go to MyVCN</div></a>';
+			$nav_bar_buttons .= '<a title="Go to MyVCN" href="'.$variables['vcn_drupal7_base_path'].'user"><div class="vcn-button vcn-alink-button floatright">Go to MyVCN</div></a>';
 		}			
 		
 	}
@@ -487,7 +487,18 @@ function vcn_cma_get_counselor_users_dropdown() {
         $name .= vcn_custom_aes_decrypt($user->lastname);
       }
       if (!strlen(trim($name))) {
-        $name .= $user->username;
+      	
+      	$drupalquery = db_select('users', 'u');
+      	$result = $drupalquery
+      	->fields('u', array('name', 'mail'))
+      	->condition('uid', (int)$user->user_session_id)
+      	->execute()
+      	->fetchAssoc();
+      	
+      	$username = $result["name"]; // student username from drupal db
+      	$email = $result["mail"]; // student email from drupal db
+      	
+        $name .= $username;
       }
       
       // check the session to see which userid is set and make  
@@ -529,13 +540,21 @@ function vcn_cma_include_counselor_variables(&$variables) {
   
   // get the student selected name/username (if the selected value is not the counselor)
   if (vcn_cma_is_councelor_viewing_student_data()) {
-    $params = array('userid' => $_SESSION['vcn_counselor_student_id'], 'extended' => 'true');
-    $info = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-user-info', $params, 'json', 'post', false);
+    $params = array('userid' => $_SESSION['vcn_counselor_student_id']);
+    $info = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-user-info-by-cma-userid', $params, 'json', 'post', false);
     
-    $firstName = vcn_custom_aes_decrypt($info->first_name);
-    $lastName = vcn_custom_aes_decrypt($info->last_name);
-    $username = $info->username;
-    $email = $info->email;
+    $firstName = vcn_custom_aes_decrypt($info->first_name); // student firstname from hvcp db
+    $lastName = vcn_custom_aes_decrypt($info->last_name);  // student lastname from hvcp db
+    
+   	$drupalquery = db_select('users', 'u');
+	$result = $drupalquery
+				->fields('u', array('name', 'mail'))
+				->condition('uid', (int)$info->user_session_id)
+				->execute()
+				->fetchAssoc();	
+	 
+    $username = $result["name"]; // student username from drupal db
+    $email = $result["mail"]; // student email from drupal db
     
     $variables['counselor_student_name'] = $firstName . " " . $lastName;
     $variables['counselor_student_username'] = $username;

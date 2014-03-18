@@ -39,7 +39,7 @@ class VCN_Model_VCNCareer extends VCN_Model_Base_VCNBase {
 
       $additional = '';
       if (isset($params['additionalinfo'])) {
-        $additional = ' , detailed_description, day_in_life, academic_requirement, physical_requirement, health_requirement ';
+        $additional = ' , detailed_description, day_in_life, academic_requirement, physical_health_requirements ';
       }
       
       $distinct = 'o.onetcode';
@@ -96,8 +96,7 @@ class VCN_Model_VCNCareer extends VCN_Model_Base_VCNBase {
           $data[$i]['detaileddesc'] = $row['detailed_description'];
           $data[$i]['dayinlife'] = $row['day_in_life'];
           $data[$i]['academicreq'] = $row['academic_requirement'];
-          $data[$i]['physicalreq'] = $row['physical_requirement'];
-          $data[$i]['healthreq'] = $row['health_requirement'];
+          $data[$i]['physicalhealthreq'] = $row['physical_health_requirements'];         
         }
         
         $i++;
@@ -457,11 +456,9 @@ class VCN_Model_VCNCareer extends VCN_Model_Base_VCNBase {
 			$columns = "vcn_occupation.onetcode AS onetcode,
 									vcn_occupation.display_title AS title, 
 					                vcn_occupation.career_image_yn AS career_image_yn,
-									vcn_occupation.career_ladder_yn AS career_ladder_yn,
-									vcn_occupation.physical_requirement AS physical_requirement,
+									vcn_occupation.career_ladder_yn AS career_ladder_yn,									
 									vcn_occupation.physical_requirement_url AS physical_requirement_url,
-                  					vcn_occupation.physical_requirement_url_flag AS physical_requirement_url_flag,
-									vcn_occupation.health_requirement AS health_requirement,
+                  					vcn_occupation.physical_requirement_url_flag AS physical_requirement_url_flag,									
 									vcn_occupation.physical_health_requirements AS physical_health_requirement,
 									vcn_occupation.nationwide_legal_requirement_desc AS nationwide_legal_requirement_desc,
 									vcn_occupation.nationwide_legal_requirement_url AS nationwide_legal_requirement_url,
@@ -527,11 +524,9 @@ class VCN_Model_VCNCareer extends VCN_Model_Base_VCNBase {
 					'title' => $row['title'],
 					'onetcode' => $row['onetcode'],
          			'career_image_yn' => $row['career_image_yn'],
-					'career_ladder_yn' => $row['career_ladder_yn'],
-					'physical_requirement' => $row['physical_requirement'],
+					'career_ladder_yn' => $row['career_ladder_yn'],					
 					'physical_requirement_url' => $row['physical_requirement_url'],
-          'physical_requirement_url_flag' => $row['physical_requirement_url_flag'],
-					'health_requirement' => $row['health_requirement'],
+          'physical_requirement_url_flag' => $row['physical_requirement_url_flag'],					
 						'physical_health_requirement' => $row['physical_health_requirement'],
 						'nationwide_legal_requirement_desc' => $row['nationwide_legal_requirement_desc'],
 						'nationwide_legal_requirement_url' => $row['nationwide_legal_requirement_url'],
@@ -647,6 +642,88 @@ class VCN_Model_VCNCareer extends VCN_Model_Base_VCNBase {
 				
 			$this->setResult($data);
 				
+		} catch (Exception $e) {
+			$this->setResult(NULL, $e->getMessage());
+		}
+			
+		return $this->result;
+	
+	}
+	
+	public function getCareerListByTypicalEducation($params) {
+	
+		$requiredParams = array('industry'); //, 'typicaledu'
+		if (!$this->checkParams($params, $requiredParams)) {
+			return $this->result;
+		}
+	
+		try {
+	
+			$db = Resources_PdoMysql::getConnection();
+			
+			$distinct = 'o.onetcode';
+			$worktype = $worktypesql = '';
+			if (!isset($params['ignoreworktype'])) {
+				$worktype = ' , vlwc.work_category_code AS worktype ';
+				$worktypesql = ' JOIN vcn_lookup_work_category vlwc ON oxi.work_category_id = vlwc.work_category_id ';
+			}else {
+				$distinct = ' DISTINCT(o.onetcode) ';
+			}
+			
+			$typicaleduWhere = '';
+			if (isset($params['typicaledu']) && strlen($params['typicaledu'])) {				 
+				$typicaleduWhere = ' AND voed.education_category_id <= :typicaledu ';
+			}
+			 	
+			$sql = " SELECT $distinct AS onetcode, o.display_title AS title $worktype ,
+							voed.education_category_id AS typicaleduid, vec.education_category_name AS typicaledutitle, vec.education_level AS edulevel 
+						FROM vcn_occupation o
+						JOIN vcn_occupation_industry oxi ON o.onetcode = oxi.onetcode AND oxi.industry_id = :industry
+						JOIN vw_vcn_onet_education_distribution voed ON o.onetcode = voed.onetcode $typicaleduWhere
+						JOIN vcn_edu_category vec ON voed.education_category_id = vec.education_category_id					
+						$worktypesql
+						WHERE o.active_yn = 'Y' "; 
+	
+			if (isset($params['order'])  && is_array($params['order']) === true ) {
+				$cat = implode(" , ",$params['order']);
+				$sql .= " ORDER BY ".$cat;
+			} else if (isset($params['order']) && is_array($params['order']) === false ) {
+				$sql .= " ORDER BY ".$params['order'];
+				
+				if (isset($params['direction'])) {
+					$sql .= " " . $params['direction'];
+				}
+			}else {
+				$sql .= " ORDER BY title";
+			}
+			
+			
+			$stmt = $db->prepare($sql);
+			$stmt->bindParam(':industry', $params['industry'], PDO::PARAM_INT);
+			
+			if (isset($params['typicaledu']) && strlen($params['typicaledu'])) {
+				$stmt->bindParam(':typicaledu', $params['typicaledu'], PDO::PARAM_INT);
+			}
+			
+	
+			$stmt->execute();
+			$result = $stmt->fetchAll();
+	
+			$data = array();
+	
+			foreach ($result as $row) {
+				$cols_array = array(
+						'title' => $row['title'],
+						'onetcode' => $row['onetcode'],
+						'educatid' => $row['typicaleduid'],
+						//'educattitle' => $row['typicaledutitle'],
+						'worktype' => isset($row['worktype']) ? $row['worktype'] : '',						
+				);
+				$data[] = $cols_array;
+			}
+	  
+			$this->setResult($data);
+	
 		} catch (Exception $e) {
 			$this->setResult(NULL, $e->getMessage());
 		}

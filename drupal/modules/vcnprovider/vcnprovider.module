@@ -300,6 +300,7 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 			module_load_include("inc","vcnprovider","includes/vcnprovider"),
 			'js' => array(
 					drupal_get_path('theme', 'vcnstark').'/js/vcn_provider.js',
+					drupal_get_path('module', 'vcnprovider').'/js/vcnprovider_program_details_edit.js',
 			),
 	);
 	
@@ -384,10 +385,26 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 	$p_length = "";
 	$p_cipcode = "";
 	$p_award_level = "";
+	$p_total_credits = "";
 	$p_desc = "";
 	$p_cname = "";
 	$p_cemail = "";
 	$p_cphone = "";
+	$p_other_requirements = "";
+	$p_howtoapply = "";
+	$p_medicalreq = "";
+	$p_immunizationreq = "";
+	$p_legalreq = "";	
+	$p_hsgradreq = "NA";
+	$p_mingpa = "";
+	$p_gedaccepted = "NA";	
+	$p_tuitioninstateindistrict = "";
+	$p_tuitioninstateoutdistrict = "";
+	$p_tuitiononline = "";
+	$p_tuitionoutstate = "";
+	$p_othercost = "";	
+	$p_admissionurl = "";
+	 
 	
 	if($form['#task'] == "edit") {		
 		//set default values
@@ -396,10 +413,25 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 		$p_length = (string) $form['#programdetails']->duration;
 	 	$p_cipcode = (string) $form['#programdetails']->cipcode;
 		$p_award_level = (string) $form['#programdetails']->awlevel;
+		$p_total_credits = (string) $form['#programdetails']->totalcredits;
 		$p_desc = (string) $form['#programdetails']->programdescription;
 		$p_cname = (string) $form['#programdetails']->programcontactname;
 		$p_cemail = (string) $form['#programdetails']->programcontactemail;
 		$p_cphone = (string) $form['#programdetails']->programcontactphone;
+		$p_other_requirements = (string) $form['#programdetails']->otherrequirements;
+		$p_howtoapply = (string) $form['#programdetails']->howtoapply;
+		$p_medicalreq = (string) $form['#programdetails']->medicalreq;
+		$p_immunizationreq = (string) $form['#programdetails']->immunizationreq;
+		$p_legalreq = (string) $form['#programdetails']->legalreq;		
+		$p_hsgradreq = (string) $form['#programdetails']->hsgradreq;
+		$p_mingpa = (string) $form['#programdetails']->mingpa;
+		$p_gedaccepted = (string) $form['#programdetails']->gedaccepted;		
+		$p_tuitioninstateindistrict = (string) $form['#programdetails']->tuitioninstateindistrict;
+		$p_tuitioninstateoutdistrict = (string) $form['#programdetails']->tuitioninstateoutdistrict;
+		$p_tuitiononline = (string) $form['#programdetails']->tuitiononline;
+		$p_tuitionoutstate = (string) $form['#programdetails']->tuitionoutstate;
+		$p_othercost = (string) $form['#programdetails']->othercost;
+		$p_admissionurl = (string) $form['#programdetails']->admissionurl;
 	}		
 	
 	$form['program_name'] = array(			
@@ -453,6 +485,13 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 			'#default_value' => $p_award_level,
 	);
 	
+	$form['program_total_credits'] = array(
+			'#title' => t('Total Credits:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_total_credits,
+			'#maxlength' => 300,
+	);
+	
 	$form['program_desc'] = array(
 			'#title' => t('Description:'),
 			'#type' => 'textarea',			
@@ -480,6 +519,113 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 			'#default_value' => $p_cphone,
 	);
 	
+	$form['program_other_requirements'] = array(
+			'#title' => t('Other Information:'),
+			'#type' => 'textarea',
+			'#default_value' => $p_other_requirements,
+	);
+	
+	$form['program_howtoapply'] = array(
+			'#title' => t('How to Apply:'),
+			'#type' => 'textarea',
+			'#default_value' => $p_howtoapply,
+	);		
+	
+	$form['program_medicalreq'] = array(
+			'#title' => t('Medical Requirements:'),
+			'#type' => 'textarea',
+			'#default_value' => $p_medicalreq,
+	);
+	
+	$form['program_immunizationreq'] = array(
+			'#title' => t('Immunization Requirements:'),
+			'#type' => 'textarea',
+			'#default_value' => $p_immunizationreq,
+	);
+	
+	$form['program_legalreq'] = array(
+			'#title' => t('Legal Requirements:'),
+			'#type' => 'textarea',
+			'#default_value' => $p_legalreq,
+	);		 	
+
+	$form['program_hsgradreq'] = array(
+			'#type' => 'select',
+			'#title' => t('HS Grad Required?'),
+			'#options' => array(
+					'NA' => t('Please Select'),
+					'No' => t('No'),
+					'Yes' => t('Yes'),
+			),
+			'#default_value' => $p_hsgradreq,
+	);
+	
+	$form['program_mingpa'] = array(
+			'#title' => t('Minimum GPA:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_mingpa,
+	);
+	
+	$form['program_gedaccepted'] = array(
+			'#type' => 'select',
+			'#title' => t('GED Accepted?'),
+			'#options' => array(
+					'NA' => t('Please Select'),
+					'No' => t('No'),
+					'Yes' => t('Yes'),
+			),
+			'#default_value' => $p_gedaccepted,			
+	);
+	 
+	
+	$form['program_tuitioninstateindistrict'] = array(
+			'#title' => t('In-state in-district Tuition:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_tuitioninstateindistrict,
+			'#size' => 100,
+			'#maxlength' => 500,
+	);
+	
+	$form['program_tuitioninstateoutdistrict'] = array(
+			'#title' => t('In-state out-district Tuition:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_tuitioninstateoutdistrict,
+			'#size' => 100,
+			'#maxlength' => 500,
+	);
+	
+	$form['program_tuitiononline'] = array(
+			'#title' => t('Online Tuition:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_tuitiononline,
+			'#size' => 100,
+			'#maxlength' => 500,
+	);
+	
+	$form['program_tuitionoutstate'] = array(
+			'#title' => t('Out-of-state Tuition:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_tuitionoutstate,
+			'#size' => 100,
+			'#maxlength' => 500,
+	);
+	
+	$form['program_othercost'] = array(
+			'#title' => t('Other Cost:'),
+			'#type' => 'textfield',
+			'#default_value' => $p_othercost,
+			'#size' => 100,
+			'#maxlength' => 1000,
+			
+	);	
+	
+	$form['program_admissionurl'] = array(
+			'#title' => t('Admission URL:'),
+			'#type' => 'textfield',
+			'#size' => 100,
+			'#default_value' => $p_admissionurl,
+	);
+		
 	$form['submit'] = array(
 			'#type' => 'submit',
 			'#value' => t('Submit Changes'),
@@ -502,8 +648,7 @@ function vcnprovider_program_form($form, &$form_state, $unitid, $programid, $cip
 function vcnprovider_preprocess_vcn_provider_program_edit_template(&$variables) {
 
 	$variables['vcn_image_path'] = vcn_image_path();
-	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
-	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();	
 
 	$form = $variables['form'];	
 
@@ -532,12 +677,28 @@ function vcnprovider_preprocess_vcn_provider_program_edit_template(&$variables) 
 	$variables['form_program_length'] = render($form['program_length']);	
 	$variables['form_program_cipcode'] = render($form['program_cipcode']);
 	$variables['form_program_award_level'] = render($form['program_award_level']);
+	$variables['form_program_total_credits'] = render($form['program_total_credits']);
 	$variables['form_program_desc'] = render($form['program_desc']);
 	$variables['form_program_contact_name'] = render($form['program_contact_name']);
 	$variables['form_program_contact_email'] = render($form['program_contact_email']);
 	$variables['form_program_contact_phone'] = render($form['program_contact_phone']); 
+	$variables['form_program_other_requirements'] = render($form['program_other_requirements']);
+	$variables['form_program_howtoapply'] = render($form['program_howtoapply']);
+	$variables['form_program_medicalreq'] = render($form['program_medicalreq']);
+	$variables['form_program_immunizationreq'] = render($form['program_immunizationreq']);
+	$variables['form_program_legalreq'] = render($form['program_legalreq']);
+	$variables['form_program_hsgradreq'] = render($form['program_hsgradreq']);
+	$variables['form_program_mingpa'] = render($form['program_mingpa']);
+	$variables['form_program_gedaccepted'] = render($form['program_gedaccepted']);
+	$variables['form_program_tuitioninstateindistrict'] = render($form['program_tuitioninstateindistrict']);
+	$variables['form_program_tuitioninstateoutdistrict'] = render($form['program_tuitioninstateoutdistrict']);
+	$variables['form_program_tuitiononline'] = render($form['program_tuitiononline']);
+	$variables['form_program_tuitionoutstate'] = render($form['program_tuitionoutstate']);
+	$variables['form_program_othercost'] = render($form['program_othercost']);
+	$variables['form_program_admissionurl'] = render($form['program_admissionurl']);
 	
 	
+		
 	$variables['form_submit'] = render($form['submit']);
 	$variables['form_hidden'] = drupal_render_children($form);
 

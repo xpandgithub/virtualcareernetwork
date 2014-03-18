@@ -31,8 +31,7 @@ function vcnDeleteNotebookItemFromCMA(cmaOptions) {
 	if(cmaOptions.itemId == '' || jQuery.inArray(cmaOptions.itemType, itemTypeList) < 0) { 
 		alert('Invalid properties of cmaOptions object.'); return false;
 	}
-	
-	//var drupal6_basepath = vcn_get_drupal6_base_path(); //Drupal.settings.drupal_basepaths.drupal6_basepath;
+		
 	var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal7_basepath;
 	isUserLoggedIn = Drupal.settings.vcncma.isUserLoggedIn;
 	userid = Drupal.settings.vcncma.userid;	

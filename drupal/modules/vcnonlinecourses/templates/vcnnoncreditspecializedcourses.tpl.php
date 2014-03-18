@@ -38,7 +38,7 @@ You should have received a copy of the GNU General Public License along with thi
 					<?php 
 				}?>				
 			    <ul class="courses-listing-ul" >
-					<?php if ($v->coursecomingsoonyn=='N' && strlen($v->onlinecourseurl)) {  ?>
+					<?php if ($v->coursecomingsoonyn=='N' && strlen($v->onlinecourseurl)) { // No need to check onlinecourseurlflag for drupal internal links. ?>
 						<li><a href="<?php echo $vcn_drupal7_base_path.$v->onlinecourseurl; ?>" ><?php echo $v->coursetitle; ?></a></li>
 					<?php } else { ?>
 						<li><?php echo $v->coursetitle; ?> (Coming soon)</li>

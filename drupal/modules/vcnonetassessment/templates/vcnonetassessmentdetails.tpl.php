@@ -25,12 +25,9 @@ You should have received a copy of the GNU General Public License along with thi
     <strong>Detailed Description:</strong><br/>
     <p><?php print $detailed_description; ?></p><br/>
     
-    <strong>Physical Requirements:</strong><br/>
-    <p><?php print $physical_requirements; ?></p><br/>
-    
-    <strong>Health Requirements:</strong><br/>
-    <p><?php print $health_requirements; ?></p><br/>
-    
+    <strong>Physical/Medical/Health Requirements:</strong><br/>
+    <p><?php print $physical_health_requirements; ?></p><br/>
+        
     <script type="text/javascript">
       google.load('visualization', '1.0', {'packages':['corechart']});
   
@@ -123,7 +120,7 @@ You should have received a copy of the GNU General Public License along with thi
              
     <strong>A Day In The Life:</strong>
 		<p><?php print $day_in_life_description; ?></p>
-		<?php if ($day_in_life_url): ?>
+		<?php if (isset($day_in_life_url)): ?>
 			<p>To see more, <?php vcn_build_link_window_opener($day_in_life_url, 'Click here'); ?></p>
 		<?php endif; ?>
 		<?php if(isset($interview_description) || isset($additional_interview_array)): ?>
@@ -133,7 +130,7 @@ You should have received a copy of the GNU General Public License along with thi
 			<?php endif; ?>
 			<?php if(isset($additional_interview_array)): ?>
 				<?php foreach($additional_interview_array as $additional_interview): ?>
-					<p><?php print (string)$additional_interview['interviewurldescription'][0]; ?><?php vcn_build_link_window_opener((string)$additional_interview['interviewurl'][0], 'Click here'); ?></p>
+					<p><?php print (string)$additional_interview['interviewurldescription'][0]; ?><?php if($additional_interview['interviewurlflag'][0] == 1){ vcn_build_link_window_opener((string)$additional_interview['interviewurl'][0], 'Click here'); }?></p>
 				<?php endforeach; ?>
 			<?php endif; ?>
 		<?php endif; ?>

@@ -46,7 +46,8 @@ You should have received a copy of the GNU General Public License along with thi
 		<div class="vcn-content-divider-large"></div>
 		<div class="vcn-content-wrapper <?php echo (isset($display_career_list) && $display_career_list >= 0) ? "" : "element-hidden";?>">
 			<?php if($display_career_list > 0) {?>
-			<div class="strong">These local careers match your education level:<br/><br/></div>
+			<div class="strong">These local careers match your education level:<br/></div>
+			<p class="font-size-11">(Your education level is a minimum requirement for these careers - typical education requirement may be higher.)<br/></p>
 			<div>
 				<div class="get-started-career-list-title strong allclear"><div>Career</div><div>Salary Range</div><div>Number of Jobs in your area</div></div>
 				<?php foreach($career_list->career as $career) { ?>

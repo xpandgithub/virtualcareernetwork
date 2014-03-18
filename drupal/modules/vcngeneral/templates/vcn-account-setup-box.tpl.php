@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with thi
 		<div class="vcn-signup-careerexplorers-additional-note vcn-signup-block-bold-red-colored">Don't lose all the work you have done to Choose a Career!</div>
 	<?php endif; ?>
 		<div style="font-size:14px; margin-bottom:10px">Get your free personal VCN Career Management Account</div>
-		<a class="strong font-size-20" href="<?php echo $vcn_drupal6_base_path; ?>user/register">Sign Up for MyVCN</a><br/>
+		<a class="strong font-size-20" href="<?php echo $vcn_drupal7_base_path; ?>user/register">Sign Up for MyVCN</a><br/>
 		<div class="ital font-size-13">Get more out of your VCN experience!</div>
 		<p>
 			<span class="vcn-industry-color font-bold">MyVCN</span> lets you save all your education, training and work related information in one place.<br/>
@@ -33,7 +33,7 @@ You should have received a copy of the GNU General Public License along with thi
 			  <div id="cmamoretext" style="display:none;" class="noresize">			           		
 					<p class="clearfloat"><span class="vcn-industry-color font-bold">MyVCN</span> is private and secure. Any information you provide will be kept secure, encrypted and confidential. <span class="strong">Only you control it.</span></p>
 		   		<p>If you choose you can also share selected information in your VCN Account with others such as career counselor.</p>
-		   		<p><strong><a href="<?php echo $vcn_drupal6_base_path; ?>user/register">You can sign up Right now!</a></strong><br/><span style="font-style:italic">All it takes is an email and password.</span></p>
+		   		<p><strong><a href="<?php echo $vcn_drupal7_base_path; ?>user/register">You can sign up Right now!</a></strong><br/><span style="font-style:italic">All it takes is an email and password.</span></p>
 		 		</div>
 		 </div>
    </div> 

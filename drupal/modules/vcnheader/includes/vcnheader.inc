@@ -23,6 +23,8 @@ You should have received a copy of the GNU General Public License along with thi
 
 function vcn_header_template_preprocess(&$variables) {
 	
+	global $user_info;
+	
 	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
 	$variables['industry_name'] = vcn_get_industry_name();
   
@@ -62,19 +64,14 @@ function vcn_header_template_preprocess(&$variables) {
 	$variables['current_drupal_version'] = $vcnAppProperties->getCurrentDrupalVersion();
 	$variables['current_moodle_version'] = $vcnAppProperties->getCurrentMoodleVersion();
 	
-	$variables['is_logged_in_user'] = $GLOBALS['is_user_logged_in'];
+	$variables['is_logged_in_user'] = $user_info['is_user_logged_in'];
 	$variables['is_logged_in_user_text'] = ($variables['is_logged_in_user']) ? 'true' : 'false';
-	$variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-	$variables['has_notebook_items'] = ($GLOBALS['vcn_notebook_item_count'] > 0) ? true : false;
-	$variables['has_notebook_items_text'] = ($variables['has_notebook_items']) ? 'true' : 'false';
-	
-	$variables['is_provider_user'] = ($GLOBALS['user_provider_id'] > 0) ? true : false;
+	$variables['is_provider_user'] = ($user_info['user_provider_id'] > 0) ? true : false;
 	$variables['is_provider_user_text'] = ($variables['is_provider_user']) ? 'true' : 'false';
-	$variables['vcn_user_id'] = $GLOBALS['vcn_user_id'];
-	$variables['d6_user_id'] = $GLOBALS['d6_uid'];
-	$variables['d6_user_name'] = $GLOBALS['d6_name'];
-	$variables['vcn_notebook_item_count'] = $GLOBALS['vcn_notebook_item_count'];
-	$variables['logged_in_user_default_zipcode'] = $GLOBALS['logged_in_user_default_zipcode'];
+	$variables['vcn_user_id'] = $user_info['vcn_user_id'];
+	$variables['drupal_user_id'] = $user_info['uid'];
+	$variables['drupal_user_name'] = $user_info['name'];	
+	$variables['logged_in_user_default_zipcode'] = $user_info['logged_in_user_default_zipcode'];
 	$variables['vcn_config_php_server_name'] = $GLOBALS['vcn_config_php_server_name'];
 	
 	// Header right( first half) links

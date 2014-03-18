@@ -30,9 +30,49 @@ You should have received a copy of the GNU General Public License along with thi
 				$(this).removeClass('status').addClass('alert-info');
 			});
 			$('a.vcn-sign-out').click(function() {
+                                // log out of moodle - to get this to work we need to call the logout.php page in moodle 
+                                // and get the sesskey that is located within the page. Then we call the logout.php page 
+                                // again and pass the sesskey to this page which should then log the user out of moodle
+                                $.ajax({
+                                  url: vcn_get_site_base_url()+vcn_moodle_base_path()+'login/logout.php', 
+                                  cache: false,
+                                  async: false,
+                                  dataType: 'html',
+                                  success: function(data) {
+                                    var parts = data.split('sesskey=');
+                                    if (parts.length > 1) {
+                                      var parts2 = parts[1].split('">');
+
+                                      if (parts2.length > 1) {
+                                        var sesskey = parts2[0];
+
+                                        $.ajax({
+                                          url: vcn_get_site_base_url()+vcn_moodle_base_path()+'login/logout.php?sesskey='+sesskey,
+                                          cache: false,
+                                          async: false,
+                                          dataType: 'html',
+                                          success: function() {
+                                            // logged out
+                                          },
+                                          error: function() {
+                                            // write error to file
+                                          }
+                                        }); 
+                                      }
+                                    }
+                                  },
+                                  error: function(data) { 
+                                    // write error to file
+                                  }
+                                });
+                                
+                                // clear sessions
 				$.ajax({url: vcn_get_drupal7_base_path()+'unset-session-onetcode', async: false});
 			});
-			
+			if ($('#vcn-login-register .captcha .fieldset-legend').length) {
+				$('#vcn-login-register .captcha .fieldset-legend').text('Verification');
+                        }
+                        
 			// changes for alignment of the "Sign Up for MyVCN" block
 			if (!($('#cac-match-interest-outer').length)) {
 				$('#choose-a-career #cac-cma').css({"margin":"63px 0 0 0"});
@@ -331,6 +371,11 @@ function custom_error_hide() {
 	return true;
 }
 
+//returns the base url of the site
+function vcn_get_site_base_url() {
+	return Drupal.settings.drupal_basepaths.site_baseurl;
+}
+
 //returns the base path for Drupal7
 function vcn_get_drupal7_base_path() {
 	return Drupal.settings.drupal_basepaths.drupal7_basepath;
@@ -352,6 +397,10 @@ function vcn_get_videos_basepath() {
 
 function vcn_get_rest_datatable_base_path() {
 	return Drupal.settings.drupal_basepaths.drupal7_basepath + '/rest-datatable/';
+}
+
+function vcn_moodle_base_path() {
+        return Drupal.settings.drupal_basepaths.moodle_basepath;
 }
 
 function vcn_get_industry_id() {
@@ -538,7 +587,7 @@ function targetUserCareer(onetcode, isUserLoggedIn, vcnUserId) {
 //Save/Target Career/Program/Certification/Licenses/Courses; type=career/program/certification/license; task=save/target; vcnuserid=cma_id
 function vcnSaveTarget(url, type, task, vcnUserId, isUserLoggedIn, onetcode) {
 	
-	var drupal6_basepath = vcn_get_drupal6_base_path(); //Drupal.settings.drupal_basepaths.drupal6_basepath;
+	var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal7_basepath;
 	
 	saveTargetOptions = new Object();
 	saveTargetOptions.url = url;
@@ -554,7 +603,7 @@ function vcnSaveTarget(url, type, task, vcnUserId, isUserLoggedIn, onetcode) {
 		vcnSaveTargetToCMA(saveTargetOptions); // Call save/target to user CMA/wishlist function
 	}else {	// If userid doesn't exists, AJAX call to get it and proceed further	 
 	    jQuery.ajax({
-	      url: drupal6_basepath+'cma/getuserid', 
+	      url: drupal7_basepath+'user/getcmauserid/ajax', 
 	      cache: false,
 	      async: false,
 	      dataType: "text",
@@ -856,8 +905,7 @@ function vcnSaveCourseToCma(url, type, vcnUserId, isUserLoggedIn) {
 })(jQuery);
 
 function displayNotLoggedInModal(msg, title) {
-	var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal6_basepath;
-	var drupal6_basepath = vcn_get_drupal6_base_path(); //Drupal.settings.drupal_basepaths.drupal6_basepath;
+	var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal7_basepath;	
 	var modalDiv = jQuery(document.createElement('div'));
   
 	var button = '<div onclick="location.href=\''+drupal7_basepath+'cma/careers\';" class="vcn-button header-buttons header-buttons-small-text noresize">Career Wishlist</div>';
@@ -885,7 +933,7 @@ function displayNotLoggedInModal(msg, title) {
         text: "Register",
         click: function() {
           jQuery(this).dialog( "close" );
-          location = drupal6_basepath + 'user/register';
+          location = drupal7_basepath + 'user/register';
         }
       },
       "Login": {
@@ -894,7 +942,7 @@ function displayNotLoggedInModal(msg, title) {
         text: "Login",
         click: function() {
           jQuery(this).dialog( "close" );
-          location = drupal6_basepath + 'user';
+          location = drupal7_basepath + 'user';
         }
       },
       "Continue": {
@@ -940,7 +988,7 @@ function displayNotLoggedInModal(msg, title) {
 }
 
 function displaySimpleModal(msg, type, title) {
-  var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal6_basepath;	
+  var drupal7_basepath = vcn_get_drupal7_base_path(); //Drupal.settings.drupal_basepaths.drupal7_basepath;	
   var modalDiv = jQuery(document.createElement('div')); 
 
   var imgHtml = '';

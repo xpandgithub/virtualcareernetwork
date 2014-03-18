@@ -102,7 +102,7 @@ You should have received a copy of the GNU General Public License along with thi
 				      <div class="allclear" >&nbsp;</div>
 				      
 				      <div class="cac-tab-cat-bottom allclear" >
-                		<span class="tab-header" >Careers in <?php //echo $work_categories->item[$i]->workcategoryname; ?>this category organized by minimum educational requirements</span><br/><br/>
+                		<span class="tab-header" >Careers in <?php //echo $work_categories->item[$i]->workcategoryname; ?>this category organized by typical educational requirements</span><br/><br/>
                 
 				      <?php 
 				      $wtkey = "wt-".$work_categories->item[$i]->workcategorycode; 	

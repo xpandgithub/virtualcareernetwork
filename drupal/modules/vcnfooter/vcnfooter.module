@@ -115,25 +115,43 @@ function vcnfooter_theme() {
 function vcnfooter_preprocess_vcnfooter_block(&$variables) {	
 
 	$subsite = vcn_determine_vcn_subsite();	
-	$industry_code =  vcn_get_industry_code();		
-	
-	$block = module_invoke('vcnfooter', 'block_view', $industry_code);
-	$variables['footer_content'] = render($block['content']);	
-	
+	$industry_code =  vcn_get_industry_code();	
+
+	$variables['footer_content'] = "";
+	if ($subsite != "provider" && $subsite != "osp") {
+		$block = module_invoke('vcnfooter', 'block_view', $industry_code);
+		$variables['footer_content'] = render($block['content']);
+	} 	
 }
 
 function vcnfooter_preprocess_vcnfooter_healthcare_block(&$variables) {
+	global $user_info;
+	
+	$variables['is_user_logged_in'] = $user_info['is_user_logged_in'];
+	$variables['is_provider_user'] = vcn_is_provider_user();	
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 }
 
 function vcnfooter_preprocess_vcnfooter_igen_block(&$variables) {
+	global $user_info;
+	
+	$variables['is_user_logged_in'] = $user_info['is_user_logged_in'];
+	$variables['is_provider_user'] = vcn_is_provider_user();
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 }
 
 function vcnfooter_preprocess_vcnfooter_transit_block(&$variables) {
+	global $user_info;
+	
+	$variables['is_user_logged_in'] = $user_info['is_user_logged_in'];
+	$variables['is_provider_user'] = vcn_is_provider_user();
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 }
 
 function vcnfooter_preprocess_vcnfooter_aarp_block(&$variables) {
+	global $user_info;
+	
+	$variables['is_user_logged_in'] = $user_info['is_user_logged_in'];
+	$variables['is_provider_user'] = vcn_is_provider_user();
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 }

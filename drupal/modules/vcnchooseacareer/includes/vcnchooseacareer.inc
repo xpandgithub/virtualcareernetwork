@@ -50,8 +50,8 @@ function vcn_get_careers_byworktype_edu(&$variables) {
 	/* REST Call */
 	
 	// get the careers with work type and education order by worktype, min required education, career title.
-	$params = array('industry' => $variables['industry'], 'order' => array('worktype', 'mineducatid', 'title'));
-	$careers_byworktype_edu = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'listcareers', $params);
+	$params = array('industry' => $variables['industry'], 'order' => array('worktype', 'typicaleduid', 'title'));
+	$careers_byworktype_edu = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-typical-education', $params);
 
 	return $careers_byworktype_edu;
 	/* End REST Call */
@@ -75,21 +75,21 @@ function vcn_process_careers_byworktype_edu(&$variables) {
 	$careers_byworktype_edu = array();
 	$careers_byworktype_edu_list = $variables['careers_byworktype_edu_list'];
 	 
-	if (count($careers_byworktype_edu_list->careerdata)>0 && count($variables['education_group_list']->item)>0) {
-		for ($i = 0; $i < count($careers_byworktype_edu_list->careerdata); $i++) {
-			$wtkey = "wt-".$careers_byworktype_edu_list->careerdata[$i]->worktype;
-			$edukey = "edu-".$careers_byworktype_edu_list->careerdata[$i]->mineducatid;
+	if (count($careers_byworktype_edu_list->career)>0 && count($variables['education_group_list']->item)>0) {
+		for ($i = 0; $i < count($careers_byworktype_edu_list->career); $i++) {
+			$wtkey = "wt-".$careers_byworktype_edu_list->career[$i]->worktype;
+			$edukey = "edu-".$careers_byworktype_edu_list->career[$i]->educatid;
 			
-			if(@!in_array($careers_byworktype_edu_list->careerdata[$i]->worktype, $careers_byworktype_edu["wtkeys"])) {			
-				$careers_byworktype_edu["wtkeys"][] = (string) $careers_byworktype_edu_list->careerdata[$i]->worktype; 
+			if(@!in_array($careers_byworktype_edu_list->career[$i]->worktype, $careers_byworktype_edu["wtkeys"])) {			
+				$careers_byworktype_edu["wtkeys"][] = (string) $careers_byworktype_edu_list->career[$i]->worktype; 
 			}
 			
-			if(@!in_array($careers_byworktype_edu_list->careerdata[$i]->mineducatid, $careers_byworktype_edu[$wtkey]["mineducatids"])) {
-				$mineducatidskey = (int) $careers_byworktype_edu_list->careerdata[$i]->mineducatid;
-				$careers_byworktype_edu[$wtkey]["mineducatids"][$mineducatidskey] = (int) $careers_byworktype_edu_list->careerdata[$i]->mineducatid;
+			if(@!in_array($careers_byworktype_edu_list->career[$i]->educatid, $careers_byworktype_edu[$wtkey]["educatids"])) {
+				$educatidskey = (int) $careers_byworktype_edu_list->career[$i]->educatid;
+				$careers_byworktype_edu[$wtkey]["educatids"][$educatidskey] = (int) $careers_byworktype_edu_list->career[$i]->educatid;
 			}
 			
-			$careers_byworktype_edu[$wtkey][$edukey][] = array( (string) $careers_byworktype_edu_list->careerdata[$i]->title, (string) $careers_byworktype_edu_list->careerdata[$i]->onetcode);
+			$careers_byworktype_edu[$wtkey][$edukey][] = array( (string) $careers_byworktype_edu_list->career[$i]->title, (string) $careers_byworktype_edu_list->career[$i]->onetcode);
 		}
 	}
 	if(isset($careers_byworktype_edu["wtkeys"])) {
@@ -100,7 +100,7 @@ function vcn_process_careers_byworktype_edu(&$variables) {
 			$careers_byworktype_edu[$wtkey]["group_2"] = array();
 			$careers_byworktype_edu[$wtkey]["group_3"] = array();
 				
-			foreach ($careers_byworktype_edu[$wtkey]["mineducatids"] as $ekey => $eval) {
+			foreach ($careers_byworktype_edu[$wtkey]["educatids"] as $ekey => $eval) {
 				$edukey = "edu-".$ekey;
 			
 				if($ekey <= $variables['education_group_list']->item[0]->maxeducatid) { // $variables['education_group_list']->item[0]->mineducatid $variables['education_group_list']->item[0]->maxeducatid

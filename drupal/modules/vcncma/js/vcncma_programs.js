@@ -59,7 +59,6 @@ You should have received a copy of the GNU General Public License along with thi
                     }
 					
 					$('td:eq(0)', nRow).html('<center><nobr>'+targeticon+'</nobr></center>');
-					$('td:eq(1)', nRow).html('<a href="'+basepath+'get-qualified/program/'+aData.itemid+'/cipcode/'+aData.cipcode+'/onetcode/'+aData.subitemid+'">'+targeted_program+'<strong>'+aData.programname+'</strong></a>');
 					
 					$('td:eq(2)', nRow).html('<a href="'+basepath+'get-qualified/school/'+aData.unitid+'"><strong>'+aData.instname+'</strong></a>'+
 							'<br/>'+aData.instaddress+'<br/>'+aData.instcity+', '+aData.inststateabbrev+' '+aData.instzip+'<br/>'+aData.instgeneraltelephone+'<br/>'+
@@ -68,10 +67,12 @@ You should have received a copy of the GNU General Public License along with thi
 					$('td:eq(3)', nRow).html(aData.educationcategoryname);
 					
                     if (councelor_viewing_student_data == true && user_not_in_save_mode == true) {
+                      $('td:eq(1)', nRow).html('<strong>'+aData.programname+'</strong>');
                       $('td:eq(4)', nRow).html('<center><nobr>'+targetbutton+
                                       '<br/><input type="button" title="Delete" value="Delete" class="vcn-button grid-action-button vcn-button-disable" name="'+aData.notebookid+'" />'+
                                       '</nobr></center>');
                     } else {
+                      $('td:eq(1)', nRow).html('<a href="'+basepath+'get-qualified/program/'+aData.itemid+'/cipcode/'+aData.cipcode+'/onetcode/'+aData.subitemid+'">'+targeted_program+'<strong>'+aData.programname+'</strong></a>');
                       $('td:eq(4)', nRow).html('<center><nobr>'+targetbutton+
                                       '<br/><input type="button" title="Delete" value="Delete" class="cma-programs-delete-this-row vcn-button grid-action-button" name="'+aData.notebookid+'" />'+
                                       '</nobr></center>');

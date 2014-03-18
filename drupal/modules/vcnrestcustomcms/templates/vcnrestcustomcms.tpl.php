@@ -120,11 +120,17 @@ var rarray=new Array();
           <strong>Description: </strong><br/><br/>		
           <textarea id="description" name="description" style="width:100%; height:150px;" ><?php echo $detailed_description; ?></textarea><br/>
         <p/>
-          <strong> Physical Requirements: </strong><br/><br/>
-          <textarea id="phyrequirements" name="phyrequirements" style="width:100%; height:150px;"  ><?php echo $physical_requirements; ?></textarea><br/>
+          <strong>Physical/Medical/Health Requirements: </strong><br/><br/>
+          <textarea id="physhealthrequirements" name="physhealthrequirements" style="width:100%; height:150px;"  ><?php echo $phys_health_requirements; ?></textarea><br/>
         <p/>
-          <strong>Medical/Health Requirements: </strong><br/><br/>
-          <textarea id="medrequirements" name="medrequirements" style="width:100%; height:150px;"  ><?php echo $health_requirements; ?></textarea><br/>
+          <strong>Physical/Medical/Health Requirement Url: </strong><br/><br/>
+          <input type="text" id="physhealthrequirementsurl" name="physhealthrequirementsurl" style="width:100%;" value="<?php echo $phys_health_requirements_url; ?>" /><br/><br/>
+        <p/>
+          <strong>Nationwide Legal Requirements: </strong><br/><br/>
+          <textarea id="nationwidelegalrequirementdesc" name="nationwidelegalrequirementdesc" style="width:100%; height:150px;"  ><?php echo $nationwide_legal_requirement_desc; ?></textarea><br/>
+        <p/>
+          <strong>Nationwide Legal Requirement Url: </strong><br/><br/>
+          <input type="text" id="nationwidelegalrequirementurl" name="nationwidelegalrequirementurl" style="width:100%;" value="<?php echo $nationwide_legal_requirement_url; ?>" /><br/><br/>
         <p/>
           <strong>Day in the Life: </strong><br/><br/>
           <textarea id="dayinlife" name="dayinlife" style="width:100%; height:150px;"  ><?php echo $day_in_life_description; ?></textarea><br/>

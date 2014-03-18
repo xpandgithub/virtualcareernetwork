@@ -21,13 +21,12 @@ function vcn_careerdetails_include_variables(&$variables) {
 	if (empty($variables['industry'])) {
 		$variables['industry'] = vcn_get_industry(); //$variables['industry_name'] = vcn_get_industry_name();
 	}
-	//$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+	 
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_base_path'] = vcn_image_path();
 	//$variables['vcn_industry_image_path'] = vcn_industry_image_path();
 
-	$user = vcn_get_user_info();
-	$variables['d6userid'] = $user['uid'];
+	$user = vcn_get_user_info();	
 	$variables['userid'] = $user['vcn_user_id'];
 	$variables['is_user_logged_in'] = $user['is_user_logged_in'];
 	
@@ -63,7 +62,7 @@ function vcn_careerdetails_get_tabs_list(&$variables) {
 }
 
 function vcn_careerdetail_user_state(&$variables) {
-	
+	$nothing_found = 0;
 	if($variables['tabid'] == "overview" && strpos($_SERVER["HTTP_REFERER"], "explorecareers")) { // Choose a Career
 		vcn_set_cookie("user_state_career_detail_referer", "explorecareers");
 		$variables['back_to_career_link'] =	$variables['vcn_drupal7_base_path']."explorecareers";
@@ -78,8 +77,10 @@ function vcn_careerdetail_user_state(&$variables) {
 		}
 	}else if(isset($_COOKIE['user_state_career_detail_referer']) && $_COOKIE['user_state_career_detail_referer'] !="") { // User state
 		$variables['back_to_career_link'] =	$variables['vcn_drupal7_base_path'].$_COOKIE['user_state_career_detail_referer'];
+		$nothing_found = 1;
 	}else {
 		$variables['back_to_career_link'] =	$variables['vcn_drupal7_base_path']."explorecareers"; // Nothing found
+		$nothing_found = 1;
 	}
 	
 	if (stristr($variables['back_to_career_link'], 'careergrid')) {
@@ -88,6 +89,10 @@ function vcn_careerdetail_user_state(&$variables) {
 		$variables['back_to_career_link_text'] = (stristr($variables['back_to_career_link'], 'cma/careers/wishlist')) ? "Back to Career Wishlist" : "Back to Review Saved Careers";
 	}else{
 		$variables['back_to_career_link_text'] = "Back to Choose a Career";
+	}
+	
+	if($nothing_found < 1) {
+		$variables['back_to_career_link'] = "javascript:history.go(-1);";
 	}
 	
 	return true;

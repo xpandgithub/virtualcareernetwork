@@ -15,53 +15,81 @@ You should have received a copy of the GNU General Public License along with thi
 
 <h1 class="title">Match Your Interests to Careers</h1>
 
-<div>
-	<div>
-	  <?php  
-	  if (count($careers) > 0) :
-	  ?>
+<div class="vcn-profiler-result">
+  <div>
+  	<?php if (count($careers_of_current_industry) > 0 || count($careers_of_other_industry) > 0) { ?>
 	  	<p>
 	      Here are your Interest Profiler results (RIASEC:   
 	      Realistic=<?php print $score_realistic; ?>, Investigative=<?php print $score_investigative; ?>, 
 	      Artistic=<?php print $score_artistic; ?>, Social=<?php print $score_social; ?>, 
 	      Enterprising=<?php print $score_enterprising; ?>, Conventional=<?php print $score_conventional; ?>)!     
-	      Think of your interests as work you like to do.
-        Your interests can help you find careers you might like to explore. The more a career meets 
-        your interests, the more likely it will be satisfying and rewarding to you.  For information
-        on how the Interest Profiler determines the results <a href="<?php print vcn_drupal7_base_path(); ?>interest-profiler-info/industry/<?php print $industry; ?>">click here</a>.
+		      Think of your interests as work you like to do.
+	        Your interests can help you find careers you might like to explore. The more a career meets 
+	        your interests, the more likely it will be satisfying and rewarding to you.  For information
+	        on how the Interest Profiler determines the results <a href="<?php print vcn_drupal7_base_path(); ?>interest-profiler-info/industry/<?php print $industry; ?>">click here</a>.
 	    </p>
-	    <p>
-	      The following are the top careers matching your interests based on the results:
-	    </p>
-	  <?php
-	    foreach ($careers as $career) :
-	  ?>
-      <div class="profiler-result-outer-container">
-        <div class="profiler-result-inner-container-left">
-          <p><img src="<?php print $career['image_url']; ?>" class="profiler-result-career-image" alt="career image" />
-        </div>
-        <div class="profiler-result-inner-container-right">
-          <p><strong><?php print $career['title']; ?></strong></p>
-          <p><?php print $career['description']; ?></p>
-          <p><a href="<?php print $career['details_url']; ?>" <?php print ($is_using_lightbox) ? 'target="_blank"' : ''; ?>>View Details</a></p>
-        </div>
-        <div class="allclear"></div>
-	    </div>
-	  <?php
-	    endforeach;
-	  else:
-	  ?>
-	    <p>Based upon the interests you have expressed, no careers were found.</p>
-	    <p>To try again, <a href="<?php print vcn_drupal7_base_path(); ?>interest-profiler/industry/<?php print $industry; ?><?php print ($is_using_lightbox) ? '/lightbox' : ''; ?>">click here</a></p>
-	  <?php
-	  endif;
-	  ?>
+	<?php } ?>
+	<div class="vcn-left-sidebar">
+	  <div class="vcn-sidebar-tools-box rndcrnr">
+	  	<div class="vcn-sidebar-tools-content">
+		  <?php  
+		  if (count($careers_of_current_industry) > 0) {
+		  ?>	  	
+		    <p class="vcn-profiler-result-header">
+		      The following are the top careers in <span class="strong"><?php echo vcn_get_industry_name(); ?></span> matching your interests based on the results:
+		    </p>
+		  <?php
+		    foreach ($careers_of_current_industry as $career) {
+		  ?>
+	      <div class="profiler-result-outer-container">
+	        <div class="profiler-result-inner-container-left">
+	          <p><img src="<?php print $career['image_url']; ?>" class="profiler-result-career-image" alt="career image" />
+	        </div>
+	        <div class="profiler-result-inner-container-right">
+	          <p><strong>#<?php print $career['rank']; ?>: <?php print $career['title']; ?></strong></p>
+	          <p><?php print $career['description']; ?></p>
+	          <p><a href="<?php print $career['details_url']; ?>" <?php print ($is_using_lightbox) ? 'target="_blank"' : ''; ?>>View Details</a></p>
+	        </div>
+	        <div class="allclear"></div>
+		    </div>
+		  <?php
+		    }
+		  }else{
+		  ?>
+		    <p>Based upon the interests you have expressed, no careers were found in <span class="strong"><?php echo vcn_get_industry_name(); ?></span>.</p>
+		    <p>To try again, <a href="<?php print vcn_drupal7_base_path(); ?>interest-profiler/industry/<?php print $industry; ?><?php print ($is_using_lightbox) ? '/lightbox' : ''; ?>">click here</a></p>
+		  <?php
+		  }
+		  ?>
+		</div>
+	  </div>			
 	</div>
 	
-  <?php if (vcn_external_client_calling_interest_profiler()) : ?>
+	<div class="vcn-right-sidebar">
+	  <?php  
+	  if (count($careers_of_other_industry) > 0) { ?>
+	    <div class="vcn-sidebar-tools-box rndcrnr">
+	  	  <div class="vcn-sidebar-tools-content">	
+		   <div> 
+		      <br/><span>The following are the top careers <span class="strong">outside <?php echo vcn_get_industry_name(); ?></span> matching your interests based on the results:</span>
+		   </div>
+		  <?php
+		    foreach ($careers_of_other_industry as $career) { ?>
+	      	  <div>        
+			    <p><span class="strong">#<?php print $career['rank']; ?></span>: <?php print $career['title']; ?><?php //print $career['onetcode']; ?></p>
+		      </div>
+		  <?php
+		    } ?>
+		  </div>
+		</div>
+	  <?php 
+	  } ?>
+	</div>
+  </div>	
+  <?php if (vcn_external_client_calling_interest_profiler()) { ?>
     <br/>
     <button onclick="location='<?php print vcn_drupal7_base_path(); ?>interest-profiler/industry/<?php print $industry; ?>'" class="vcn-button <?php print $alt_color_class; ?>">Go Back</button>
-  <?php else : ?>
+  <?php } else { ?>
     <!-- VCN Navigation bar -->
     <div class="vcn-user-navigation-bar allclear">
       <div class="nav-bar-left"><div><a title="Back" href="javascript:history.go(-1);">Go Back</a></div></div>	 
@@ -69,7 +97,7 @@ You should have received a copy of the GNU General Public License along with thi
       <div class="allclear"></div>		      	
     </div>
     <!-- End of VCN Navigation bar -->
-  <?php endif; ?>
+  <?php } ?>
     
 	<br/><br/>
 

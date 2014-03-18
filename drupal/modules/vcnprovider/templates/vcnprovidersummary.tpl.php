@@ -31,7 +31,7 @@ if (!$is_user_provider) :
       </p>
     </div>
     <div id="provider-summary-front-signin-container">
-      <a href="<?php print $GLOBALS['vcn_config_default_base_path_drupal6']; ?>user?type=provider" alt="Sign in" title="Sign in" style="text-decoration:none; color:white;">
+      <a href="<?php print vcn_drupal7_base_path(); ?>user?type=provider" alt="Sign in" title="Sign in" style="text-decoration:none; color:white;">
         <div id="provider-summary-front-signin-button">
           <p id="provider-summary-front-signin-text">
             <img src="<?php print $vcn_image_path; ?>miscellaneous/lock-icon.png" style="height:28px; width:auto; position:relative; top:5px;" alt="Sign in lock"/> &nbsp;Sign In
@@ -40,7 +40,7 @@ if (!$is_user_provider) :
       </a>
     </div>
     <div id="provider-summary-front-register-container">
-      <a href="<?php print $GLOBALS['vcn_config_default_base_path_drupal6']; ?>user/register?type=provider" alt="Register" title="Register" style="text-decoration:none; color:white;">
+      <a href="<?php print vcn_drupal7_base_path(); ?>provider-register" alt="Register" title="Register" style="text-decoration:none; color:white;">
         <div id="provider-summary-front-register-button">
           <p id="provider-summary-front-register-text">Register</p>
         </div>

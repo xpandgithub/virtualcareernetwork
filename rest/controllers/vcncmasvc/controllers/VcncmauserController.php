@@ -17,10 +17,10 @@ You should have received a copy of the GNU General Public License along with thi
 
 class VCNCmaSvc_VCNCmaUserController extends VCN_WebServices {	
 	
-	public function getUserInfoAction() {    
+	public function getUserInfoByCmaUseridAction() {    
     
 		$model = new VCN_Model_VCNCmaUser();
-		$data = $model->getUserInfo($this->params);
+		$data = $model->getUserInfoByCmaUserid($this->params);
 			
 		$output = self::getOutput( $this->format, $data, 'result');
 	
@@ -28,10 +28,10 @@ class VCNCmaSvc_VCNCmaUserController extends VCN_WebServices {
 	
 	} 
 	
-	public function updateUserInfoAction() {
+	public function updateUserInfoByCmaUseridAction() {
 	
 		$model = new VCN_Model_VCNCmaUser();
-		$data = $model->updateUserInfo($this->params);
+		$data = $model->updateUserInfoByCmaUserid($this->params);
 			
 		$output = self::getOutput( $this->format, $data, 'result');
 	

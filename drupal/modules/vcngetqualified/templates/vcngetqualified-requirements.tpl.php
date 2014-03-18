@@ -42,31 +42,65 @@ You should have received a copy of the GNU General Public License along with thi
 							<?php endif; ?>
 					
 							<div class="vcn-getqualified-wrapper">
-								<div class="vcn-getqualified-requirements-paragraph-header">Legal Requirements:</div>
-								<?php if($legal_nationwide_requirements != "") { ?><div id="vcn-getqualified-legal-requirements"><span class="strong"><br/>General/Nationwide</span><p><?php print $legal_nationwide_requirements; ?></p></div><?php }?>
-								<div id="vcn-getqualified-legal-requirements"><span class="strong"><br/>State-Specific</span>
+								<div class="vcn-getqualified-requirements-subtitle">Legal Requirements:</div>
+								<div class="vcn-getqualified-legal-requirements"><span class="strong"><br/>General/Nationwide</span>
+									<?php if ($legal_nationwide_requirements): ?>
+										<div id="career-legal-nationwide-requirements-regular-text">
+											<p><?php print $legal_nationwide_requirements; ?></p>
+										</div>
+									<?php endif; ?>
+									<?php if (isset($legal_nationwide_requirements_associated_url) && isset($legal_nationwide_requirements_associated_url_flag)): ?>
+										<div id="career-legal-nationwide-requirements-hidden-text" class="element-hidden">
+											<?php print vcn_build_link_window_opener($legal_nationwide_requirements_associated_url, 'Additional Information', false); ?>
+										</div>
+										<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
+									<?php endif; ?>
+								</div>
+								<div class="vcn-getqualified-legal-requirements"><span class="strong"><br/>State-Specific</span>
 									<div id="career-legal-requirements">
 										<div id="career-legal-requirements-regular-text">
 											<?php print $legal_state_specific_requirements_regular_text; ?>
 										</div>
 										<div id="career-legal-requirements-hidden-text" class="element-hidden">
-										  <?php if (isset($legal_state_specific_requirements_hidden_text)) { ?>
-											<?php print $legal_state_specific_requirements_hidden_text; ?>
-										  <?php } ?>
-										  <?php if(!empty($legal_state_specific_requirements_associated_url)) { ?>
-											<p class="paragraph-formatting"><?php print vcn_build_link_window_opener($legal_state_specific_requirements_associated_url, 'Additional Information', false); ?></p>
-										  <?php } ?>
+										  <?php if (isset($legal_state_specific_requirements_hidden_text)): ?>
+												<?php print $legal_state_specific_requirements_hidden_text; ?>
+										  <?php endif; ?>
+										  <?php if(!empty($legal_state_specific_requirements_associated_url)): ?>
+												<p class="paragraph-formatting"><?php print vcn_build_link_window_opener($legal_state_specific_requirements_associated_url, 'Additional Information', false); ?></p>
+										  <?php endif; ?>
 										</div>
-										<?php if (!empty($legal_state_specific_requirements_hidden_text) || !empty($legal_state_specific_requirements_associated_url)) { ?>
-										<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a><br/>
-										<?php } ?>
+										<?php if (!empty($legal_state_specific_requirements_hidden_text) || !empty($legal_state_specific_requirements_associated_url)): ?>
+											<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
+										<?php endif; ?>
 									</div>
+									<div class="career-legal-requirements-disclaimer">Disclaimer: The legal requirements mentioned above may not be exhaustive or may not include special requirements of specific employers.</div>
 								</div>
 							</div>
 							
 							<div class="vcn-getqualified-wrapper">
-								<div class="vcn-getqualified-requirements-paragraph-header">Physical/Medical/Health Requirements:</div>
-								<div id="vcn-getqualified-physical-requirements"><?php print $physical_health_requirements; ?></div>
+								<div class="vcn-getqualified-requirements-subtitle">Physical/Medical/Health Requirements:</div>
+								<div id="vcn-getqualified-physical-requirements">
+									<div id="career-medical-health-requirements">
+										<div id="career-medical-health-requirements-regular-text">
+											<?php if (!empty($physical_health_requirements_regular_text)): ?>
+												<?php print $physical_health_requirements_regular_text; ?>
+											<?php else: ?>
+												<p>No specific requirements have been identified.</p>
+											<?php endif; ?>
+										</div>
+										<div id="career-medical-health-requirements-regular-text" class="element-hidden">
+											<?php if (!empty($physical_health_requirements_hidden_text)): ?>
+												<?php print $physical_health_requirements_hidden_text; ?>
+											<?php endif; ?>
+											<?php if (isset($physical_requirement_url) && isset($physical_requirement_url_flag)): ?>
+												<?php print vcn_build_link_window_opener($physical_requirement_url, 'Additional Information', false); ?>
+											<?php endif; ?>
+										</div>
+										<?php if (!empty($physical_health_requirements_hidden_text) || !empty($physical_requirement_url)): ?>
+											<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a><br/>
+										<?php endif; ?>
+									</div>
+								</div>
 							</div>									  	
 				
 						<?php else: ?>

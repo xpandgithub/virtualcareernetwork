@@ -43,8 +43,7 @@ function vcnchooseacareer_preprocess_vcn_explore_careers_template(&$variables) {
     $variables['page_title'] = 'Target Local Hot Jobs and Careers';
     $variables['display_careers_match_by_default'] = true;
   }
-  
-	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+  	
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_path'] = vcn_image_path();
 	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
@@ -56,8 +55,7 @@ function vcnchooseacareer_preprocess_vcn_explore_careers_template(&$variables) {
 		$variables['targeted_career_count'] = count($vcnuser_get_notebook_items->item) > 0 ? 1 : 0;
 	}
 	
-	$variables['isLoggedInUser'] = $user['is_user_logged_in'];
-	//$variables['isLoggedInUser'] = ($GLOBALS['d6_uid'] && is_numeric($GLOBALS['d6_uid']) && $GLOBALS['d6_uid'] > 0) ? true : false;
+	$variables['isLoggedInUser'] = $user['is_user_logged_in'];	
 	
 	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
 	$variables['cactext'] = vcn_node_text_by_urlalias("explorecareers-text");
@@ -97,6 +95,10 @@ function vcn_get_work_categories($variables) {
  */
 
 function vcnchooseacareer_preprocess_vcn_advanced_career_tools(&$variables) {
+	global $user_info;
 	drupal_add_js(drupal_get_path('module', 'vcnchooseacareer') .'/js/vcn_advanced_career_tools.js', 'file');
 	$variables['is_healthcare_industry'] = vcn_is_healthcare_industry();
+	
+	$variables['show_hide'] = $user_info['is_user_logged_in'] ? "element-hidden" : "";
+	
 }

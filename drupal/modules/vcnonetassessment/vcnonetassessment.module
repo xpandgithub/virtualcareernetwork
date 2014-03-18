@@ -14,12 +14,6 @@ You should have received a copy of the GNU General Public License along with thi
 
 
 <?php
-
-/*if (!drupal_session_started() && !isset($_SESSION) && !headers_sent()) {
-  session_start();
-  error_log('session started at onet assessment module - ignored');
-}*/
-
 /**
  * Implementation of hook_help().
  */
@@ -35,11 +29,6 @@ function vcnonetassessment_help($path, $arg) {
  */
 function vcnonetassessment_preprocess_vcn_onet_assessment_template(&$variables) {
 	
-	if (!drupal_session_started() && !isset($_SESSION) && !headers_sent()) {
-		session_start();
-		error_log('session started at onetassessment module preprocess function');
-	}
-
 	if (!isset($variables['industry'])) {
 		$variables['industry'] = $GLOBALS['vcn_config_default_industry_id'];
 	}
@@ -55,9 +44,8 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_template(&$variables) 
 	$variables['questions'] = $content;
 	
 	$userAnswersArr = array();
-	if (isset($_SESSION['user_answers'])) { 
-	  $userAnswersArr = $_SESSION['user_answers'];
-	} else if ($GLOBALS['is_user_logged_in']) {
+
+  if ($GLOBALS['vcn_user_id']) {
     $params = array('userid' => $GLOBALS['vcn_user_id']);
     $content = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-cma-user-assessment-values', $params, 'xml', 'post', false);
     if (strlen($content->item->assessmentvalues)) {
@@ -109,9 +97,6 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_results_template(&$var
   
   $userScoresArr = vcn_get_onet_assessment_scores(true);
   
-	$_SESSION['user_answers'] = $userScoresArr['user_answers'];
-	$_SESSION['user_answers_types'] = $userScoresArr['user_answers_types'];
-  
 	$variables['score_realistic'] = $userScoresArr['score_realistic'];
 	$variables['score_investigative'] = $userScoresArr['score_investigative'];
 	$variables['score_artistic'] = $userScoresArr['score_artistic'];
@@ -126,7 +111,8 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_results_template(&$var
 	
 	$careers = vcn_get_onet_assessment_career_matches_by_scores($variables['industry'], $variables['score_realistic'], $variables['score_investigative'], $variables['score_artistic'], $variables['score_social'], $variables['score_enterprising'], $variables['score_conventional'], $variables['limit']);
 	
-	$variables['careers'] = $careers;
+	$variables['careers_of_current_industry'] = $careers['careers_of_current_industry'];
+	$variables['careers_of_other_industry'] = $careers['careers_of_other_industry'];
 	
   $altColorClass = '';
 	if (vcn_external_client_calling_interest_profiler()) {
@@ -196,34 +182,20 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_details_template(&$var
 	
 	$variables['detailed_description'] = $detailed_description;
 	
-	$physicalRequirementsArr = vcn_text_into_paragraphs((string)$career_data->careerdata->physicalrequirement[0]);
+	$physicalHealthRequirementsArr = vcn_text_into_paragraphs((string)$career_data->careerdata->physicalhealthrequirements[0]);
 	
-	$physical_requirements = "";
-	if (!empty($physicalRequirementsArr['regular_text_array'])) {
-		foreach ($physicalRequirementsArr['regular_text_array'] as $value) {
-			$physical_requirements .= $value;
+	$physical_health_requirements = "";
+	if (!empty($physicalHealthRequirementsArr['regular_text_array'])) {
+		foreach ($physicalHealthRequirementsArr['regular_text_array'] as $value) {
+			$physical_health_requirements .= $value;
 		}
-		foreach ($physicalRequirementsArr['hidden_text_array'] as $value) {
-			$physical_requirements .= $value;
-		}
-	}
-	
-	$variables['physical_requirements'] = $physical_requirements;
-	
-	$healthRequirementsArr = vcn_text_into_paragraphs((string)$career_data->careerdata->healthrequirement[0]);
-	
-	$health_requirements = "";
-	if (!empty($healthRequirementsArr['regular_text_array'])) {
-		foreach ($healthRequirementsArr['regular_text_array'] as $value) {
-			$health_requirements .= $value;
-		}
-		foreach ($healthRequirementsArr['hidden_text_array'] as $value) {
-			$health_requirements .= $value;
+		foreach ($physicalHealthRequirementsArr['hidden_text_array'] as $value) {
+			$physical_health_requirements .= $value;
 		}
 	}
 	
-	$variables['health_requirements'] = $health_requirements;
-	
+	$variables['physical_health_requirements'] = $physical_health_requirements;
+
 	// DATA FOR CAREER DETAILS SALARY & OUTLOOK TAB
  	$variables['annual_salary_pct10_for_national'] = '';
 	$variables['annual_salary_pct25_for_national'] = '';
@@ -261,8 +233,11 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_details_template(&$var
   }
         
 	// DATA FOR CAREER DETAILS ON THE JOB TAB
-	$variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];
-	$variables['day_in_life_url'] = (string)$career_data->careerdata->dayinlifeurl[0];
+	$variables['day_in_life_description'] = (string)$career_data->careerdata->dayinlife[0];	
+	$variables['day_in_life_url_flag'] = !empty($career_data->careerdata->dayinlifeurlflag[0]) ? (string)$career_data->careerdata->dayinlifeurlflag[0] : NULL;
+	if (isset($variables['day_in_life_url_flag']) && $variables['day_in_life_url_flag'] == '1' && !empty($career_data->careerdata->dayinlifeurl[0])) {
+		$variables['day_in_life_url'] = (string)$career_data->careerdata->dayinlifeurl[0];
+	}
 	
 	$career_interview_data = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-interview-data', array('onetcode' => $onetcode));
 	if (!empty($career_interview_data->careerinterview->item)) {
@@ -270,7 +245,7 @@ function vcnonetassessment_preprocess_vcn_onet_assessment_details_template(&$var
 	}
 	
 	$variables['interview_description'] = !empty($career_interview_data_array['main_interview'][0]['interviewurldescription']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurldescription'] : NULL;
-	$variables['interview_url'] = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
+	$variables['interview_url'] = (!empty($career_interview_data_array['main_interview'][0]['interviewurl']) && $career_interview_data_array['main_interview'][0]['interviewurlflag'] == 1) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
 	$variables['additional_interview_array'] = !empty($career_interview_data_array['additional_interview']) ? $career_interview_data_array['additional_interview'] : NULL;
 	
 	// DATA FOR CAREER DETAILS EDUCATION & TRAINING TAB

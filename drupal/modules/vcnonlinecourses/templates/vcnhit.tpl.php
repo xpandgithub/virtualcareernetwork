@@ -31,12 +31,13 @@ You should have received a copy of the GNU General Public License along with thi
 			<ul><?php		
 				foreach ($course->item as $v) {  ?>
 				<li><?php 
-					if ($v->coursecomingsoonyn=='N' && strlen($v->onlinecourseurl)) { ?>
+					if ($v->coursecomingsoonyn=='N' && strlen($v->onlinecourseurl)) { // No need to check onlinecourseurlflag for drupal internal links. ?>
 						<a href="<?php echo $vcn_drupal7_base_path.$v->onlinecourseurl; ?>" ><?php echo $v->coursetitle; ?></a><?php
 					} ?>					
 				</li><?php  				
 				}  ?>
 			</ul>
+			<br/><span class="strong">Note:</span> These courses use the Adobe Flash player. Your browser/device must support the Adobe Flash player to be able to view the courses.
 		</td>	
 		<td id="hitright" >
 			<?php echo $hitright;?>

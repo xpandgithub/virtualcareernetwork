@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License along with thi
 
 <div id="vcn-advanced-career-tools" class="vcn-sidebar-tools-box rndcrnr" >
 	<h3 class="vcn-sidebar-tools-header">Advanced Career Tools</h3>
-	<div class="vcn-sidebar-tools-content">	
+	<div class="vcn-sidebar-tools-content <?php echo $show_hide;?>">	
 		<?php if(!strpos($_SERVER["REQUEST_URI"], "careergrid")) { ?>	
 		<form name="searchform" action="<?php print vcn_drupal7_base_path(); ?>careergrid" id="searchform" method="post" >					   
 		   <div class="cac-search form-item">

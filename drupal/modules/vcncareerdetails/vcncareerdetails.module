@@ -238,8 +238,21 @@ function vcncareerdetails_preprocess_vcn_careerdetails_on_the_job_template(&$var
 	if (!empty($career_interview_data->careerinterview->item)) {
 		$career_interview_data_array = vcn_get_career_interview_data_array($career_interview_data->careerinterview->item);			
 		//$variables['interview_description'] = !empty($career_interview_data_array['main_interview'][0]['interviewurldescription']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurldescription'] : NULL;
-		$variables['interview_url'] = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
+		//$variables['interview_url'] = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
 		$variables['additional_interview_array'] = !empty($career_interview_data_array['additional_interview']) ? $career_interview_data_array['additional_interview'] : NULL;
+		
+		$interview_url = !empty($career_interview_data_array['main_interview'][0]['interviewurl']) ? (string)$career_interview_data_array['main_interview'][0]['interviewurl'] : NULL;
+		$variables['is_internal_file'] = FALSE;
+		
+		if ($interview_url) {
+			if (strpos($interview_url, 'http') !== 0) {
+				$interview_url = vcn_drupal7_base_path().drupal_get_path("theme", "vcnstark").'/media/'.$interview_url;
+				$variables['is_internal_file'] = TRUE;
+			}
+			$variables['interview_url'] = $interview_url;
+		} else {
+			$variables['interview_url'] = NULL;
+		}
 	}		
 		
 }

@@ -239,6 +239,15 @@ function vcnmenu_menu() {
 	);
 	//Provider portal pages end
 	
+   // sitemap page
+  
+    $items['site-map'] = array(
+  		'title' => 'Site Map',
+  		'page callback' => 'vcn_site_map',   
+    	'file' => 'includes/vcnmenucallback.inc',
+  		'access callback' => TRUE,
+    );
+	
 	// Help page
 	
 	$items['help'] = array(
@@ -635,6 +644,16 @@ function vcnmenu_menu() {
 	//end of menus for tables and rest integration
 	
 	// Ajax calls
+	
+	// Get/set cma user id
+	$items['user/getcmauserid/ajax'] = array(
+			'title' => 'Get/set cma user id Ajax Callback',
+			'page callback' => 'vcn_get_cma_userid_ajax_callback',
+			'file' => 'includes/vcnuser.inc',
+			'file path' => drupal_get_path('module', 'vcnuser'),
+			'access arguments' => array('access content'),
+			'type' => MENU_CALLBACK,
+	);
 	
 	// Return Job count by onetcode and zipcode
 	$items['jobcountbyonetandzip/ajax'] = array(
@@ -1281,6 +1300,11 @@ function vcnmenu_menu() {
 		'access callback' => TRUE,
 	);
 	
+	$items['provider-register'] = array(
+		'page callback' => 'vcnuser_provider_register',
+		'access callback' => 'user_register_access',
+	);
+	
 	return $items;
 }
 
@@ -1418,6 +1442,13 @@ function vcnmenu_theme() {
 	);
 	//Provider portal pages end
 	
+    // Site map page theme variable
+    $theme['vcn_site_map_template'] = array(
+  		'template' => 'templates/vcnsitemap',
+  		'path' => drupal_get_path('module', 'vcnsitemap'),
+  		'arguments' => array(),
+    );
+  
 	// Help page theme variable
 	$theme['vcn_help_template'] = array(
 		'template' => 'templates/vcnhelp',
@@ -1887,6 +1918,40 @@ function vcnmenu_theme() {
 	);
 	
 	/* End Find work/job */
+	
+	/* Theme for login, register and password */
+	
+	$theme['user_login'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnuser').'/templates',
+		'template' => 'vcn-user-login',
+	);
+	
+	$theme['user_register_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnuser').'/templates',
+		'template' => 'vcn-user-register-form',
+	);
+	
+	$theme['user_pass'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnuser').'/templates',
+		'template' => 'vcn-user-pass',
+	);
+	
+	$theme['user_profile_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnuser').'/templates',
+		'template' => 'vcn-user-profile',
+	);
+	
+	$theme['vcn_provider_register_form'] = array(
+		'render element' => 'form',
+		'path' => drupal_get_path('module', 'vcnuser').'/templates',
+		'template' => 'vcn-provider-register-form',
+	);
+	
+	/* end of theme for login, register and password*/
 	
 	return $theme;
 }

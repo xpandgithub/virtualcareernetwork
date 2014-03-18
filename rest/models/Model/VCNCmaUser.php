@@ -26,7 +26,7 @@ You should have received a copy of the GNU General Public License along with thi
  */
 class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {	
 
-  public function getUserInfo($params) {
+  public function getUserInfoByCmaUserid($params) {
   	
   	$requiredParams = array('userid');
   	if (!$this->checkParams($params, $requiredParams)) {
@@ -48,7 +48,9 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 
         $result = $stmt->fetch();        
 
-        if (isset($params['extended']) && strlen($params['extended'])) {
+        // Code moved to drupal to connect drupal db and get info of specific userid from drupal db
+        // Only in use to get student data.
+        /*if (isset($params['extended']) && strlen($params['extended'])) {
           $sql2 = " SELECT name AS username, mail AS email
                     FROM drupal.users u                 
                     WHERE u.uid = :usersessionid ";
@@ -62,7 +64,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
           $result2 = $stmt2->fetch();
           
           $result = array_merge((array)$result, (array)$result2);
-        }
+        }*/
         
         $this->setResult($result);
 
@@ -73,7 +75,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
     return $this->result;
   }  
 
-  public function updateUserInfo($params) {
+  public function updateUserInfoByCmaUserid($params) {
   	 
   	$requiredParams = array('userid');
   	if (!$this->checkParams($params, $requiredParams)) {
@@ -176,7 +178,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
   	return $this->result;
   }
 
-  public function resetSessionId($params) {	error_log('resetSessionId called:'); //error_log('params: ' . print_r($params,true));
+  public function resetSessionId($params) {	//error_log('resetSessionId called:'); //error_log('params: ' . print_r($params,true));
   
   	$requiredParams = array('old_session_id', 'session_id');
   	if (!$this->checkParams($params, $requiredParams)) {
@@ -202,11 +204,10 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
   	
   		$stmt->execute(); 			
   		  		
-  		$this->setResult('success', 'data returned', $params); // As per D6 requirement //$data = array('userinfo' => $cma_session->toArray());
-  		//$this->setResult(array(true));
+  		$this->setResult(array('status' => 'success', 'params' => $params));   		 
   		
   	} catch (Exception $e) {
-	 	$this->setResult('fail', 'Can not find CMA record: ', $params);  // As per D6 requirement
+	 	$this->setResult(NULL, $e->getMessage());
 	 	error_log(print_r($e, true));	//$this->setResult(NULL, $e->getMessage());
   	}
   	
@@ -214,7 +215,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
   	 	
   }
   
-  public function getCmaUserInfo($params) { error_log('getCmaUserInfo'); //error_log('params: ' . print_r($params,true));
+  public function getCmaUserInfo($params) { //error_log('getCmaUserInfo'); //error_log('params: ' . print_r($params,true));
   	
   	$requiredParams = array('drupal_user_id', 'session_id', 'industry');
   	if (!$this->checkParams($params, $requiredParams)) {
@@ -244,6 +245,31 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		if(isset($cma_user_result[0]['user_id']) && $cma_user_result[0]['user_id'] >= 1) {
 	  			$cma_user = true;
 	  			$cma_user_id = $cma_user_result[0]['user_id'];
+	  		}else { // insert entry in vcn_cma_user for logged in user, if not found
+	  			//error_log('create new user entry with drupal user id and return it (if not already there for any unusual case - due to any issue during registration)'); // If not there, create new entry and return it (in case of new registration)
+	  			
+	  			$sql = "INSERT INTO vcn_cma_user
+							(USER_SESSION, USER_SESSION_ID, ZIPCODE, CREATED_TIME)
+						VALUES
+		  					('U', :drupal_user_id, :zipcode, now())
+		  					";
+	  			
+	  			$stmt = $db->prepare($sql);
+	  			$stmt->bindParam(':zipcode', '', PDO::PARAM_STR);
+	  			$stmt->bindParam(':drupal_user_id', $params['drupal_user_id'], PDO::PARAM_STR);
+	  			$stmt->execute();
+	  			$lastInsertId = $db->lastInsertId();			
+	  			 
+	  			$cma_user_result[0]['user_id'] = $lastInsertId;
+	  			$cma_user_result[0]['user_session'] = 'U';
+	  			$cma_user_result[0]['user_session_id'] = $params['drupal_user_id'];
+	  			$cma_user_result[0]['zipcode'] = '';
+	  			$cma_user_result[0]['first_name'] = '';
+	  			$cma_user_result[0]['last_name'] = '';
+	  			
+	  			$cma_user = true;
+	  			$cma_user_id = $lastInsertId;
+	  			
 	  		} 			  		
 	  	}
 	  	
@@ -259,7 +285,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  	}
 	  	
 	  	// Check, process and return userinfo as per "$cma_session && $cma_user"
-	  	if ($cma_session && $cma_user) { error_log('getUserInfo - found both, merging'); // $userinfo = $cma_user; 
+	  	if ($cma_session && $cma_user) { //error_log('getUserInfo - found both, merging'); // $userinfo = $cma_user; 
 	  		  		
 	  		$this->vcn_user_session_merge($params, $cma_user_id, $cma_session_user_id, $registering_user); 
 	  		
@@ -270,7 +296,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		$cmauserinfo['firstname'] = $cma_user_result[0]['first_name'];
 	  		$cmauserinfo['lastname'] = $cma_user_result[0]['last_name'];
 	  		 
-	  	} elseif ($cma_user) { error_log('getUserInfo - found user only'); // $userinfo = $cma_user; 
+	  	} elseif ($cma_user) { //error_log('getUserInfo - found user only'); // $userinfo = $cma_user; 
 	  		
 	  		$cmauserinfo['userid'] = $cma_user_id; // $cma_user_result[0]['user_id'];
 	  		$cmauserinfo['usersession'] = 'U'; // $cma_user_result[0]['user_session'];
@@ -279,7 +305,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		$cmauserinfo['firstname'] = $cma_user_result[0]['first_name'];
 	  		$cmauserinfo['lastname'] = $cma_user_result[0]['last_name'];	  		 		 
 	  		
-	  	} elseif ($cma_session) { error_log('getUserInfo - found session only'); // $userinfo = $cma_session;
+	  	} elseif ($cma_session) { //error_log('getUserInfo - found session only'); // $userinfo = $cma_session;
 	  		
 	  		$cmauserinfo['userid'] = $cma_session_user_id; // $cma_session_result[0]['user_id'];
 	  		$cmauserinfo['usersession'] = 'S'; // $cma_session_result[0]['user_session'];
@@ -298,18 +324,21 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		$stmt->execute(); 		
 	  		
 	  		
-	  	} else { error_log('getUserInfo - found neither, setting up new object'); //date('Y-m-d H:i:s')   		 
-	  				
-	  		$sql = "INSERT INTO vcn_cma_user
-						(USER_SESSION, USER_SESSION_ID, CREATED_TIME) 
-					VALUES
-	  					('S', :session_id, now())
-	  					";
-	  		
-	  		$stmt = $db->prepare($sql);
-	  		$stmt->bindParam(':session_id', $params['session_id'], PDO::PARAM_STR);		
-	  		$stmt->execute();	
-	  		$lastInsertId = $db->lastInsertId();
+	  	} else { //error_log('getUserInfo - found neither, setting up new object'); //date('Y-m-d H:i:s')   		 
+
+	  		$lastInsertId = 0;
+	  		if(isset($params['is_cma_user_id_required']) && $params['is_cma_user_id_required'] == true) {
+		  		$sql = "INSERT INTO vcn_cma_user
+							(USER_SESSION, USER_SESSION_ID, CREATED_TIME) 
+						VALUES
+		  					('S', :session_id, now())
+		  					";
+		  		
+		  		$stmt = $db->prepare($sql);
+		  		$stmt->bindParam(':session_id', $params['session_id'], PDO::PARAM_STR);		
+		  		$stmt->execute();	
+		  		$lastInsertId = $db->lastInsertId();
+	  		}
 	  		
 	  		$cmauserinfo['userid'] = $lastInsertId; // vcn_cma_user => user_id
 	  		$cmauserinfo['usersession'] = 'S';
@@ -318,6 +347,21 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		$cmauserinfo['firstname'] = '';
 	  		$cmauserinfo['lastname'] = '';
 	  			  		 
+	  	}
+	  	
+	  	// if logged in + provider user + cma user id > 0 (must be for this case), get provider school unitid list
+	  	if($params['drupal_user_id'] > 0 && $cmauserinfo['userid'] > 0 && isset($params['is_provider_user_id_required']) && $params['is_provider_user_id_required'] == true){
+	  		
+	  		$cmauserinfo['providerunitidlist'] = 0;
+	  		$sql = "SELECT GROUP_CONCAT(unitid) as unitidlist FROM vcn_cma_user_provider WHERE user_id = :user_id ";
+	  		$stmt = $db->prepare($sql);
+	  		$stmt->bindParam(':user_id', $cmauserinfo['userid'], PDO::PARAM_STR);
+	  		$stmt->execute();
+	  		$cma_user_provider = $stmt->fetchAll();
+	  		if(isset($cma_user_provider[0]['unitidlist']) && $cma_user_provider[0]['unitidlist'] >= 1) {	  				  			 
+	  			$cmauserinfo['providerunitidlist'] = $cma_user_provider[0]['unitidlist'];
+	  		}
+	  		
 	  	}
 	  
 	  	//error_log('CmaUser Model: ' .print_r($cmauserinfo, true), 3, ini_get('error_log'));
@@ -332,7 +376,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
   	return $this->result;
   }
   
-  private function vcn_user_session_merge($params, $cma_user_id, $cma_session_user_id, $registering_user = false)  {  	error_log("vcn_user_session_merge: ");
+  private function vcn_user_session_merge($params, $cma_user_id, $cma_session_user_id, $registering_user = false)  {  	//error_log("vcn_user_session_merge: ");
   	
   	try {
   		$db = Resources_PdoMysql::getConnection();
@@ -365,7 +409,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 		  				// Update cma_user items item_rank to 0 for specific industry ( session wishlist is having new targeted items for same industry to merge)
 		  				$sql = "UPDATE vcn_cma_user_notebook
 				  			SET item_rank = 0
-				  			WHERE user_id = :cma_user_id AND industry_id = :industry_id "; error_log("Update cma_user items item_rank to 0 for specific industry: ".$cma_user_row['industry_id']);
+				  			WHERE user_id = :cma_user_id AND industry_id = :industry_id "; //error_log("Update cma_user items item_rank to 0 for specific industry: ".$cma_user_row['industry_id']);
 		  				$stmt = $db->prepare($sql);
 		  				$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
 		  				$stmt->bindParam(':industry_id', $cma_user_row['industry_id'], PDO::PARAM_INT);
@@ -381,9 +425,9 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 		  		$sql = "DELETE vcun1 from vcn_cma_user_notebook vcun1 , vcn_cma_user_notebook vcun2
 						where vcun1.ITEM_ID = vcun2.ITEM_ID 
 						AND vcun1.ITEM_TYPE = vcun2.ITEM_TYPE
-						AND vcun1.STFIPS = vcun2.STFIPS
+						AND vcun1.SECONDARY_INFO = vcun2.SECONDARY_INFO
 						AND vcun1.USER_ID = :cma_user_id
-						AND vcun2.USER_ID = :cma_session_user_id ";	error_log("remove all duplicate entry from table for cma_user_id: ");
+						AND vcun2.USER_ID = :cma_session_user_id ";	//error_log("remove all duplicate entry from table for cma_user_id: ");
 		  		$stmt = $db->prepare($sql);
 		  		$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
 		  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
@@ -395,7 +439,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		
 		  		$sql = "UPDATE vcn_cma_user_notebook
 				  			SET user_id = :cma_user_id
-				  			WHERE user_id = :cma_session_user_id "; error_log("Update all cma_session_user_id entry to cma_user_id to merge notebook items: ");
+				  			WHERE user_id = :cma_session_user_id "; //error_log("Update all cma_session_user_id entry to cma_user_id to merge notebook items: ");
 		  		$stmt = $db->prepare($sql);
 		  		$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
 		  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
@@ -410,11 +454,11 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		// #2222.01 remove all duplicate entry from vcn_cma_user_course table for cma_user_id ( duplicate with cma_session_user_id)
 	  		
 		  		$sql = "DELETE vcuc1 from vcn_cma_user_course vcuc1 , vcn_cma_user_course vcuc2
-						where vcuc1.COURSE_ID = vcuc2.COURSE_ID
-						AND vcuc1.COURSE_CODE = vcuc2.COURSE_CODE
+						where (vcuc1.COURSE_ID = vcuc2.COURSE_ID OR (vcuc1.COURSE_ID IS NULL AND vcuc2.COURSE_ID IS NULL))
+						AND (vcuc1.COURSE_CODE = vcuc2.COURSE_CODE OR (vcuc1.COURSE_CODE IS NULL AND vcuc2.COURSE_CODE IS NULL))
 						AND vcuc1.MILITARY_YN = vcuc2.MILITARY_YN
 						AND vcuc1.USER_ID = :cma_user_id
-						AND vcuc2.USER_ID = :cma_session_user_id "; error_log("remove all duplicate entry from vcn_cma_user_course table for cma_user_id: ");
+						AND vcuc2.USER_ID = :cma_session_user_id "; //error_log("remove all duplicate entry from vcn_cma_user_course table for cma_user_id: ");
 		  		$stmt = $db->prepare($sql);
 		  		$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
 		  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
@@ -426,7 +470,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		
 		  		$sql = "UPDATE vcn_cma_user_course
 				  			SET user_id = :cma_user_id
-				  			WHERE user_id = :cma_session_user_id "; error_log("Update all cma_session_user_id entry to cma_user_id to merge courses at vcn_cma_user_course: ");
+				  			WHERE user_id = :cma_session_user_id "; //error_log("Update all cma_session_user_id entry to cma_user_id to merge courses at vcn_cma_user_course: ");
 		  		$stmt = $db->prepare($sql);
 		  		$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
 		  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
@@ -436,24 +480,38 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
   		
   		// #2222 End of Merge all courses from session user to cma user
   		
-  		// #3333 Once, all notebook and course items merged from session to cma user, remove session entry from vcn_cma_user table
+      // #3333 Update assessment_values for cma_user_id with assessment_values from cma_session_user_id
+          
+          $sql = "UPDATE vcn_cma_user u1,
+                         (SELECT * FROM vcn_cma_user WHERE user_id = :cma_session_user_id) u2
+				  			  SET u1.assessment_values = u2.assessment_values
+				  			WHERE u1.user_id = :cma_user_id 
+                AND u2.assessment_values IS NOT NULL "; //error_log("Update all cma_session_user_id entry to cma_user_id to merge assessment values: ");
+		  		$stmt = $db->prepare($sql);
+		  		$stmt->bindParam(':cma_user_id', $cma_user_id, PDO::PARAM_INT);
+		  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
+		  		$stmt->execute();
+        
+     // #3333 END     
+          
+  		// #4444 Once, all notebook and course items merged from session to cma user, remove session entry from vcn_cma_user table
 		if (!$registering_user) { // This condition is copied from old logic, need to confirm, why it's required to delete session entry only if it's not register process.
 	  		$sql = "Delete FROM vcn_cma_user
-			  				WHERE USER_ID = :cma_session_user_id"; error_log("Once, all notebook and course items merged from session to cma user, remove session entry: ");
+			  				WHERE USER_ID = :cma_session_user_id"; //error_log("Once, all notebook and course items merged from session to cma user, remove session entry: ");
 	  		$stmt = $db->prepare($sql);
 	  		$stmt->bindParam(':cma_session_user_id', $cma_session_user_id, PDO::PARAM_INT);
 	  		$stmt->execute();
 		}
-  		// #3333 END
+  		// #4444 END
   		
   		
   	} catch (Exception $e) {
-  		$this->setResult(NULL, $e->getMessage()); error_log(print_r($e, true));
+  		$this->setResult(NULL, $e->getMessage()); error_log(print_r($e, true), 0);
   	}
   	
   }
   
-  public function updateCmaUserInfo($params) {	error_log("updateCmaUserInfo: "); //error_log("params: ".print_r($params, true), 3, ini_get('error_log'));
+  public function updateCmaUserInfo($params) {	//error_log("updateCmaUserInfo: "); //error_log("params: ".print_r($params, true), 3, ini_get('error_log'));
   	 
   	$requiredParams = array('drupal_user_id', 'session_id', 'industry');
   	if (!$this->checkParams($params, $requiredParams)) {
@@ -483,7 +541,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  		$stmt->execute();
 	  		$cma_user_result = $stmt->fetchAll();
 	  		
-	  		if(isset($cma_user_result[0]['user_id']) && $cma_user_result[0]['user_id'] >= 1) { error_log('Update user info with drupal user id entry'); 
+	  		if(isset($cma_user_result[0]['user_id']) && $cma_user_result[0]['user_id'] >= 1) { //error_log('Update user info with drupal user id entry'); 
 	  			$cma_user = true;
 	  			$cma_user_id = $cma_user_result[0]['user_id'];	  			
 	  				
@@ -502,7 +560,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  			$cmauserinfo['firstname'] = $cma_user_result[0]['first_name'];
 	  			$cmauserinfo['lastname'] = $cma_user_result[0]['last_name'];
 	  			
-	  		} else { error_log('create new user entry with drupal user id and return it (in case of new registration)'); // If not there, create new entry and return it (in case of new registration) 
+	  		} else { //error_log('create new user entry with drupal user id and return it (in case of new registration)'); // If not there, create new entry and return it (in case of new registration) 
 	  			$sql = "INSERT INTO vcn_cma_user
 							(USER_SESSION, USER_SESSION_ID, ZIPCODE, CREATED_TIME)
 						VALUES
@@ -541,7 +599,7 @@ class VCN_Model_VCNCmaUser extends VCN_Model_Base_VCNBase {
 	  	}
 	  	
 	  	//$cma_user will be always there, either old or new created at top of function
-	  	if ($cma_session) {	error_log('updateUserInfo - found both, merging');
+	  	if ($cma_session) {	//error_log('updateUserInfo - found both, merging');
 	  		$this->vcn_user_session_merge($params, $cma_user_id, $cma_session_user_id, $registering_user); 
 	  	}
 	  	

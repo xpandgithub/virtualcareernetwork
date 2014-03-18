@@ -62,11 +62,11 @@ You should have received a copy of the GNU General Public License along with thi
 	<div class="industry-home-submain">
 		<div class="industry-home-submain-left">			
 			<div class="industry-home-submain-left-box">
-				<a title="Why Focus on 50+" href="<?php echo $vcn_drupal7_base_path;?>why-industry"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-why-industry.jpg" title="Why Focus on 50+" width="130px" height="130px" class="industry-home-img" alt="Why Focus on 50+ image">
+				<a title="<?php print $whyindustry; ?>" href="<?php echo $vcn_drupal7_base_path;?>why-industry"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-why-industry.jpg" title="<?php print $whyindustry; ?>" width="130px" height="130px" class="industry-home-img" alt="Why Focus on 50+ image">
 				<h4>Why Focus on 50+?</h4></a>				
 			</div>
 			<div class="industry-home-submain-left-box">
-				<a title="New to VCN" href="<?php echo $vcn_drupal7_base_path;?>new-to-vcn"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-new-to-vcn.jpg" title="New to VCN" width="130px" height="130px" class="industry-home-img" alt="New to VCN image">
+				<a title="<?php print $newtovcn; ?>" href="<?php echo $vcn_drupal7_base_path;?>new-to-vcn"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-new-to-vcn.jpg" title="<?php print $newtovcn; ?>" width="130px" height="130px" class="industry-home-img" alt="New to VCN image">
 				<h4>New to VCN?</h4></a>				
 			</div>
 			<div class="allclear"></div>			

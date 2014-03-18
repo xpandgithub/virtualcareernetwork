@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License along with thi
 	<h3 class="vcn-sidebar-tools-header open-tools-box">Prior Learning Tools</h3>
 	<div class="vcn-sidebar-tools-content">
 	 
-	  <!-- <h4><a target="_blank" href="<?php echo vcn_drupal6_base_path();?>learning-inventory-output" title="View My Learning Inventory" id="view-mylearninginventory">View and Print My Learning Inventory <img alt="PDF Icon" src="<?php echo vcn_image_path();?>miscellaneous/pdf.png"></a></h4>
-	  <h4><a target="_blank" href="<?php echo vcn_drupal6_base_path();?>learning-inventory-output?c=1" title="View My Cover Letter" id="view-mycoverletter">View and Print My Cover Letter <img alt="PDF Icon" src="<?php echo vcn_image_path();?>miscellaneous/pdf.png"></a></h4> -->
+	  <!-- <h4><a target="_blank" href="<?php echo vcn_drupal7_base_path();?>learning-inventory-output" title="View My Learning Inventory" id="view-mylearninginventory">View and Print My Learning Inventory <img alt="PDF Icon" src="<?php echo vcn_image_path();?>miscellaneous/pdf.png"></a></h4>
+	  <h4><a target="_blank" href="<?php echo vcn_drupal7_base_path();?>learning-inventory-output?c=1" title="View My Cover Letter" id="view-mycoverletter">View and Print My Cover Letter <img alt="PDF Icon" src="<?php echo vcn_image_path();?>miscellaneous/pdf.png"></a></h4> -->
 		 
 	  <p><a href="<?php echo vcn_drupal7_base_path();?>pla/resources" title="PLA Resources">PLA Resources</a></p>		 
     <br/>

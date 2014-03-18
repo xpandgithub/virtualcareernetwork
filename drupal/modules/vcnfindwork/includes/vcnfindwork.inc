@@ -199,7 +199,7 @@ function vcn_findwork_results_form($form, &$form_state, $additional_parameters) 
  * @param array $params
  * @return array data from API US Jobs for an occupation
  */
-function vcn_findwork_results_get_data_by_onetcode($params, $print_jurl = FALSE) {
+function vcn_findwork_results_get_data_by_onetcode($params, $print_jurl=false, $jobpagemax=500) {
 
 	$laytitles_array = vcn_rest_wrapper('vcnoccupationsvc', 'vcnlaytitle', 'getactivelaytitlesforoccupation',
 			array('onetcode' => $params['onetcode'], 'industry' => vcn_get_industry()), 'json', 'post', false);
@@ -233,7 +233,7 @@ function vcn_findwork_results_get_data_by_onetcode($params, $print_jurl = FALSE)
 		$find_job_query_string .= "&zc1=".$params['zipcode']."&rd1=".$params['distance'];
 	}
 
-	return vcn_get_data_from_apiusjobs($find_job_query_string, $print_jurl);
+	return vcn_get_data_from_apiusjobs($find_job_query_string, $print_jurl, $jobpagemax);
 }
 
 
@@ -242,7 +242,7 @@ function vcn_findwork_results_get_data_by_onetcode($params, $print_jurl = FALSE)
  * @param array $params
  * @return array data from API US Jobs for an occupation
  */
-function vcn_findwork_results_get_data_freetext_search($params, $print_jurl = FALSE) {
+function vcn_findwork_results_get_data_freetext_search($params, $print_jurl=false, $jobpagemax=500) {
 
 	$search_term = $params['search_term'];
 	$search_term = str_replace('~', '/', $search_term);
@@ -255,7 +255,7 @@ function vcn_findwork_results_get_data_freetext_search($params, $print_jurl = FA
 		$find_job_query_string .= "&zc1=".$params['zipcode']."&rd1=".$params['distance'];
 	}
 
-	return vcn_get_data_from_apiusjobs($find_job_query_string, $print_jurl);
+	return vcn_get_data_from_apiusjobs($find_job_query_string, $print_jurl, $jobpagemax);
 }
 
 
@@ -301,14 +301,13 @@ function vcn_prepend_the_word_Title($string, $common_keywords) {
 }
 
 
-function vcn_get_data_from_apiusjobs($query_string, $print_jurl = FALSE) {
+function vcn_get_data_from_apiusjobs($query_string, $print_jurl = FALSE, $jobpagemax=500) {
 
 	$jobpagemin = 1; //copied over from D6, occupations_findwork.tpl.php
-	$jobpagemax = 500; //copied over from D6, occupations_findwork.tpl.php
 
 	$joburl = $GLOBALS['vcn_config_dea_web_service_url'];
 	$joburl .= '?kw='.$query_string;
-	$joburl .= "&rs=".$jobpagemin."&re=".$jobpagemax."&cn=100&tm=30&key=".$GLOBALS['vcn_config_dea_web_service_key'];
+	$joburl .= "&rs=".$jobpagemin."&re=".$jobpagemax."&cn=100&tm=60&key=".$GLOBALS['vcn_config_dea_web_service_key'];
 
 	global $user;
 
@@ -361,9 +360,10 @@ function vcn_get_data_from_apiusjobs($query_string, $print_jurl = FALSE) {
 function vcn_findwork_results_feedback($params) {
 	// Ref table vcn_comment to figure out the parameters we need to construct here
 
-	$params['vcn_user_id'] = isset($GLOBALS['vcn_user_id']) ? $GLOBALS['vcn_user_id'] : null;
-	$params['vcn_user_email'] = ($GLOBALS['is_user_logged_in'] === true) ? (isset($GLOBALS['vcn_user_email']) ? $GLOBALS['vcn_user_email'] : 'no-email') : 'anonymous-user';
-	$params['vcn_user_drupal_email'] = ($GLOBALS['is_user_logged_in'] === true) ? (isset($GLOBALS['drupal_mail']) ? $GLOBALS['drupal_mail'] : 'no-email') : 'anonymous-user';
+	global $user_info;
+	
+	$params['vcn_user_id'] = (isset($user_info['vcn_user_id']) && $user_info['vcn_user_id'] > 0) ? $user_info['vcn_user_id'] : null;
+	$params['vcn_user_drupal_email'] = ($user_info['is_user_logged_in'] === true) ? ((isset($user_info['mail']) && $user_info['mail'] != "") ? $user_info['mail'] : 'no-email') : 'anonymous-user';
 
 	if (isset($params['search_term'])) {
 		$data = vcn_findwork_results_get_data_freetext_search($params, FALSE);

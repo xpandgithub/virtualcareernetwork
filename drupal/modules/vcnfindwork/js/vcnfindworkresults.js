@@ -29,7 +29,6 @@ You should have received a copy of the GNU General Public License along with thi
 				"bLengthChange": false,
 				"bDeferRender": true,
 				"aaData": aaData,
-				"aaSorting": [[ 2, "asc" ]],
 				"bAutoWidth": false,
 				"aoColumns": [
 				              {"sWidth": "40%", "mData":"job_title"}, 
@@ -37,6 +36,7 @@ You should have received a copy of the GNU General Public License along with thi
 				              {"sWidth": "20%", "mData": "location"}, 
 				              {"sWidth": "5%", "mData":"date_acquired", "sType": "date"}
 				             ],
+				"aaSorting": [[3, "desc"]],
 				"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
 					$('td:eq(0)', nRow).html('<a target="_blank" href="'+aData.job_url+'">'+aData.job_title+'</a>');
 

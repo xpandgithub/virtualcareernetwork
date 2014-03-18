@@ -58,7 +58,6 @@ You should have received a copy of the GNU General Public License along with thi
 	        		   }	        		   
 	        		   
 	        		   job_search_title = aData.industry_name+' Career: <span class="strong">'+ aData.title + '</span>';
-	        		   jobsbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-jobscouts-jobs vcn-button grid-action-button" name="'+jobslink+'" />';
 						
 	        	   } else {	        		   
 	        		   jobslink = basepath+'findwork-results/search-term/'+ aData.keyword_url;
@@ -70,9 +69,14 @@ You should have received a copy of the GNU General Public License along with thi
 	        		   }
 	        		   	        		   
 	        		   job_search_title = 'Job Search keyword: <span class="strong">'+ aData.keyword + '</span>';
-	        		   jobsbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-jobscouts-jobs vcn-button grid-action-button" name="'+jobslink+'" />';
 	        	   }
 	        	   
+                           if (councelor_viewing_student_data) {
+                             jobsbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-jobscouts-jobs vcn-button grid-action-button vcn-button-disable" name="'+jobslink+'" />';
+                           } else {
+                             jobsbutton = '<input type="button" title="Jobs" value="Jobs" class="cma-jobscouts-jobs vcn-button grid-action-button" name="'+jobslink+'" />';
+                           }
+                           
 	        	   var zipcode = '';
 	        	   if (aData.zipcode) {
 	        		   zipcode = aData.zipcode;
@@ -105,8 +109,13 @@ You should have received a copy of the GNU General Public License along with thi
 			});
 			
 			$('#cma-job-scouts-listing .cma-jobscouts-jobs').live('click', function(e) {
+                          
+                          var btnflag = $(this).hasClass("vcn-button-disable");
+				
+			  if(btnflag == false) {
 				var jobsurl = $(this).attr("name");
-				document.location.href = jobsurl;							
+				document.location.href = jobsurl;
+                          }
 			});
 			
 			$('#cma-job-scouts-listing input.cma-delete-this-row').live('click', function(e) {

@@ -68,12 +68,13 @@ class VCN_Model_VCNOnetAssessment extends VCN_Model_Base_VCNBase {
       
       $db = Resources_PdoMysql::getConnection();
 
-      $sql = " SELECT DISTINCT vooa.*, o.career_image_yn, o.display_title, o.detailed_description
+      $sql = " SELECT DISTINCT vooa.*, o.career_image_yn, o.display_title, o.detailed_description, oxi.industry_id
                FROM vcn_occupation_onet_assessment vooa
-               JOIN vcn_occupation o ON o.onetcode = vooa.onetcode 
-               JOIN vcn_occupation_industry oxi ON oxi.onetcode = o.onetcode
-               WHERE oxi.industry_id = :industry
+               LEFT JOIN vcn_occupation o ON o.onetcode = vooa.onetcode 
+               Left JOIN vcn_occupation_industry oxi ON oxi.onetcode = o.onetcode              
                ORDER BY o.onetcode ";
+      
+      // WHERE oxi.industry_id = :industry
 
       $binds = array(':industry' => $params['industry']);
 
@@ -88,6 +89,7 @@ class VCN_Model_VCNOnetAssessment extends VCN_Model_Base_VCNBase {
         $detailedDescriptionArr = explode('.', $row['detailed_description']);
 
         $detailsArr = array(
+        	'industryid' => $row['industry_id'],
             'careerimageyn' => $row['career_image_yn'],
             'title' => $row['display_title'],
             'description' => $detailedDescriptionArr[0],
@@ -121,7 +123,7 @@ class VCN_Model_VCNOnetAssessment extends VCN_Model_Base_VCNBase {
                           pow(($params['social'] - $userMean), 2) +
                           pow(($params['enterprising'] - $userMean), 2) +
                           pow(($params['conventional'] - $userMean), 2)) / 5);
-
+      
       foreach ($oNetCareersArray as $key => $valueArr) {
         // calculate out the mean and standard deviation of each O*Net career
         $oNetMean = ($valueArr['scores']['realistic'] +
@@ -157,6 +159,7 @@ class VCN_Model_VCNOnetAssessment extends VCN_Model_Base_VCNBase {
                       'title' => $oNetCareersArray[$key]['title'],
                       'description' => $oNetCareersArray[$key]['description'],
                       'coefficient' => $correlationCoefficient,
+            		  'industry' => $oNetCareersArray[$key]['industryid'],
             );
 
             $correlationCoefficientsArr[] = $infoArr;
@@ -167,14 +170,32 @@ class VCN_Model_VCNOnetAssessment extends VCN_Model_Base_VCNBase {
       // Sort the array from largest to smallest coefficient
       usort($correlationCoefficientsArr, array("VCN_Model_VCNOnetAssessment", "sortByCorrelationCoefficient"));
 
-      $finalCorrelationCoefficientsArr = array();
+      $finalCorrelationCoefficientsArr_industry = array();
+      $finalCorrelationCoefficientsArr_other = array();
       for ($i = 0; $i < count($correlationCoefficientsArr); $i++) {
-        $finalCorrelationCoefficientsArr[] = $correlationCoefficientsArr[$i];
-        if (isset($params['limit']) && $i > $params['limit'] - 2) {
-          break;
-        }
+      	
+      	if (isset($params['limit']) && count($finalCorrelationCoefficientsArr_industry) >= $params['limit'] && count($finalCorrelationCoefficientsArr_other) >= $params['limit']) {
+      		break;
+      	} else {
+	      if($correlationCoefficientsArr[$i]['industry'] > 0 && $correlationCoefficientsArr[$i]['industry'] == $params['industry']) {
+	      	if(isset($params['limit']) && count($finalCorrelationCoefficientsArr_industry) >= $params['limit'] ) {	
+	      		continue;      		
+	      	} 
+	      	$correlationCoefficientsArr[$i]['rank'] = $i+1;
+	      	$finalCorrelationCoefficientsArr_industry[] = $correlationCoefficientsArr[$i];
+	      }else {
+	      	if(isset($params['limit']) && count($finalCorrelationCoefficientsArr_other) >= $params['limit'] ) {
+	      		continue;
+	      	}
+	      	$correlationCoefficientsArr[$i]['rank'] = $i+1;
+	      	$finalCorrelationCoefficientsArr_other[] = $correlationCoefficientsArr[$i];      	
+	      }        
+      	}
       }
 
+      $finalCorrelationCoefficientsArr = array("finalCorrelationCoefficientsArr_industry" => $finalCorrelationCoefficientsArr_industry,
+      										   "finalCorrelationCoefficientsArr_other" => $finalCorrelationCoefficientsArr_other);
+      
       $data = $finalCorrelationCoefficientsArr;
 
       $this->setResult($data);  

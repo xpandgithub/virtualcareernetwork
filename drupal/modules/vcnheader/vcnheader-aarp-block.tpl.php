@@ -24,11 +24,9 @@ global $user;
 if (isset($_GET['debug']) && strlen($_GET['debug']) && array_search("administrator", $user->roles) == true) {  // Values to be display via browser view source for debugging ?><!--
 is_provider_user=<?php echo $is_provider_user_text; ?>;
 vcn_user_id=<?php echo $vcn_user_id; ?>;
-d6_user_id=<?php echo $d6_user_id; ?>;
-d6_user_name=<?php echo $d6_user_name; ?>;
-vcn_notebook_item_count=<?php echo $vcn_notebook_item_count; ?>;
+drupal_user_id=<?php echo $drupal_user_id; ?>;
+drupal_user_name=<?php echo $drupal_user_name; ?>;
 is_logged_in_user=<?php echo $is_logged_in_user_text; ?>;
-has_notebook_items=<?php echo $has_notebook_items_text; ?>;
 logged_in_user_default_zipcode=<?php echo $logged_in_user_default_zipcode; ?>;
 vcn_config_php_server_name=<?php echo $vcn_config_php_server_name; ?>;
 current_drupal_version=<?php echo $current_drupal_version; ?>;
@@ -46,12 +44,12 @@ if (vcn_header_footer_should_display()) {
 	  			<div id="vcn-header-welcome-links" class="noresize">
 		      	  <?php if (!$is_logged_in_user) { ?>	        
 		      	    <a title="MyVCN" class="my-vcn-link-off" href="#">MyVCN</a>
-		            <a title="Sign In" href="<?php echo vcn_drupal6_base_path(); ?>user">Sign In</a> 
+		            <a title="Sign In" href="<?php echo vcn_drupal7_base_path(); ?>user">Sign In</a> 
 		            <a title="Zoom Page" id="zoompage" href="javascript:void(0);"><span class="font-smaller noresize">A</span>A<span class="font-larger noresize">A</span></a> 
 		          <?php }else{ ?>                
 		            <span class="welcome-message noresize"><?php print $welcome_message; ?></span>
 		            <a title="MyVCN" href="<?php echo vcn_drupal7_base_path(); ?>cma/career-wishlist/my-vcn" >MyVCN</a>
-		            <a title="Sign Out" class="vcn-sign-out" href="<?php echo vcn_drupal6_base_path(); ?>logout">Sign Out</a> 
+		            <a title="Sign Out" class="vcn-sign-out" href="<?php echo vcn_drupal7_base_path(); ?>user/logout">Sign Out</a> 
 		            <a title="Zoom Page" id="zoompage" href="javascript:void(0);"><span class="font-smaller noresize">A</span>A<span class="font-larger noresize">A</span></a>           
 			      <?php } ?>	      	
 			    </div>	  			

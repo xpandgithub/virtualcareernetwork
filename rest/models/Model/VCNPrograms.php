@@ -53,7 +53,6 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 				
 			//columns
 			$columns = "p.awlevel AS award_level,
-								p.program_code AS program_code,
 								pc.program_id AS program_id,
 								c.ciptitle AS ciptitle,
 								c.cipcode AS cipcode,
@@ -270,13 +269,13 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 	
 			$db = Resources_PdoMysql::getConnection();
 	
-      $binds = array(
+      		$binds = array(
 					':programid' => $params['programid'],
 					':cipcode' => $params['cipcode'],
 			);
-
-			$sql = "SELECT v.awlevel AS awlevel,
-						v.awards_desc as awdesc,
+      		
+			
+			$sql = "SELECT v.awlevel AS awlevel,						
 						v.other_cost AS othercost,
 						v.other_req AS otherrequirements,
 						v.how_to_apply AS howtoapply,					
@@ -294,9 +293,13 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
             			v.program_url_flag AS programurlflag,
 						v.admission_url AS admissionurl,
             			v.admission_url_flag AS admissionurlflag,
-						v.status AS status,
-						v.total_courses AS totalcourses,
-						v.total_credits AS totalcredits,						
+						v.status AS status,						
+						v.total_credits AS totalcredits,	
+						v.tuition_in_state_in_district AS tuitioninstateindistrict,
+						v.tuition_in_state_out_district AS tuitioninstateoutdistrict,		
+						v.tuition_online AS tuitiononline,
+						v.tuition_out_state AS tuitionoutstate,	
+						v.online AS online,					
 						i.iped_category_name AS ipedcatname,
 						e.education_category_name AS ipedsdesc,
 						v.duration AS duration,
@@ -616,8 +619,8 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 				
 			if($params['task'] == "add") {
 				$sql = "INSERT INTO vcn_program 
-						(created_by,created_time,unitid,program_name,awlevel,duration,program_url,program_description,program_contact_name,program_contact_email,program_contact_phone) 
-					    VALUES (:updatedby,Now(),:unitid,:programname,:awlevel,:programlength,:programurl,:programdesc,:programcontactname,:programcontactemail,:programcontactphone)";
+						(created_by,created_time,unitid,program_name,awlevel,total_credits,duration,program_url,program_description,program_contact_name,program_contact_email,program_contact_phone,other_req,how_to_apply,medical_req,immunization_req,legal_req,hs_grad_req,min_gpa,ged_accepted,tuition_in_state_in_district,tuition_in_state_out_district,tuition_online,tuition_out_state,other_cost,admission_url) 
+					    VALUES (:updatedby,Now(),:unitid,:programname,:awlevel,:totalcredits,:programlength,:programurl,:programdesc,:programcontactname,:programcontactemail,:programcontactphone,:programotherrequirements,:programhowtoapply,:programmedicalreq,:programimmunizationreq,:programlegalreq,:programhsgradreq,:programmingpa,:programgedaccepted,:programtuitioninstateindistrict,:programtuitioninstateoutdistrict,:programtuitiononline,:programtuitionoutstate,:programothercost,:programadmissionurl)";
 			
 					
 				$stmt = $db->prepare($sql);
@@ -626,13 +629,28 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 				$stmt->bindParam(':unitid', $params['unitid'], PDO::PARAM_INT);				
 				$stmt->bindParam(':programname', $params['programname'], PDO::PARAM_STR);		
 				$stmt->bindParam(':awlevel', $params['awlevel'], PDO::PARAM_INT);
+				$stmt->bindParam(':totalcredits', $params['totalcredits'], PDO::PARAM_STR);
 				$stmt->bindParam(':programlength', $params['programlength'], PDO::PARAM_STR);
 				$stmt->bindParam(':programurl', $params['programurl'], PDO::PARAM_STR);
 				$stmt->bindParam(':programdesc', $params['programdesc'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactname', $params['programcontactname'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactemail', $params['programcontactemail'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactphone', $params['programcontactphone'], PDO::PARAM_STR);
-					
+				$stmt->bindParam(':programotherrequirements', $params['programotherrequirements'], PDO::PARAM_STR);
+				$stmt->bindParam(':programhowtoapply', $params['programhowtoapply'], PDO::PARAM_STR);
+				$stmt->bindParam(':programmedicalreq', $params['programmedicalreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programimmunizationreq', $params['programimmunizationreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programlegalreq', $params['programlegalreq'], PDO::PARAM_STR);				
+				$stmt->bindParam(':programhsgradreq', $params['programhsgradreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programmingpa', $params['programmingpa'], PDO::PARAM_STR);
+				$stmt->bindParam(':programgedaccepted', $params['programgedaccepted'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitioninstateindistrict', $params['programtuitioninstateindistrict'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitioninstateoutdistrict', $params['programtuitioninstateoutdistrict'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitiononline', $params['programtuitiononline'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitionoutstate', $params['programtuitionoutstate'], PDO::PARAM_STR);
+				$stmt->bindParam(':programothercost', $params['programothercost'], PDO::PARAM_STR);
+				$stmt->bindParam(':programadmissionurl', $params['programadmissionurl'], PDO::PARAM_STR);
+
 				$stmt->execute();
 					
 				$programid = $db->lastInsertId();				
@@ -653,22 +671,43 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 				
 				$sql = "UPDATE vcn_program
 							SET updated_by = :updatedby, updated_time = Now(),					
-								program_name = :programname, awlevel = :awlevel, duration = :programlength, 
+								program_name = :programname, awlevel = :awlevel, total_credits = :totalcredits, duration = :programlength, 
 								program_url = :programurl, program_description = :programdesc, program_contact_name = :programcontactname, 
-								program_contact_email = :programcontactemail, program_contact_phone = :programcontactphone
+								program_contact_email = :programcontactemail, program_contact_phone = :programcontactphone, other_req = :programotherrequirements,
+								how_to_apply = :programhowtoapply, medical_req = :programmedicalreq, 
+								immunization_req = :programimmunizationreq, legal_req = :programlegalreq, 
+								hs_grad_req = :programhsgradreq, min_gpa = :programmingpa, ged_accepted = :programgedaccepted, 
+								tuition_in_state_in_district = :programtuitioninstateindistrict, tuition_in_state_out_district = :programtuitioninstateoutdistrict, 
+								tuition_online = :programtuitiononline, tuition_out_state = :programtuitionoutstate, other_cost = :programothercost,
+								admission_url = :programadmissionurl
 						  WHERE program_id =:programid ";			
 					
 				$stmt = $db->prepare($sql);
-					
+													
 				$stmt->bindParam(':updatedby', $params['updatedby'], PDO::PARAM_INT);
 				$stmt->bindParam(':programname', $params['programname'], PDO::PARAM_STR);		
 				$stmt->bindParam(':awlevel', $params['awlevel'], PDO::PARAM_INT);
+				$stmt->bindParam(':totalcredits', $params['totalcredits'], PDO::PARAM_STR);
 				$stmt->bindParam(':programlength', $params['programlength'], PDO::PARAM_STR);
 				$stmt->bindParam(':programurl', $params['programurl'], PDO::PARAM_STR);
 				$stmt->bindParam(':programdesc', $params['programdesc'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactname', $params['programcontactname'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactemail', $params['programcontactemail'], PDO::PARAM_STR);
 				$stmt->bindParam(':programcontactphone', $params['programcontactphone'], PDO::PARAM_STR);
+				$stmt->bindParam(':programotherrequirements', $params['programotherrequirements'], PDO::PARAM_STR);
+				$stmt->bindParam(':programhowtoapply', $params['programhowtoapply'], PDO::PARAM_STR);
+				$stmt->bindParam(':programmedicalreq', $params['programmedicalreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programimmunizationreq', $params['programimmunizationreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programlegalreq', $params['programlegalreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programhsgradreq', $params['programhsgradreq'], PDO::PARAM_STR);
+				$stmt->bindParam(':programmingpa', $params['programmingpa'], PDO::PARAM_STR);
+				$stmt->bindParam(':programgedaccepted', $params['programgedaccepted'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitioninstateindistrict', $params['programtuitioninstateindistrict'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitioninstateoutdistrict', $params['programtuitioninstateoutdistrict'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitiononline', $params['programtuitiononline'], PDO::PARAM_STR);
+				$stmt->bindParam(':programtuitionoutstate', $params['programtuitionoutstate'], PDO::PARAM_STR);
+				$stmt->bindParam(':programothercost', $params['programothercost'], PDO::PARAM_STR);
+				$stmt->bindParam(':programadmissionurl', $params['programadmissionurl'], PDO::PARAM_STR);
 				$stmt->bindParam(':programid', $programid, PDO::PARAM_INT);
 					
 				$stmt->execute();
@@ -690,6 +729,8 @@ class VCN_Model_VCNPrograms extends VCN_Model_Base_VCNBase {
 	
 		} catch (Exception $e) {
 			$this->setResult(NULL, $e->getMessage());
+			//error_log(print_r($params, true), 3, ini_get('error_log'));
+			error_log($e, 3, ini_get('error_log'));					
 		}
 	
 		return $this->result;

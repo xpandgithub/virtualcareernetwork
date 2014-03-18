@@ -54,8 +54,7 @@ function vcn_import_occupations() {
       $blob = $career->title . PHP_EOL . PHP_EOL .
               $career->dayinlife . PHP_EOL . PHP_EOL .
               $career->academicreq . PHP_EOL . PHP_EOL .
-              $career->physicalreq . PHP_EOL . PHP_EOL .
-              $career->healthreq . PHP_EOL . PHP_EOL .
+              $career->physicalhealthreq . PHP_EOL . PHP_EOL .              
               $career->detaileddesc . PHP_EOL . PHP_EOL .
               $laytitles;
       

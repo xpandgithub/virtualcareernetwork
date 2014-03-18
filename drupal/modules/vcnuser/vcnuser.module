@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with thi
 // The VCNUser module is intended to operate as a singleton global object, with the following
 // public interfaces:
 //
-// To get user data:
+// To get user data: functions are at vcnuser.inc
 //   vcnuser_get_zip()
 //   vnuser_get_distance()
 //   vcnuser_get_st() 
@@ -42,252 +42,151 @@ function vcnuser_help($path, $arg) {
   }
 }
 
-/** 
- * User Object
+/**
+ * Implements hook_user_view().
+ * redirect users from drupal default user view page to cma profile page
  */
-class VCNUser {
-   private $url_zip = null;
-   private $url_onetcode = null;
-   private $url_distance = null;
-   private $url_st = null;
-   private $url_awlevel = null;
-   
-   private $session_zip = null;
-   private $session_onetcode = null;
-   private $session_distance = null;
-   private $session_st = null;
-   private $session_awlevel = null;
-   
-   private $cma_zip = null;
-   private $cma_onetcode = null;
-   private $cma_distance = null;
-   private $cma_st = null;
-   private $cma_awlevel = null;
-   
-   // store REST data for occupation and education levels to avoid
-   // repeat REST calls for form display and edit
-   
-   private $occupation_list;
-   private $education_levels_list;
-   private $distance_options = array(5 => "5 miles", 
-	                     15 => "15 miles", 
-				    			     25 => "25 miles", 
-							         50 => "50 miles", 
-							         100 => "100 miles", 
-							         250 => "250 miles", 
-							         500 => "500 miles");
-   
-   // default values 
-   private $default_distance;
-   
-   function __construct() {
-   	 	
-   		// gather reference data needed for forms
-	   	$params = array('industry' => $GLOBALS['vcn_config_default_industry_id']);
-	   	$this->occupation_list = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'listcareers', $params);
-	   	//don't want to show education level less than high school, hence using no_less_than_hs flag
-	   	$this->education_levels_list = vcn_rest_wrapper('vcnlookupsvc', 'vcnlookup', 'get-education-category', array('industry' => $GLOBALS['vcn_config_default_industry_id'], 'no_less_than_hs' => TRUE));
-	   
-	   	$this->set_default_distance($GLOBALS['default_distance']); // default distance is 25 miles
-	   	
-	   	if (empty($GLOBALS['vcn_user_id']) || !isset($GLOBALS['vcn_user_id'])) {
-	   		$is_user_id_set = false;
-	   	} else {
-	   		$is_user_id_set = true;
-	   	}
-	   	
-	   	if (!isset($_SESSION['vcnuser_onetcode']) && ($is_user_id_set)) { //if no carrer is selected by user, pull the targeted career from CMA if exists, and later set it to session in function get_onetcode()
-	   		$get_targeted_career_data = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-targeted-career', array('user_id' => $GLOBALS['vcn_user_id'], 'industry' => $GLOBALS['vcn_config_default_industry_id']), 'xml', 'post', false);
-	   		$targeted_career = isset($get_targeted_career_data->item) ? (string)$get_targeted_career_data->item->itemid[0] : NULL;
-	   		$this->cma_onetcode = $targeted_career;
-	   	}
-   
-   }
-   
-   public function get_zip() {
-     if (!empty($this->url_zip)) {
-     	// sync session value to url value
-	   vcnuser_set_zip_cookie($this->url_zip);
-	   return $this->url_zip;
-	 } else if (!empty($this->session_zip)) {
-	 	if ($this->session_zip == 'cleared' || !is_numeric($this->session_zip)) {
-	 		return null;
-	 	}
-	   return $this->session_zip;
-	 } else if (!empty($this->cma_zip)) {
-	   return $this->cma_zip;
-	 } else {
-	   return null;
-	 }
-   }
-   
-   public function get_onetcode() {
-     if (!empty($this->url_onetcode)) {
-	   // sync session value to url value
-		   vcnuser_set_onetcode_session($this->url_onetcode);
-		   return $this->url_onetcode;
-		 } else if (!empty($this->session_onetcode)) {
-		   return $this->session_onetcode;
-		 } else if (!empty($this->cma_onetcode)) { //defined in the __construct
-		 		return $this->cma_onetcode;
-		 } else {
-		   return null;
-		 }
-   }
-   
-   public function get_distance() {
-     if (!empty($this->url_distance)) {
-	   // sync session value to url value
-	   vcnuser_set_distance_cookie($this->url_distance);
-	   return $this->url_distance;
-	 } else if (!empty($this->session_distance)) {
-	   return $this->session_distance;
-	 } else if (!empty($this->cma_distance)) {
-	   return $this->cma_distance;
-	 } else {
-	   return $this->default_distance;
-	 }
-   }
-   
-	public function get_awlevel() {
-   	if (!empty($this->url_awlevel)) { // sync session value to url value
-   		vcnuser_set_awlevel_cookie($this->url_awlevel);
-   		return $this->url_awlevel;
-   	} else if (!empty($this->session_awlevel)) {
-   		return $this->session_awlevel;
-   	} else if (!empty($this->cma_awlevel)) {
-   		return $this->cma_awlevel;
-   	} else {
-   		//return null;
-   		$onetcode = $this->get_onetcode();
-   		if (!empty($onetcode)) {
-   			/*$max_education_array = vcn_calculate_max_edu_for_career($onetcode, FALSE);
-   			vcnuser_set_awlevel_cookie($max_education_array['max_education_id']);
-   			return $max_education_array['max_education_id'];*/
-   			
-   			$all_education_id = vcn_get_all_education_id();
-   			vcnuser_set_awlevel_cookie($all_education_id);
-   			return $all_education_id;
-   			
-   		} else {
-   			return null;
-   		}
-   	}
-  }
-   
-   public function get_zip_st() {
-     $zip = $this->get_zip();
-	 if (!empty($zip)) {
-	   return vcnStateUtil::getStateAbbrevFromZip($zip);
-     } else {
-	   return null;
-	 }
-   }
-   
-   public function get_st() {
-     //if (!empty($this->url_st)) {
-	 //  return $this->url_st;
-	 //} else if (!empty($this->session_st)) {
-	 //  return $this->session_st;
-	 //} else if (!empty($this->cma_st)) {
-	 //  return $this->cma_st;
-	 //} else {
-	 return $this->get_zip_st();
-	 //}
-   }
-    
-   public function get_url_zip() {
-     return $this->url_zip;
-   }
-   
-   public function set_url_zip($zip) {
-     $this->url_zip = $zip;
-   }
-   
-   public function set_url_distance($distance) {
-     $this->url_distance = $distance;
-   }
-   
-//   public function set_url_st($st) {
-//     $this->url_st = $st;
-//   }
-   
-   public function set_url_onetcode($onetcode) {
-     $this->url_onetcode = $onetcode;
-   }
-   
-   public function set_url_awlevel($awlevel) {
-     $this->url_awlevel = $awlevel;
-   }
-   
-   public function set_session_zip($zip) {
-     $this->session_zip = $zip;
-   }
-   
-   public function set_session_distance($distance) {
-     $this->session_distance = $distance;
-   }
-   
-//   public function set_session_st($st) {
-//     $this->session_st = $st;
-//   }
-   
-   public function set_session_onetcode($onetcode) {
-     $this->session_onetcode = $onetcode;
-   }
-   
-   public function set_session_awlevel($awlevel) {
-     $this->session_awlevel = $awlevel;
-   }
-   
-   public function set_cma_zip($zip) {
-     $this->cma_zip = $zip;
-   }
-   
-   public function get_session_zip() {
-     return $this->session_zip;
-   }
-   
-   public function get_session_distance() {
-     return $this->session_distance;
-   }
-   
-   public function get_session_st() {
-     return $this->session_st;
-   }
-   
-   public function get_session_onetcode() {
-     return $this->session_onetcode;
-   }
-   
-   public function get_session_awlevel() {
-     return $this->session_awlevel;
-   }
-   
-   public function get_occupation_list() {
-     return $this->occupation_list;
-   }
-   
-   public function get_education_levels_list() {
-     return $this->education_levels_list;
-   }
-   
-   public function get_distance_options() {
-     return $this->distance_options;
-   }
-   
-   public function set_default_distance($default_distance) {
-   		$this->default_distance = $default_distance;
-   }
+function vcnuser_user_view($account, $view_mode, $langcode) {
+	drupal_goto("cma/profile");
 }
 
 /**
- * create global user object with all URL, session and CMA user values
+ * implements hook_init to initialize global user object
+ */
+
+function vcnuser_init() {
+	
+	module_load_include('inc', 'vcnuser', 'includes/vcnuser.class'); // vcnuser class file must be included to create user object with vcnuser_get_user_values() function
+	module_load_include('inc', 'vcnuser', 'includes/vcnuser'); // Public functions to get User url/session/cma values through out site 
+	
+	vcnuser_get_user_info(); // Manage user session and get user basic info including drupal uid, cma user id, user name, cma first/last name, provider id...
+	vcnuser_get_user_values(); // User url/session/cma values for zipcode, education level, aw level, onetcode, distance
+}
+
+/**
+ * User global variables/object for user basic info including drupal uid, cma user id, user name, cma first/last name, provider id...
+ * Need to change name of some variables once logic is working fine.
+ */
+function vcnuser_get_user_info() {
+
+	global $user;
+
+	// Check if current session id is same as old one, if not reset entry of cma user table
+	// Only happens when user does login/register //session id gets change.
+	$session_id = session_id(); 
+	if (isset($_SESSION['old_session_id'])) {
+		if ($_SESSION['old_session_id'] != $session_id) {
+			// Reset session id in cma user table
+			vcnuser_reset_session_id();
+		}
+	}
+	$_SESSION['old_session_id'] = $session_id;
+
+	//set globals
+	global $user_info; // Use this variable instead of individual global variables.
+	$user_info = array();
+
+	$user_info['session_id'] = $session_id; // Current user session id // for logged in user $user->sid; //drupal_session_start(); //drupal_session_generate(); //drupal_session_regenerate();
+
+	$user_info['uid'] = isset($user->uid) ? $user->uid : 0; // Drupal user id
+
+  $user_info['drupal_username'] = isset($user->name) ? $user->name : "";  // set the drupal username 
+  
+	$user_info['name'] = isset($user->name) ? $user->name : ""; // Update name with vcn user "firstname" if available
+
+	$user_info['vcn_user_name'] = isset($user->name) ? $user->name : ""; // Update vcn_user_name with vcn user "firstname lastname"
+
+	$user_info['is_drupal_username'] = true; // ser as per name value // flag to indicate if username ($user_info['name']) is coming from Drupal (username) or CMA (firstname)
+
+	$user_info['user_roles'] = isset($user->roles) ? $user->roles : array(); // drupal user roles array
+
+	$user_info['mail'] = isset($user->mail) ? $user->mail : NULL; // drupal user email id
+
+	$user_info['vcn_user_id'] = $GLOBALS['vcn_user_id'] = 0; // cma user id update along with cma values : available for both logged in and anonymous user
+
+	$user_info['is_user_logged_in'] = $GLOBALS['is_user_logged_in'] = (isset($user->uid) && $user->uid > 0) ? true : false; // check either global d7 user object to get user role or uid. if uid = 0, it's non logged in user.
+
+	$user_info['user_provider_id'] = 0; // Provider id // cma user table join with cma provider table to find out if user is provider or not
+
+	$user_info['logged_in_user_default_zipcode'] = NULL; // upadate with cma user zipcode
+
+	// Get cma user info if any
+	// set/update variables ($username, $name, $is_drupal_username, $cma_uid, $user_provider_id, $logged_in_user_default_zipcode) as per result.
+	// Most of info we need for logged in user only, but cma_uid/vcn_user_id is needed for anonymous users too at most of module pages for navigation or cma listing. 
+	vcnuser_get_user_cma_info();
+	
+	// get drupal destination as referral and set it to session for any future bounceback/redirect. Used for login/register-autologin at hook_user_login
+	$drupal_referral_destination = drupal_get_destination();	
+	if(strpos($drupal_referral_destination["destination"], "user") === false && !((!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest'))) { // Skip AJAX request // skip user login/register/forgot-password and any other core drupal user pages.
+		$_SESSION['drupal_referral_destination'] = $drupal_referral_destination["destination"];
+	}
+	
+}
+
+/**
+ *  Reset session id in cma user table 
+ *  Only happens when user does login/register and session id gets change with that
+ */
+function vcnuser_reset_session_id() {
+
+	$params = array('old_session_id' => $_SESSION['old_session_id'], 'session_id' => session_id(), 'industry' => vcn_get_industry() ); 
+	$result = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'reset-session-id', $params, 'xml', 'post', false);
+	
+	if(isset($result) && (string)$result->status != "success" && display_debug_detail()){
+		error_log ("Unable to migrate session to logged in user");
+		drupal_set_message('Unable to migrate session to logged in user.');
+	} 
+}
+
+/**
+ * Get cma user info if any
+ * set/update gloabl variables/object (name, vcn_user_name, is_drupal_username, vcn_user_id/cma_uid, user_provider_id, logged_in_user_default_zipcode) as per result.
+ */
+function vcnuser_get_user_cma_info($is_cma_user_id_required = false) {
+
+	global $user_info;
+
+	$is_provider_user_id_required = in_array("provider", $user_info['user_roles']) ? true : false ;
+
+	// Get cma user info if any
+	// set/update variables ($username, $name, $is_drupal_username, $cma_uid, $user_provider_id, $logged_in_user_default_zipcode) as per result.
+	$params = array('drupal_user_id' => $user_info['uid'], 'session_id' => $user_info['session_id'], 'industry' => vcn_get_industry(),
+					 'is_cma_user_id_required' => $is_cma_user_id_required,
+					 'is_provider_user_id_required' => $is_provider_user_id_required );
+	$userdata = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-cma-user-info', $params, 'xml', 'post', false);
+	 
+	$user_info['vcn_user_id'] = $GLOBALS['vcn_user_id'] = (int)$userdata->userinfo->userid;
+			
+	if($user_info['uid'] > 0) {
+	
+		if((string)$userdata->userinfo->firstname != "") {
+			$user_info['name'] = vcn_custom_aes_decrypt((string)$userdata->userinfo->firstname);
+			$user_info['is_drupal_username'] = false;
+			$user_info['vcn_user_name'] = vcn_custom_aes_decrypt((string)$userdata->userinfo->firstname)." ".vcn_custom_aes_decrypt((string)$userdata->userinfo->lastname);
+		}
+		$user_info['vcn_user_first_name'] = vcn_custom_aes_decrypt((string)$userdata->userinfo->firstname);
+		$user_info['vcn_user_last_name'] = vcn_custom_aes_decrypt((string)$userdata->userinfo->lastname);		
+				
+		if($is_provider_user_id_required){
+			$user_info['user_provider_id'] = $userdata->userinfo->providerunitidlist; // Comma seperated list if more than one
+		}
+				
+		$user_info['logged_in_user_default_zipcode'] = (int)$userdata->userinfo->zipcode;
+	}
+			
+}
+
+/**
+ * create global user object with all URL, session and CMA user values of VCNUser class
  */ 
  
 $vcnuser = new stdClass();
 
 function vcnuser_get_user_values() {
+	global $user_info;
+	
+	$industry_code = vcn_get_industry_code();
+	
     $vcnuser = new VCNUser();
 	$GLOBALS['vcnuser'] = $vcnuser;
 	$current_path_array = explode("/", $_SERVER['REQUEST_URI']);
@@ -318,11 +217,16 @@ function vcnuser_get_user_values() {
 	if ($find_awlevel_key) {
 	  $vcnuser->set_url_awlevel($current_path_array[$find_awlevel_key + 1]);
 	} else {
-		$session_onetcode = isset($_SESSION['vcnuser_onetcode']) ? $_SESSION['vcnuser_onetcode'] : NULL;
+		$session_onetcode = isset($_SESSION['vcnuser_onetcode_'.$industry_code]) ? $_SESSION['vcnuser_onetcode_'.$industry_code] : NULL;
 		$onetcode = vcnuser_get_onetcode();
 		if (isset($onetcode)) {
 			if ($onetcode != $session_onetcode) { 
-				// navigate to the bottom of the file for explanation E1
+				// if user selects new career then get minimum education for the selected career.
+				// if they are looking at the same career keep the education level they had selected for the career
+				// eg: if users select "Acute Care Nurse" (min education is Associate's degree) and "bachelors degree" and submit the user selection form, "bachelor degree" will be in the min education cookie.
+				// now if they explore the website and go to career details page for "Acute Care Nurse" and click on Find Programs link, they should go to get qualified page with "Acute care nurse" as the career and "Bachelors degree"
+				// but if they go to career detail page of some other career and click on Find programs link, go to the get qualified page with minimum education of that particular career selected
+				
 				/*$min_education_array = vcn_calculate_max_edu_for_career($onetcode, FALSE);
 				$vcnuser->set_url_awlevel($max_education_array['max_education_id']);*/
 				
@@ -346,8 +250,8 @@ function vcnuser_get_user_values() {
 	//  $vcnuser->set_session_st($_COOKIE['vcnuser_st']);
 	//}
 	
-	if (isset($_SESSION['vcnuser_onetcode'])) {
-	  $vcnuser->set_session_onetcode($_SESSION['vcnuser_onetcode']);
+	if (isset($_SESSION['vcnuser_onetcode_'.$industry_code])) {
+	  $vcnuser->set_session_onetcode($_SESSION['vcnuser_onetcode_'.$industry_code]);
 	}
 	
 	if (isset($_COOKIE['vcnuser_awlevel'])) {
@@ -356,187 +260,308 @@ function vcnuser_get_user_values() {
 	
 	// next, fill value from CMA
 	
-	if ($GLOBALS['is_user_logged_in']) {
-      $vcnuser->set_cma_zip($GLOBALS['logged_in_user_default_zipcode']);
+	if ($user_info['is_user_logged_in']) {
+      $vcnuser->set_cma_zip($user_info['logged_in_user_default_zipcode']);
 	}
 
 }
 
-function vcnuser_get_zip() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_zip();
+// ========= User Login, Registration forms theming ================
+
+/* Implementing hook_menu_alter
+ * Hiding the default tabs on the user registration and login page so we can customize them using our logic and styles*/
+function vcnuser_menu_alter(&$item) {
+	$item['user/register']['type'] = MENU_CALLBACK;
+	$item['user/login']['type'] = MENU_CALLBACK;
 }
 
-function vcnuser_get_distance() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_distance();
+function vcnuser_menu_local_tasks_alter(&$data) {
+	if (!empty($data['tabs'])) {
+		foreach($data['tabs'][0]['output'] as $key => $value) {
+			if(($value['#link']['path'] == 'user/%/view') || ($value['#link']['path'] == 'user/%/edit')) {
+				unset($data['tabs'][0]['output'][$key]);
+			}
+		}
+	}
 }
 
-function vcnuser_get_zip_st() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_zip_st();
+
+/**
+ * Implementation of hook_form_alter for registration and login page
+ */
+
+function vcnuser_form_alter(&$form, &$form_state, $form_id) {
+	switch ($form_id) {
+		case 'user_login':
+			$form['actions']['submit']['#value'] = t('Sign In');
+			$form['actions']['submit']['#attributes']['class'][] = 'vcn-button';
+			$form['actions']['submit']['#attributes']['title'] = 'Sign In';
+			break;
+		case 'user_pass':
+			$form['name']['#description'] = t('Enter your username or e-mail.');
+			$form['actions']['submit']['#attributes']['class'][] = 'vcn-button';
+			$form['actions']['submit']['#attributes']['title'] = 'E-mail new password';
+			break;
+		case 'user_register_form':
+			$form['actions']['submit']['#attributes']['class'][] = 'vcn-button';
+			$form['actions']['submit']['#attributes']['title'] = 'Create New Account';
+			$form['zipcode'] = array(
+					'#type' => 'textfield',
+					'#title' => t('ZIP Code'),
+					'#size' => 25,
+					'#maxlength' => 5,
+					'#required' => TRUE,
+					'#description' => t('This ZIP Code will be used as default value for ZIP Code based searches.'),
+			);
+			$form['#validate'][] = '_vcnuser_register_zip_validation';
+      $form['#submit'][] = '_vcnuser_user_register_moodle_submit';
+			break;
+		case 'user_profile_form':
+			$form['picture']['#access'] = FALSE; // hiding the upload picture
+			$form['mimemail']['#access'] = FALSE; // hiding mimemail options where users can select if they want to receive plain emails
+			$form['actions']['submit']['#attributes']['class'][] = 'vcn-button';
+			$form['actions']['submit']['#attributes']['title'] = 'Save';
+      $form['#submit'][] = '_vcnuser_user_profile_moodle_submit';
+			break;
+		case 'user_pass_reset':
+			$form['actions']['submit']['#attributes']['class'][] = 'vcn-button';
+			$form['actions']['submit']['#attributes']['title'] = 'Reset Password';
+			break;
+		default:
+			break;
+	}
 }
 
-function vcnuser_get_st() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_st();
+/*
+ * Form submit handler for user_profile_form for updating moodle user
+ */
+function _vcnuser_user_profile_moodle_submit($form, &$form_state) {
+
+  vcn_persist_moodle_user('update', $form_state);
 }
 
-function vcnuser_get_onetcode() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_onetcode();
-}
-
-function vcnuser_get_awlevel() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_awlevel();
-}
-
-function vcnuser_get_career_name() {
-  $career_name = null;
- 
-  $onetcode = vcnuser_get_onetcode();
-  if (!empty($onetcode)) {
-    $occlist = vcnuser_get_occupation_list();
-    foreach ($occlist->careerdata as $occ) { 
-       if ($occ->onetcode==$onetcode) {
-		  $career_name = $occ->title;
-		  break;
-	   }
-    }
-  }
-  return $career_name;
-}
-
-function vcnuser_get_edulevel() {
-  $edulevel = null;
+/*
+ * Form submit handler for user_register_form for creating moodle user
+ */
+function _vcnuser_user_register_moodle_submit($form, &$form_state) {
   
-  $awlevel = vcnuser_get_awlevel();
-  if (!empty($awlevel)) {
-	$edulist = vcnuser_get_education_levels_list();
-    foreach ($edulist->categories->item as $lev) { 
-      if ($lev->educationcategoryid==$awlevel) {
-		$edulevel = $lev->educationcategoryname;
-	    break;
-	  }
-	}
-  }
-  return $edulevel;
+  vcn_persist_moodle_user('insert', $form_state);
+
 }
 
-function vcnuser_get_occupation_list() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_occupation_list();
-}
-
-function vcnuser_get_education_levels_list() {
-  $vcnuser = $GLOBALS['vcnuser'];
-  return $vcnuser->get_education_levels_list();
-}
-
-/**
- * implements hook_init to initialize global user object
- */
- 
-function vcnuser_init() {
-	vcnuser_get_user_values();
-}
-
-
-/**
- * Returns the ZIP Code if it exists in the URL
- * @return $zipcode
- */
-function vcnuser_get_zipcode_from_url() {
-	$current_path_array = explode("/", $_SERVER['REQUEST_URI']);
-	$find_zip_key = array_search('zip', $current_path_array);
-	if ($find_zip_key) {
-		$zipcode_value = $current_path_array[$find_zip_key + 1];
-	} else {
-		$zipcode_value = NULL;
-	}
-	return $zipcode_value;
-}
-  
-/**
- * 
- * @return $zipcode
- */
-function vcnuser_get_zipcode_from_cookie() {
-	if (isset($_COOKIE['d6_d7_zipcode_share'])) {
-		$zipcode = $_COOKIE['d6_d7_zipcode_share'];
-	} else {
-		$zipcode = NULL;
-	}
-	return $zipcode;
-}
-
-/**
- * Create cookie values
- */
-function vcnuser_set_zip_cookie($zip) {
-	setcookie("d6_d7_zipcode_share", $zip, time()-86400, '/');
-	setcookie("d6_d7_zipcode_share", $zip, 0, '/');
-}
-
-function vcnuser_set_distance_cookie($distance) {
-	setcookie("vcnuser_distance", $distance, time()-86400, '/');
-	setcookie("vcnuser_distance", $distance, 0, '/');
-}
-
-function vcnuser_set_onetcode_session($onetcode) {
-	if (isset($_SESSION['vcnuser_onetcode'])) {
-		unset($_SESSION['vcnuser_onetcode']);
-	}
-	$_SESSION['vcnuser_onetcode'] = $onetcode;
-}
-
-function vcnuser_set_awlevel_cookie($awlevel) {
-	setcookie("vcnuser_awlevel", $awlevel, time()-86400, '/');
-	setcookie("vcnuser_awlevel", $awlevel, 0, '/');
-}
-
-function vcnuser_unset_onetcode_session() {
-  if (isset($_SESSION['vcnuser_onetcode'])) { unset($_SESSION['vcnuser_onetcode']); }
-  if (isset($_SESSION['user_answers'])) { unset($_SESSION['user_answers']); }
-  if (isset($_SESSION['user_answers_types'])) { unset($_SESSION['user_answers_types']); }
-  if (isset($_SESSION['vcn_counselor_student_id'])) { unset($_SESSION['vcn_counselor_student_id']); }
-}
-
-
-/**
- * this function will help us identify if the user really cleared the ZIP code from input field and wanted to see the data across the entire country, so we are setting cookie value to "cleared"
- */
-function vcnuser_clear_zip_cookie() {
-	setcookie("d6_d7_zipcode_share", null, time()-86400, '/');
-	setcookie("d6_d7_zipcode_share", "cleared", 0, '/');
-}
-
-function vcnuser_get_notebook_items($vcnuserid, $item_type = "ALL", $targeted = '0', $details = FALSE) { //$item_type = 'OCCUPATION'/'PROGRAM'/'CERTIFICATE'/'LICENSE'/'ALL'
-	/* REST Call */
+/*
+ * Implementing hook_user_insert
+ * Used to insert the newly created users data into hvcp/moodle DB
+ * */
+function vcnuser_user_insert(&$edit, $account, $category) {
+	
+	$session_id = session_id();
 	$industry = vcn_get_industry();
+	
+	$params = array('drupal_user_id' => $account->uid, 'session_id' => $session_id, 'industry' => $industry, 'userinfo' => array('zipcode' => $edit['zipcode']));
+	$call_result = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'update-cma-user-info', $params, 'xml', 'post', false);
 
-	$params = array('userid' => $vcnuserid, 'industry' => $industry, 'type' => $item_type, 'targeted' => $targeted, 'details' => $details);
-	$user_notebook_items = vcn_rest_wrapper('vcncmasvc', 'vcnnotebook', 'get-notebook-items', $params, 'xml', 'post', false);
-
-	return $user_notebook_items;
-
-	/* End REST Call */
 }
 
-function vcnuser_get_edu_level() {
-	if (isset($_COOKIE['user_edu_level'])) {
-		$user_edu_level = $_COOKIE['user_edu_level'];
-	} else {
-		$user_edu_level = 0;
+/*
+ * Function is used to call the REST service to insert/update the moodle user
+ */
+function vcn_persist_moodle_user($action, $form_state) {
+  
+  global $user_info;
+  
+  // call the new moodle REST service for update
+  $password = $form_state['values']['pass'];
+  if (!strlen($password) && isset($form_state['values']['current_pass'])) {
+    $password = $form_state['values']['current_pass'];
+  }
+  $password = md5($password);
+  
+  try {
+    if ($action == 'insert') {
+      // call the new moodle REST service for insert
+      $params = array('userid' => 0, 'username' => $form_state['values']['name'], 'password' => $password, 'email' => $form_state['values']['mail']);
+      $call_result = vcn_rest_wrapper('vcnmoodlesvc', 'vcnmoodle', 'insert-moodle-user', $params, 'xml', 'post', false);
+    } else if ($action == 'update') {
+      $params = array('userid' => $user_info['uid'], 'username' => $user_info['drupal_username'], 'password' => $password, 'email' => $form_state['values']['mail']);
+      $call_result = vcn_rest_wrapper('vcnmoodlesvc', 'vcnmoodle', 'update-moodle-user', $params, 'xml', 'post', false);
+    }
+  } catch (Exception $e) {
+    // need to log the error
+    print($e->getMessage());exit;
+  }
+}
+
+function vcnuser_provider_register() {
+	return drupal_get_form('vcn_provider_register_form');
+}
+
+function vcn_provider_register_form($form, &$form_state) {
+	
+	$form = array();
+	
+	$form['first_name'] = array (
+		'#type' => 'textfield',
+		'#title' => t('First Name: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['last_name'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Last Name: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['user_name'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Username: '),
+		'#size' => 60,
+		'#required' => TRUE,
+		'#description' => t('Spaces are allowed; punctuation is not allowed except for periods, hyphens, and underscores.'),	
+	);
+	
+	$form['email'] = array (
+		'#type' => 'textfield',
+		'#title' => t('E-mail Address: '),
+		'#size' => 60,
+		'#required' => TRUE,
+		'#description' => t('A valid e-mail address. All e-mails from the system will be sent to this address. 
+												The e-mail address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by e-mail.')
+	);
+	
+	$form['phone_number'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Phone Number: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['title'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Title: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['institution_name'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Institution Name: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['institution_website'] = array (
+		'#type' => 'textfield',
+		'#title' => t('Institution Website: '),
+		'#size' => 60,
+		'#required' => TRUE,
+	);
+	
+	$form['disclaimer'] = array (
+		'#type' => 'checkbox',
+		'#title' => t('<span class="strong">Disclaimer:</span> <span class="form-required" title="This field is required.">*</span></b> I certify that I am an authorized representative of the subject organization and accept full responsibility for the accuracy and completeness of the education program information provided.'),
+	);
+	
+	$form['provider_register_submit'] = array (
+		'#type' => 'submit',
+		'#name' => 'provider_register_submit',
+		'#value' => t('Create New Account'),
+		'#attributes' => array (
+				'class' => array('vcn-button',),
+				'title' => "Create New Account"
+		),
+		'#validate' => array('_vcnuser_provider_register_validate'),
+		'#submit' => array('_vcnuser_provider_registration_submit'),
+	);
+	
+	return $form;
+	
+}
+	
+function vcnuser_preprocess_vcn_provider_register_form(&$variables) {
+	drupal_add_js(drupal_get_path('module', 'vcnuser') .'/js/vcn_user_login_register.js', 'file');
+	$variables['base_path'] = vcn_drupal7_base_path();
+	$variables['image_path'] = vcn_image_path();
+}
+
+function vcnuser_preprocess_user_login(&$vars) {
+	drupal_add_js(drupal_get_path('module', 'vcnuser') .'/js/vcn_user_login_register.js', 'file');
+	$vars['base_path'] = vcn_drupal7_base_path();
+	$vars['image_path'] = vcn_image_path();
+	$vars['is_provider_sign_in'] = isset($_GET['type']) ? (($_GET['type'] == 'provider') ? true : false): false;
+}
+
+function vcnuser_preprocess_user_register_form(&$vars) {
+	drupal_add_js(drupal_get_path('module', 'vcnuser') .'/js/vcn_user_login_register.js', 'file');
+	$vars['base_path'] = vcn_drupal7_base_path();
+	$vars['image_path'] = vcn_image_path();
+}
+
+function vcnuser_preprocess_user_pass(&$vars) {
+	drupal_add_js(drupal_get_path('module', 'vcnuser') .'/js/vcn_user_login_register.js', 'file');
+	$vars['base_path'] = vcn_drupal7_base_path();
+	$vars['image_path'] = vcn_image_path();
+	$vars['is_provider_sign_in'] = isset($_GET['type']) ? (($_GET['type'] == 'provider') ? true : false): false;
+}
+
+function vcnuser_preprocess_user_profile_form(&$vars) {
+	drupal_add_js(drupal_get_path('module', 'vcnuser') .'/js/vcn_user_login_register.js', 'file');
+}
+
+function vcnuser_mail($key, &$message, $params) {
+	switch ($key) {
+		case 'provider_registration':
+			$message['subject'] = $params['subject'];
+			$message['body'][] = $params['body'];
+			break;
+		default:
+			break;
 	}
-	return $user_edu_level;
 }
 
-// -------------- Do not delete ------------
-//E1
-// if user selects new career then get minimum education for the selected career.
-// if they are looking at the same career keep the education level they had selected for the career
-// eg: if users select "Acute Care Nurse" (min education is Associate's degree) and "bachelors degree" and submit the user selection form, "bachelor degree" will be in the min education cookie.
-// now if they explore the website and go to career details page for "Acute Care Nurse" and click on Find Programs link, they should go to get qualified page with "Acute care nurse" as the career and "Bachelors degree"
-// but if they go to career detail page of some other career and click on Find programs link, go to the get qualified page with minimum education of that particular career selected
+/*
+ * hook_mail_alter : Update "from" email for all user related and other system email.
+ * */
+function vcnuser_mail_alter(&$message){	
+	
+	/* REST Call */
+	// get vcn_support_email Id
+	$params = array('prop_id' => 6);
+	$content = vcn_rest_wrapper('vcnpropertiessvc', 'vcnproperties', 'get-properties', $params);
+	$support_email = (string) $content->properties->item->value;
+	/* End REST Call */
+	
+	$key = $message["key"];
+	 switch ($key) {
+		case 'register_no_approval_required':
+			$message['from'] = $support_email;			
+			break;
+		default:
+			$message['from'] = $support_email; 
+			break;
+	} 
+}
+
+/*
+ * hook_user_login : Update global destination variable to redirect user to referral page.
+ * */
+function vcnuser_user_login(&$edit, $account) {
+	//$edit['redirect'] = 'cma/profile';  // Works only for login
+	if(isset($_SESSION['drupal_referral_destination']) && $_SESSION['drupal_referral_destination'] != "" && $_POST['form_id'] != 'user_pass_reset'){
+		_vcnuser_get_global_destination(); //$_SESSION['drupal_referral_destination']; // works for login + register (+auto login) too
+		//error_log("GLOBALS['destination']: ".print_r($GLOBALS['destination'], true), 3, ini_get('error_log'));
+	}
+}
+
+// this function is used to parse the destination url and then put it in the array correctly 
+// for the global destination variable so redirects work correctly when logging in
+function _vcnuser_get_global_destination() {
+  $urlParts = drupal_parse_url($_SESSION['drupal_referral_destination']);
+  $GLOBALS['destination'][] = $urlParts['path'];
+  
+  if (isset($urlParts['query'])) {
+    $GLOBALS['destination'][] = array('query' => $urlParts['query']);
+  }
+}

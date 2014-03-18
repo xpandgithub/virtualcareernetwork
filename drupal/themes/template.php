@@ -73,20 +73,24 @@ function vcnstark_preprocess_html(&$variables) {
 	$variables['attributes_array']['id'] = 'vcn-'.$industry_code;
 	$variables['classes_array'][] = 'vcn-'.$industry_code;
 
+  $site_baseurl = vcn_base_url();
 	$drupal7_basepath = vcn_drupal7_base_path();
 	$drupal6_basepath = vcn_drupal6_base_path();
 	$drupal7_images_basepath = vcn_image_path();
 	$drupal7_videos_basepath = vcn_video_path();
-	
+	$moodle_basepath = vcn_moodle_base_path();
+  
 	$industry_id = vcn_get_industry();
 	$industry_name = vcn_get_industry_name();
 	
 	drupal_add_js(array(
 								'drupal_basepaths' => array(
+                      'site_baseurl' => $site_baseurl,
 											'drupal7_basepath' => $drupal7_basepath, 
 											'drupal6_basepath' => $drupal6_basepath,
 											'drupal7_images_basepath' => $drupal7_images_basepath,
-											'drupal7_videos_basepath' => $drupal7_videos_basepath
+											'drupal7_videos_basepath' => $drupal7_videos_basepath,
+                      'moodle_basepath' => $moodle_basepath
 									),
 									'industry' => array(
 											'industry_id' => $industry_id,

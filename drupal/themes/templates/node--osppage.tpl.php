@@ -40,7 +40,7 @@ You should have received a copy of the GNU General Public License along with thi
       ?>
 	</div>
 	<div id="osp-main-image">
-      <img src="<?php print vcn_image_path(); ?>miscellaneous/ospimage.jpg" alt="ospimage" width="300" />
+      <img src="<?php print vcn_image_path(); ?>miscellaneous/ospimage.jpg" alt="Open Source Portal information" width="300" />
       <br/><br/>
 	  <div id="osp-forum-activity-list">
 	    <?php 	  

@@ -29,16 +29,13 @@ You should have received a copy of the GNU General Public License along with thi
       <?php print $GLOBALS['vcn_config_default_industry_tagline']; ?>
     </div>
     <a title="Get Started Now!" href="<?php echo $vcn_drupal7_base_path; ?>get-started">
-      <div id="industry-home-tagline-button" class="noresize">
+      <div title="Understand how VCN helps you prepare for a better job." id="industry-home-tagline-button" onclick="window.location.href = vcn_get_drupal7_base_path()+'get-started';" class="noresize">
         <p id="industry-home-tagline-button-line1" class="noresize">Get Started Now!</p>
       </div>
     </a>
     <?php for($i=1; $i <= $home_banner_count; $i++) {?>
     <div class="" id="fp-container<?php echo $i; ?>">
-      <img src="<?php echo $vcn_industry_image_path;?>home_images/home-banner-<?php echo $i; ?>.png" alt="home" width="960px" height="350px" border="0" usemap="#map"  />
-      <map name="map">
-      <area shape="rect" coords="135,186,377,284" alt="Choose a Career" href="<?php echo $vcn_drupal7_base_path;?>explorecareers" title="Get Started Now! Choose a Career" />	
-      </map>	  
+      <img src="<?php echo $vcn_industry_image_path;?>home_images/home-banner-<?php echo $i; ?>.png" alt="home" width="960px" height="350px" border="0" />
     </div>
     <?php }?>	
  
@@ -65,18 +62,12 @@ You should have received a copy of the GNU General Public License along with thi
 	<div class="industry-home-submain">
 		<div class="industry-home-submain-left">			
 			<div class="industry-home-submain-left-box">
-				<img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-why-industry.jpg" title="Why" width="130px" height="130px" class="industry-home-img">
-				<h4>Why <?php print $industry_name; ?>?</h4>
-				<p class="industry-home-submain-box-text">
-					<?php print $whyindustry; ?> <a title="Why" href="<?php echo $vcn_drupal7_base_path;?>why-industry">Read more</a>
-				</p>
+				<a title="<?php print $whyindustry; ?>" href="<?php echo $vcn_drupal7_base_path;?>why-industry"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-why-industry.jpg" title="<?php print $whyindustry; ?>" width="130px" height="130px" class="industry-home-img" alt="Why <?php print $industry_name; ?> image">
+				<h4>Why <?php print $industry_name; ?>?</h4></a>				
 			</div>
 			<div class="industry-home-submain-left-box">
-				<img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-new-to-vcn.jpg" title="New to VCN" width="130px" height="130px" class="industry-home-img">
-				<h4>New to VCN?</h4>
-				<p class="industry-home-submain-box-text">
-					The Primary goal of VCN is to prepare you for your desired Career, which can be achieved in 3 major steps. <a title="New to VCN" href="<?php echo $vcn_drupal7_base_path;?>new-to-vcn">Read more</a>
-				</p>
+				<a title="<?php print $newtovcn; ?>" href="<?php echo $vcn_drupal7_base_path;?>new-to-vcn"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-new-to-vcn.jpg" title="<?php print $newtovcn; ?>" width="130px" height="130px" class="industry-home-img" alt="New to VCN image">
+				<h4>New to VCN?</h4></a>				
 			</div>
 			<div class="allclear"></div>			
 		</div>

@@ -47,7 +47,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
 			$binds = array();
 			
 			 if (in_array($params['itemtype'], array('PROGRAM', 'LICENSE'))) {
-				$where = ' AND n.stfips = :secondaryinfo ';
+				$where = ' AND n.secondary_info = :secondaryinfo ';
 				$binds[':secondaryinfo'] = $params['secondaryinfo'];				
 			}
 			 
@@ -132,11 +132,11 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
         	
         	$joins = ' LEFT JOIN vcn_program p ON p.program_id = n.item_id 
         	 		   INNER JOIN vcn_program_cipcode pc ON p.program_id = pc.program_id
-        			   INNER JOIN vcn_cipcode c ON pc.cipcode = c.cipcode AND c.cipcode = n.stfips
+        			   INNER JOIN vcn_cipcode c ON pc.cipcode = c.cipcode AND c.cipcode = n.secondary_info
         			   INNER JOIN vcn_provider v ON p.unitid = v.unitid AND v.zip IS NOT NULL';
         }
 
-        $sql = " SELECT n.notebook_id AS notebookid, n.user_id AS userid, n.item_type AS itemtype, n.stfips AS stfips, n.item_id AS onetcode, n.item_id AS item_id, 
+        $sql = " SELECT n.notebook_id AS notebookid, n.user_id AS userid, n.item_type AS itemtype, n.secondary_info AS secondaryinfo, n.item_id AS onetcode, n.item_id AS item_id, 
                         n.item_rank AS itemrank, n.item_notes AS itemnotes, n.active_yn AS activeyn, n.sub_item_id AS subitemid  
                         $columns
                  FROM vcn_cma_user_notebook n
@@ -181,7 +181,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
           	$rowdata['notebookid'] = $row['notebookid'];
             $rowdata['itemid'] = $row['item_id'];	
             $rowdata['onetcode'] = $row['subitemid'];	
-            $rowdata['stfips'] = $row['stfips'];
+            $rowdata['stfips'] = $row['secondaryinfo'];
           } else if (strtoupper($type) == 'CERTIFICATE') {
           	$rowdata['notebookid'] = $row['notebookid'];
             $rowdata['itemid'] = $row['item_id'];	
@@ -190,7 +190,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
           	$rowdata['notebookid'] = $row['notebookid'];
             $rowdata['itemid'] = $row['item_id'];	
             $rowdata['onetcode'] = $row['subitemid'];	
-            $rowdata['cipcode'] = $row['stfips'];
+            $rowdata['cipcode'] = $row['secondaryinfo'];
             
             if (isset($params['details']) && $params['details'] == true) {
             	$rowdata['programname'] = $row['programname'];
@@ -210,7 +210,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
           	$rowdata['onetcode'] = $row['subitemid'];              	
           	$rowdata['itemrank'] = $row['itemrank'];
           	$rowdata['itemtype'] = $row['itemtype'];
-          	$rowdata['secondaryinfo'] = $row['stfips'];
+          	$rowdata['secondaryinfo'] = $row['secondaryinfo'];
           }
           
           $data[] = $rowdata; 
@@ -280,8 +280,8 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
               JOIN vcn_occupation_industry oxi ON o.onetcode = oxi.onetcode AND oxi.industry_id = :industry
 							JOIN vw_vcn_onet_education_distribution voed ON o.onetcode = voed.onetcode 
 							JOIN vcn_edu_category vec ON voed.education_category_id = vec.education_category_id 
-							JOIN socxonet AS sxo ON o.onetcode = sxo.onetcode 
-							JOIN socxsocwage AS sxsw ON sxo.soccode = sxsw.soccode 
+							LEFT JOIN socxonet AS sxo ON o.onetcode = sxo.onetcode 
+							LEFT JOIN socxsocwage AS sxsw ON sxo.soccode = sxsw.soccode 
 							LEFT JOIN wage_occ wo ON wo.occcode = sxsw.socwage AND wo.stfips = '00' 
   						GROUP BY onetcode";
   
@@ -340,10 +340,9 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
                       n.user_id,
                       n.item_rank,
                       n.item_id,
-                      n.stfips AS secondaryinfo,
+                      n.secondary_info AS secondaryinfo,
                       n.sub_item_id,
-                      p.awlevel AS award_level,
-                      p.program_code AS program_code,
+                      p.awlevel AS award_level,                     
                       pc.program_id AS program_id,
                       c.ciptitle AS ciptitle,
                       c.cipcode AS cipcode,
@@ -368,7 +367,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
               AND n.user_id = :userid 
               AND n.industry_id = :industry				  	
               AND n.item_id =  p.program_id 
-              AND n.stfips = c.cipcode
+              AND n.secondary_info = c.cipcode
               ORDER BY n.item_rank desc, program_name ";
   
   		$binds = array(
@@ -429,7 +428,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
   		}
   		
   		if ($params['itemtype'] == "program" || $params['itemtype'] == "license") {
-  			$sql .= " AND n.stfips = :secondaryinfo ";
+  			$sql .= " AND n.secondary_info = :secondaryinfo ";
   			$binds[':secondaryinfo'] = $params['secondaryinfo'];
   		}
   		
@@ -484,7 +483,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
   			
   			//Save Notebook item to table
   			$sql = "INSERT INTO vcn_cma_user_notebook
-	  					(USER_ID, ITEM_TYPE, STFIPS, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
+	  					(USER_ID, ITEM_TYPE, SECONDARY_INFO, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
 						VALUES
 	  					(:userid, :itemtype, :secondaryinfo, :itemid, :subitemid, :itemrank, 'Y', now(), :industry)
 	  					";
@@ -597,7 +596,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
   				$success[] = "Item targeted with updating itemrank.";
   			}else {  // target requested item with (insert)  				
   				$sql = "INSERT INTO vcn_cma_user_notebook
-	  					(USER_ID, ITEM_TYPE, STFIPS, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
+	  					(USER_ID, ITEM_TYPE, SECONDARY_INFO, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
 						VALUES
 	  					(:userid, :itemtype, :secondaryinfo, :itemid, :subitemid, 1, 'Y', now(), :industry)
 	  					";
@@ -629,7 +628,7 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
   					$success[] = "Career related to item targeted with updating itemrank.";
   				}else { // career related to item targeted 
   					$sql = "INSERT INTO vcn_cma_user_notebook
-	  					(USER_ID, ITEM_TYPE, STFIPS, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
+	  					(USER_ID, ITEM_TYPE, SECONDARY_INFO, ITEM_ID, SUB_ITEM_ID, ITEM_RANK, ACTIVE_YN, CREATED_TIME, INDUSTRY_ID)
 						VALUES
 	  					(:userid, 'OCCUPATION', '', :itemid, :subitemid, 1, 'Y', now(), :industry)
 	  					";
@@ -768,12 +767,17 @@ class VCN_Model_VCNCmaNotebook extends VCN_Model_Base_VCNBase {
 					item_id AS itemid,
 					o.display_title AS onettitle,
 					p.program_name AS programname,
-					p.awards_desc AS programaward,
+					p.awlevel AS awlevel,
+  					eci.iped_category_name AS ipedcategoryname,
+  					eci.iped_category_description AS ipedcategorydescription,
+          			ec.education_category_name AS programaward,
 					p2.instnm AS school
 				FROM vcn_cma_user_notebook n
 				LEFT OUTER JOIN vcn_occupation o ON ( o.ONETCODE = n.ITEM_ID )
 				LEFT OUTER JOIN vcn_program p ON ( p.PROGRAM_ID = n.ITEM_ID )
 				LEFT OUTER JOIN vcn_provider p2 ON ( p2.UNITID = p.UNITID )
+  				LEFT JOIN vcn_edu_category_iped eci ON p.awlevel = eci.iped_lookup_code
+        		LEFT JOIN vcn_edu_category ec ON eci.education_category_id = ec.education_category_id
 				WHERE user_id =  :userid
 				AND ( ITEM_TYPE = 'PROGRAM' OR ITEM_TYPE = 'OCCUPATION' )
 				AND ITEM_RANK = 1 AND INDUSTRY_ID = :industry ORDER BY n.CREATED_TIME "; 		

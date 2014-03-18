@@ -16,93 +16,68 @@ You should have received a copy of the GNU General Public License along with thi
 <?php
 /**
  * @file
- *   Themes the VCN Healthcare Home block
+ *   Themes the VCN Industry Home block
  */
 ?>
-<div class="fp-container1" id="fp-container1">
-  <img src="<?php echo $vcn_industry_image_path; ?>home_images/banner_learn.jpg" alt="button navigation image map" usemap="#topButtonNav"/ style="outline:none;">
-  <map name="topButtonNav" title="Splash Image">
-    <area shape="poly" coords="78,91,275,91,279,110,275,130,78,130" href="<?php echo vcn_drupal7_base_path(); ?>explorecareers" alt="Choose a Career" title="Pick the right healthcare career.">
-    <area shape="poly" coords="78,133,246,133,267,152,246,172,78,172" href="<?php echo vcn_drupal7_base_path(); ?>get-qualified" alt="Get Qualified" title="Locate the education or training you need to succeed.">
-    <area shape="poly" coords="78,175,312,175,333,195,312,214,78,214" href="<?php echo vcn_drupal7_base_path(); ?>online-courses/take-online" alt="Take a Course Online" title="Use the VCN's Learning Exchange to find and take courses online.">
-    <area shape="poly" coords="78,217,225,217,248,236,225,256,78,256" href="<?php echo vcn_drupal7_base_path(); ?>findwork" alt="Find a Job" title="Find your job in healthcare.">
-    <area shape="rect" coords="19,330,149,459" rel="lightvideo" href="<?php echo $vcn_video_path; ?>Why_healthcare_AACC_VCN0.flv" toptions="width = 425, height = 240, resizable = 1, layout=flatlook, shaded=1" alt="Watch a Video" title="Watch a video about a career in healthcare">
-    <area shape="rect" coords="188,334,325,464" href="<?php echo vcn_drupal7_base_path(); ?>new-to-vcn" alt="New to VCN" title="New to VCN">
-    <area shape="rect" coords="355,334,480,461" href="<?php echo vcn_drupal7_base_path(); ?>pla/getting-started" alt="Earn College Credits" title="Get College Credits">
-    <area shape="rect" coords="528,295,592,316" onclick="display(0);" href="javascript:void(0);" alt="Learn" title="Learn" class="cursorpointer">
-    <area shape="rect" coords="638,295,701,316" onclick="display(1);" href="javascript:void(0);" alt="Earn" title="Earn" class="cursorpointer">
-    <area shape="rect" coords="750,295,815,316" onclick="display(2);" href="javascript:void(0);" alt="Advance" title="Advance" class="cursorpointer">
-    <area shape="rect" coords="862,285,925,316" onclick="display(3);" href="javascript:void(0);" alt="Serve" title="Serve" class="cursorpointer">
-  </map>
-  <div class="rotating-text">
+<div>
+  <div id="industry-home-top-img">	
+    
+    <div id="industry-home-tagline-text1" class="noresize">
+      <?php print $industry_name; ?>
+    </div>
+    <div id="industry-home-tagline-text2" class="noresize">
+      <?php print str_replace(",", ", <br/> &nbsp;&nbsp;&nbsp;&nbsp;", $GLOBALS['vcn_config_default_industry_tagline']); ?>
+    </div>
+    <a title="Get Started Now!" href="<?php echo $vcn_drupal7_base_path; ?>get-started">
+      <div title="Understand how VCN helps you prepare for a better job." id="industry-home-tagline-button" onclick="window.location.href = vcn_get_drupal7_base_path()+'get-started';" class="noresize">
+        <p id="industry-home-tagline-button-line1" class="noresize">Get Started Now!</p>
+      </div>
+    </a>
+    <?php for($i=1; $i <= $home_banner_count; $i++) {?>
+    <div class="" id="fp-container<?php echo $i; ?>">
+      <img src="<?php echo $vcn_industry_image_path;?>home_images/home-banner-<?php echo $i; ?>.png" alt="home" width="960px" height="350px" border="0"  />
+    </div>
+    <?php }?>	
+ 
+    <div id="fp-container-pagination"> 
+    <?php for($i=1; $i <= $home_banner_count; $i++) {?> 	
+     <div class="floatleft">
+       <a id="fp-container-pagination<?php echo $i-1; ?>" onclick="display(<?php echo $i-1; ?>);" href="javascript:void(0);" title="">&nbsp;&nbsp;</a>
+     </div>
+    <?php }?>	
+    </div>	
+ 
+	<!-- Run the javascript to rotate the page-->
+	<script type="text/javascript">
+		var divIds=new Array(); 
+		<?php for($i=1; $i <= $home_banner_count; $i++) {?>
+		divIds[<?php echo $i-1; ?>]="fp-container<?php echo $i; ?>"; 		
+		<?php }?>	
+		display(0);
+	</script>
+	<!--break-->
   </div>
-</div>
-
-<div class="fp-container2" id="fp-container2" style="display:none">
-  <img src="<?php echo $vcn_industry_image_path; ?>home_images/banner_earn.jpg" alt="button navigation image map" usemap="#topButtonNav"/ style="outline:none;">
-  <map name="topButtonNav" title="Splash Image">
-    <area shape="poly" coords="78,91,275,91,279,110,275,130,78,130" href="<?php echo vcn_drupal7_base_path(); ?>explorecareers" alt="Choose a Career" title="Pick the right healthcare career.">
-    <area shape="poly" coords="78,133,246,133,267,152,246,172,78,172" href="<?php echo vcn_drupal7_base_path(); ?>get-qualified" alt="Get Qualified" title="Locate the education or training you need to succeed.">
-    <area shape="poly" coords="78,175,312,175,333,195,312,214,78,214" href="<?php echo vcn_drupal7_base_path(); ?>online-courses/take-online" alt="Take a Course Online" title="Use the VCN's Learning Exchange to find and take courses online.">
-    <area shape="poly" coords="78,217,225,217,248,236,225,256,78,256" href="<?php echo vcn_drupal7_base_path(); ?>findwork" alt="Find a Job" title="Find your job in healthcare.">
-    <area shape="rect" coords="19,330,149,459" rel="lightvideo" href="<?php echo $vcn_video_path; ?>Why_healthcare_AACC_VCN0.flv" toptions="width = 425, height = 240, resizable = 1, layout=flatlook, shaded=1" alt="Watch a Video" title="Watch a video about a career in healthcare">
-    <area shape="rect" coords="188,334,325,464" href="<?php echo vcn_drupal7_base_path(); ?>new-to-vcn" alt="New to VCN" title="New to VCN">
-    <area shape="rect" coords="355,334,480,461" href="<?php echo vcn_drupal7_base_path(); ?>pla/getting-started" alt="Earn College Credits" title="Get College Credits">
-    <area shape="rect" coords="528,295,592,316" onclick="display(0);" href="javascript:void(0);" alt="Learn" title="Learn" class="cursorpointer">
-    <area shape="rect" coords="638,295,701,316" onclick="display(1);" href="javascript:void(0);" alt="Earn" title="Earn" class="cursorpointer">
-    <area shape="rect" coords="750,295,815,316" onclick="display(2);" href="javascript:void(0);" alt="Advance" title="Advance" class="cursorpointer">
-    <area shape="rect" coords="862,285,925,316" onclick="display(3);" href="javascript:void(0);" alt="Serve" title="Serve" class="cursorpointer">
-  </map>
-  <div class="rotating-text">
+  <div class="allclear"></div>
+  <div id="industry-home-middle">  
+	<div class="industry-home-submain">
+		<div class="industry-home-submain-left">			
+			<div class="industry-home-submain-left-box">
+				<a title="<?php print $whyindustry; ?>" rel="lightvideo" href="<?php echo $vcn_video_path; ?>Why_healthcare_AACC_VCN0.flv" toptions="width = 425, height = 240, resizable = 1, layout=flatlook, shaded=1" >
+					<img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-why-industry.jpg" title="<?php print $whyindustry; ?>" width="130px" height="130px" class="industry-home-img" alt="Why <?php print $industry_name; ?> image">
+					<h4>Why <?php print $industry_name; ?>?</h4>
+					<img class="why-industry-play-button" alt="Play" src="<?php print $vcn_image_base_path; ?>buttons/play.png">
+				</a>									
+			</div>
+			<div class="industry-home-submain-left-box">
+				<a title="<?php print $newtovcn; ?>" href="<?php echo $vcn_drupal7_base_path;?>new-to-vcn"><img src="<?php echo $vcn_industry_image_path;?>home_images/thumb-new-to-vcn.jpg" title="<?php print $newtovcn; ?>" width="130px" height="130px" class="industry-home-img" alt="New to VCN image">
+				<h4>New to VCN?</h4></a>				
+			</div>
+			<div class="allclear"></div>			
+		</div>
+		<div class="industry-home-submain-right">
+			<?php echo $hometext; ?>		  			
+		</div>
+	</div>
   </div>
+  <div class="allclear"></div>   
 </div>
-
-<div class="fp-container3" id="fp-container3" style="display:none">
-  <img src="<?php echo $vcn_industry_image_path; ?>home_images/banner_advance.jpg" alt="button navigation image map" usemap="#topButtonNav"/ style="outline:none;">
-  <map name="topButtonNav" title="Splash Image">
-    <area shape="poly" coords="78,91,275,91,279,110,275,130,78,130" href="<?php echo vcn_drupal7_base_path(); ?>explorecareers" alt="Choose a Career" title="Pick the right healthcare career.">
-    <area shape="poly" coords="78,133,246,133,267,152,246,172,78,172" href="<?php echo vcn_drupal7_base_path(); ?>get-qualified" alt="Get Qualified" title="Locate the education or training you need to succeed.">
-    <area shape="poly" coords="78,175,312,175,333,195,312,214,78,214" href="<?php echo vcn_drupal7_base_path(); ?>online-courses/take-online" alt="Take a Course Online" title="Use the VCN's Learning Exchange to find and take courses online.">
-    <area shape="poly" coords="78,217,225,217,248,236,225,256,78,256" href="<?php echo vcn_drupal7_base_path(); ?>findwork" alt="Find a Job" title="Find your job in healthcare.">
-    <area shape="rect" coords="19,330,149,459" rel="lightvideo" href="<?php echo $vcn_video_path; ?>Why_healthcare_AACC_VCN0.flv" toptions="width = 425, height = 240, resizable = 1, layout=flatlook, shaded=1" alt="Watch a Video" title="Watch a video about a career in healthcare">
-    <area shape="rect" coords="188,334,325,464" href="<?php echo vcn_drupal7_base_path(); ?>new-to-vcn" alt="New to VCN" title="New to VCN">
-    <area shape="rect" coords="355,334,480,461" href="<?php echo vcn_drupal7_base_path(); ?>pla/getting-started" alt="Earn College Credits" title="Get College Credits">
-    <area shape="rect" coords="528,295,592,316" onclick="display(0);" href="javascript:void(0);" alt="Learn" title="Learn" class="cursorpointer">
-    <area shape="rect" coords="638,295,701,316" onclick="display(1);" href="javascript:void(0);" alt="Earn" title="Earn" class="cursorpointer">
-    <area shape="rect" coords="750,295,815,316" onclick="display(2);" href="javascript:void(0);" alt="Advance" title="Advance" class="cursorpointer">
-    <area shape="rect" coords="862,285,925,316" onclick="display(3);" href="javascript:void(0);" alt="Serve" title="Serve" class="cursorpointer">
-  </map>
-  <div class="rotating-text">
-  </div>
-</div>
-
-<div class="fp-container4" id="fp-container4" style="display:none">
-  <img src="<?php echo $vcn_industry_image_path; ?>home_images/banner_contribute.jpg" alt="button navigation image map" usemap="#topButtonNav"/ style="outline:none;">
-  <map name="topButtonNav" title="Splash Image">
-    <area shape="poly" coords="78,91,275,91,279,110,275,130,78,130" href="<?php echo vcn_drupal7_base_path(); ?>explorecareers" alt="Choose a Career" title="Pick the right healthcare career.">
-    <area shape="poly" coords="78,133,246,133,267,152,246,172,78,172" href="<?php echo vcn_drupal7_base_path(); ?>get-qualified" alt="Get Qualified" title="Locate the education or training you need to succeed.">
-    <area shape="poly" coords="78,175,312,175,333,195,312,214,78,214" href="<?php echo vcn_drupal7_base_path(); ?>online-courses/take-online" alt="Take a Course Online" title="Use the VCN's Learning Exchange to find and take courses online.">
-    <area shape="poly" coords="78,217,225,217,248,236,225,256,78,256" href="<?php echo vcn_drupal7_base_path(); ?>findwork" alt="Find a Job" title="Find your job in healthcare.">
-    <area shape="rect" coords="19,330,149,459" rel="lightvideo" href="<?php echo $vcn_video_path; ?>Why_healthcare_AACC_VCN0.flv" toptions="width = 425, height = 240, resizable = 1, layout=flatlook, shaded=1" alt="Watch a Video" title="Watch a video about a career in healthcare">
-    <area shape="rect" coords="188,334,325,464" href="<?php echo vcn_drupal7_base_path(); ?>new-to-vcn" alt="New to VCN" title="New to VCN">
-    <area shape="rect" coords="355,334,480,461" href="<?php echo vcn_drupal7_base_path(); ?>pla/getting-started" alt="Earn College Credits" title="Get College Credits">
-    <area shape="rect" coords="528,295,592,316" onclick="display(0);" href="javascript:void(0);" alt="Learn" title="Learn" class="cursorpointer">
-    <area shape="rect" coords="638,295,701,316" onclick="display(1);" href="javascript:void(0);" alt="Earn" title="Earn" class="cursorpointer">
-    <area shape="rect" coords="750,295,815,316" onclick="display(2);" href="javascript:void(0);" alt="Advance" title="Advance" class="cursorpointer">
-    <area shape="rect" coords="862,285,925,316" onclick="display(3);" href="javascript:void(0);" alt="Serve" title="Serve" class="cursorpointer">
-  </map>
-  <div class="rotating-text">
-  </div>
-</div>
-
-<!-- Run the javascript to rotate the page-->
-<script type="text/javascript">
-	var divIds=new Array(); 
-	divIds[0]="fp-container1"; 
-	divIds[1]="fp-container2"; 
-	divIds[2]="fp-container3"; 
-	divIds[3]="fp-container4";
-	
-	display(0);
-</script>
-<!--break-->

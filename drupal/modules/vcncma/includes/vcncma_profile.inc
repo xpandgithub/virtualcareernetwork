@@ -46,7 +46,7 @@ function vcn_cma_profile_form_submit($form, &$form_state) {		//$form_state['redi
 	$userid = $user['vcn_user_id'];
 	
 	$params = array('userid' => $userid, 'firstname' => vcn_custom_aes_encrypt($form_state['input']['first_name']), 'lastname' => vcn_custom_aes_encrypt($form_state['input']['last_name']), 'zipcode' => $form_state['input']['zipcode']);
-	$update_info = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'update-user-info', $params, 'xml', 'post', false);
+	$update_info = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'update-user-info-by-cma-userid', $params, 'xml', 'post', false);
 	$update_info_status = (int) $update_info->item;
 	
 	if($update_info_status) {
@@ -56,7 +56,7 @@ function vcn_cma_profile_form_submit($form, &$form_state) {		//$form_state['redi
 	}
 }
 
-function vcn_get_cma_user_info() {	
+/*function vcn_get_cma_user_info() {	
 	$user = vcn_get_user_info();
 	$userid = $user['vcn_user_id'];
 	
@@ -64,5 +64,5 @@ function vcn_get_cma_user_info() {
 	$cmauserinfo = vcn_rest_wrapper('vcncmasvc', 'vcncmauser', 'get-user-info', $params, 'xml', 'post', false); 
 
   return $cmauserinfo;
-	/* End REST Call */
-}
+	 
+}*/

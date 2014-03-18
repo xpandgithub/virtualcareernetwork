@@ -39,7 +39,7 @@ function vcn_pla_inventory_listing(&$variables) {
 				$count++;
 				
 				if($c_type == "vcncourses") {
-					$course_detail_url = $variables["vcn_drupal7_base_path"].$credit_courses->$c_type->item[$i]->onlinecourseurl;
+					$course_detail_url = $variables["vcn_drupal7_base_path"].$credit_courses->$c_type->item[$i]->onlinecourseurl; // Drupal internal link, no need to check for onlinecourseurlflag
 					$course_title = "<a title='".$credit_courses->$c_type->item[$i]->coursetitle."' href='".$course_detail_url."'>".$credit_courses->$c_type->item[$i]->coursetitle."</a>";
 				}else if($c_type == "collegecourses") {
 					$course_detail_url = $variables["vcn_drupal7_base_path"]."pla/".$course_detail_page[(string) $credit_courses->$c_type->item[$i]->coursetype]."/".$credit_courses->$c_type->item[$i]->usercourseid;

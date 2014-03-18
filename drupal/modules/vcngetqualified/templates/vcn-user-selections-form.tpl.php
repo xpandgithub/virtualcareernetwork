@@ -24,7 +24,7 @@ You should have received a copy of the GNU General Public License along with thi
 			<div class="vcn-user-selections-show-on-load"><?php print $vcn_user_selections_edu_level_markup; ?></div>
 		</div>
 		<div id="vcn-user-selections-edu-level-help-image">
-			<img id="vcn-user-selections-edu-level-help" src="<?php print vcn_image_path(); ?>miscellaneous/help.png" alt="Help" />
+			<img id="vcn-user-selections-edu-level-help" src="<?php print vcn_image_path(); ?>miscellaneous/help.png" alt="Help" title="Click for additional information" />
 		</div>
 	</div>
 	<div id="vcn-user-selections-edu-level-note"></div>

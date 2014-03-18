@@ -29,7 +29,7 @@ if(vcn_drupal6_career_guide_D7_popup()) {
 
 ?>
 <h1 class="title">Match Your Education to Careers</h1>
-<p>Please provide the following information to determine the careers suitable for you.</p>
+<p>Please provide the following information to determine the careers (based on typical education requirement) suitable for you.</p>
 <div id="grey-match-box">
 <form name="education_match_form" id="education_match_form" method="post" >
 	<div>
@@ -78,15 +78,21 @@ if(vcn_drupal6_career_guide_D7_popup()) {
 <div>
 	<?php $titlear=array(); ?>
 	<ul>
-		<?php 
+		<?php
+		$foundone = false;
 			for ($i=0; $i<count($occupation_current_careers->career); $i++) {
-				if ($occupation_current_careers->career[$i]->displaytitle) { ?>
-					<li><a <?php echo $link_target; ?> href="<?php echo vcn_drupal7_base_path(); ?>careers/<?php echo $occupation_current_careers->career[$i]->onetcode; ?>"><?php echo $occupation_current_careers->career[$i]->displaytitle; ?></a></li>
+				if ($occupation_current_careers->career[$i]->title) {
+					$foundone = true; ?>
+					<li><a <?php echo $link_target; ?> href="<?php echo vcn_drupal7_base_path(); ?>careers/<?php echo $occupation_current_careers->career[$i]->onetcode; ?>"><?php echo $occupation_current_careers->career[$i]->title; ?></a></li>
 					<?php $titlear[]=(string)$occupation_current_careers->career[$i]->onetcode; 
 			 	}
 			 } ?>
 	</ul>
-
+	<?php
+	if (!$foundone) {
+		?><ul><li class="nodot" >None</li></ul><?php 	
+	}
+	?>
 </div>
 
 <div class="strong">Careers that you could pursue after obtaining the higher education level that you have indicated:</div>
@@ -95,10 +101,10 @@ if(vcn_drupal6_career_guide_D7_popup()) {
 	<?php 
 	$foundone = false;
 	for ($i=0; $i<count($occupation_towards_careers->career); $i++) { 
-		if ($occupation_towards_careers->career[$i]->displaytitle && !in_array((string)$occupation_towards_careers->career[$i]->onetcode,$titlear)) { 
+		if ($occupation_towards_careers->career[$i]->title && !in_array((string)$occupation_towards_careers->career[$i]->onetcode,$titlear)) { 
 			$foundone = true;
 			?>
-			<li><a <?php echo $link_target; ?> href="<?php echo vcn_drupal7_base_path(); ?>careers/<?php echo $occupation_towards_careers->career[$i]->onetcode; ?>"><?php echo $occupation_towards_careers->career[$i]->displaytitle; ?></a></li>
+			<li><a <?php echo $link_target; ?> href="<?php echo vcn_drupal7_base_path(); ?>careers/<?php echo $occupation_towards_careers->career[$i]->onetcode; ?>"><?php echo $occupation_towards_careers->career[$i]->title; ?></a></li>
 			<?php 
 		} 
 	} 

@@ -34,10 +34,10 @@ You should have received a copy of the GNU General Public License along with thi
         <li><a href="<?php echo $vcn_drupal7_base_path; ?>career-tools" title="Links to various online career preparation and education tools plus a directory of support organizations that can assist you in your career development.">Career Tools</a></li>    
         <li class="last">
         <?php
-        if($GLOBALS['is_user_logged_in']) {
-          echo '<a class="vcn-sign-out" href="' . vcn_drupal6_base_path() . 'logout" alt="Sign Out" title="Sign Out">Sign Out</a>';
+        if($is_user_logged_in) {
+          echo '<a class="vcn-sign-out" href="' . vcn_drupal7_base_path() . 'user/logout" alt="Sign Out" title="Sign Out">Sign Out</a>';
         } else {
-          echo '<a href="' . vcn_drupal6_base_path() . 'user" alt="Sign In" title="Sign In">Sign In</a>';
+          echo '<a href="' . vcn_drupal7_base_path() . 'user" alt="Sign In" title="Sign In">Sign In</a>';
         }
         ?>
         </li>
@@ -46,7 +46,7 @@ You should have received a copy of the GNU General Public License along with thi
         <li><a href="<?php echo $vcn_drupal7_base_path; ?>about-us" title="About Us">About Us</a></li>
         <li><a href="<?php echo $vcn_drupal7_base_path; ?>site-map" title="Site Map">Site Map</a></li>
         <li><a href="<?php echo $vcn_drupal7_base_path; ?>privacy-policy" title="Privacy Policy">Privacy Policy</a></li>       
-        <?php if (!$GLOBALS['is_user_logged_in'] || $GLOBALS['user_provider_id'] > 0) : ?>
+        <?php if (!$is_user_logged_in || $is_provider_user) : ?>
           <li><a class="provider-portal" href="<?php echo $vcn_drupal7_base_path; ?>provider/summary" title="Provider Portal">Provider Portal</a></li>
         <?php endif; ?>
         <li><a href="<?php echo $vcn_drupal7_base_path; ?>community/groups" title="Community Groups">Communities</a></li>      

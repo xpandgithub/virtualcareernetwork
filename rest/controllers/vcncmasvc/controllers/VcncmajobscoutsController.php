@@ -22,7 +22,7 @@ class VCNCmaSvc_VCNCmaJobscoutsController extends VCN_WebServices {
 		$model = new VCN_Model_VCNCmaJobscouts();
 		$data  = $model->getCmaJobscouts($this->params);
 	
-		$output = self::getOutput( $this->format, $data, 'result');
+		$output = self::getOutput($this->format, $data, 'result');
 		
 		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
 		
@@ -33,7 +33,7 @@ class VCNCmaSvc_VCNCmaJobscoutsController extends VCN_WebServices {
 		$model = new VCN_Model_VCNCmaJobscouts();
 		$data = $model->deleteFromJobscouts($this->params);
 			
-		$output = self::getOutput( $this->format, $data, 'result');
+		$output = self::getOutput($this->format, $data, 'result');
 	
 		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
 	
@@ -44,7 +44,7 @@ class VCNCmaSvc_VCNCmaJobscoutsController extends VCN_WebServices {
 		$model = new VCN_Model_VCNCmaJobscouts();
 		$data = $model->updateSubscriptionJobscouts($this->params);
 			
-		$output = self::getOutput( $this->format, $data, 'result');
+		$output = self::getOutput($this->format, $data, 'result');
 	
 		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
 	
@@ -55,10 +55,21 @@ class VCNCmaSvc_VCNCmaJobscoutsController extends VCN_WebServices {
 		$model = new VCN_Model_VCNCmaJobscouts();
 		$data = $model->saveJobSearch($this->params);
 			
-		$output = self::getOutput( $this->format, $data, 'result');
+		$output = self::getOutput($this->format, $data, 'result');
 	
 		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
 	
 	}
 	
+  public function getAllCmaJobscoutsForTodayAction() {
+		
+		$model = new VCN_Model_VCNCmaJobscouts();
+		$data  = $model->getAllCmaJobscoutsForToday($this->params);
+	
+		$output = self::getOutput($this->format, $data, 'result');
+		
+		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
+		
+	}
+  
 }	

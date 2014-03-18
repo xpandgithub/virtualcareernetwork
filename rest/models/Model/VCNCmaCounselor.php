@@ -35,14 +35,13 @@ class VCN_Model_VCNCmaCounselor extends VCN_Model_Base_VCNBase {
 		
     try {
       
-      $db = Resources_PdoMysql::getConnection();
-
-      $sql = " SELECT u.name AS username, u.mail AS email, cu.user_id AS userid, cu.first_name AS firstname, cu.last_name AS lastname
+      $db = Resources_PdoMysql::getConnection();       
+      
+      $sql = " SELECT cu.user_id AS userid, cu.first_name AS firstname, cu.last_name AS lastname, cu.user_session_id
                FROM vcn_cma_user_counselor cuc
-               JOIN vcn_cma_user cu ON cuc.user_id = cu.user_id
-               JOIN drupal.users u ON cu.user_session_id = u.uid
+               JOIN vcn_cma_user cu ON cuc.user_id = cu.user_id                
                WHERE counselor_id = :counselor_id
-               ORDER BY u.name ";
+               ORDER BY cu.first_name ";
 
       $binds = array(
         ':counselor_id' => $params['counselor_id'],

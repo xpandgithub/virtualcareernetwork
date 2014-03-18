@@ -130,11 +130,19 @@ function vcnhome_preprocess_vcnhome_healthcare_block(&$variables) {
 
 	$path = drupal_get_path('theme', 'vcnstark');
 	drupal_add_js($path . '/js/vcn_home.js');
+	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_path'] = vcn_image_path();
 	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	$variables['vcn_image_base_path'] = vcn_image_path();
 	$variables['vcn_video_path'] = vcn_video_path();
-	$variables['vcn_industry_name'] = strtolower(vcn_get_industry_name());
+	$variables['industry_name'] = vcn_get_industry_name();
 	
+	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
+	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
+	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
+	
+	$variables['newtovcn'] = 'The Primary goal of VCN is to prepare you for your desired Career, which can be achieved in 3 major steps.';
+	$variables['home_banner_count'] = 4;
 }
 
 /**
@@ -148,11 +156,12 @@ function vcnhome_preprocess_vcnhome_igen_block(&$variables) {
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_path'] = vcn_image_path();
 	$variables['vcn_industry_image_path'] = vcn_industry_image_path();
+	$variables['industry_name'] = vcn_get_industry_name();
 	
 	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.	
 	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
 	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
-	
+	$variables['newtovcn'] = 'The Primary goal of VCN is to prepare you for your desired Career, which can be achieved in 3 major steps.';
 	$variables['home_banner_count'] = 4;
 }
 
@@ -168,7 +177,7 @@ function vcnhome_preprocess_vcnhome_transit_block(&$variables) {
 	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
 	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
 	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
-  
+	$variables['newtovcn'] = 'The Primary goal of VCN is to prepare you for your desired Career, which can be achieved in 3 major steps.';
 	$variables['home_banner_count'] = 4;
 }
 
@@ -184,6 +193,6 @@ function vcnhome_preprocess_vcnhome_aarp_block(&$variables) {
 	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
 	$variables['hometext'] = vcn_node_text_by_urlalias("industry-home");
 	$variables['whyindustry'] = vcn_node_text_by_urlalias("why-industry-summary");
-  
+	$variables['newtovcn'] = 'The Primary goal of VCN is to prepare you for your desired Career, which can be achieved in 3 major steps.';
 	$variables['home_banner_count'] = 4;
 }

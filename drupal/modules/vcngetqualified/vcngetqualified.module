@@ -282,12 +282,14 @@ function vcngetqualified_preprocess_vcn_getqualified_requirements(&$variables) {
 			$variables['career_title_link'] = vcn_drupal7_base_path().'careers/'.$requirements_data['onetcode'];
 		}
 
-			
-		$variables['physical_health_requirements'] = $requirements_data['physical_health_requirements'] !="" ? $requirements_data['physical_health_requirements'] : "<p>No specific requirements have been identified.</p>";
+		$variables['physical_health_requirements_regular_text'] = $requirements_data['physical_health_requirements_regular_text'];
+		$variables['physical_health_requirements_hidden_text'] = $requirements_data['physical_health_requirements_hidden_text'];
+		$variables['physical_requirement_url'] = $requirements_data['physical_requirement_url'];
+		$variables['physical_requirement_url_flag'] = $requirements_data['physical_requirement_url_flag'];
 		
 		$variables['legal_nationwide_requirements'] = $requirements_data['legal_nationwide_requirements'] !="" ? $requirements_data['legal_nationwide_requirements'] : "No specific Legal requirements have been identified.";
-		//$legal_state_specific_requirement = $requirements_data['legal_state_specific_requirement'] !="" ? $requirements_data['legal_state_specific_requirement'] : "No specific Legal requirements have been identified in your state.";
-		//$variables['legal_state_specific_requirement'] = isset($requirements_data['zipcode']) ? $legal_state_specific_requirement : 'Please enter your <b>Preferred Location (ZIP Code)</b> to view the legal requirements for this occupation.';
+		$variables['legal_nationwide_requirements_associated_url'] = $requirements_data['legal_nationwide_requirements_associated_url'];
+		$variables['legal_nationwide_requirements_associated_url_flag'] = $requirements_data['legal_nationwide_requirements_associated_url_flag'];
 		
 		$variables['legal_state_specific_requirements_regular_text'] = $requirements_data['legal_state_specific_requirements_regular_text'];
 		$variables['legal_state_specific_requirements_hidden_text'] = $requirements_data['legal_state_specific_requirements_hidden_text'];
@@ -336,7 +338,7 @@ function vcngetqualified_preprocess_vcn_getqualified_certifications(&$variables)
 			);
 
 			$rows = array();
-			$d6_link = vcn_drupal6_base_path();
+			
 			$d7_link = vcn_drupal7_base_path();
 			$vcn_user_id = (int)$GLOBALS['vcn_user_id'];
 			$is_user_logged_in = (int)$GLOBALS['is_user_logged_in'];
@@ -423,7 +425,7 @@ function vcngetqualified_preprocess_vcn_getqualified_licenses(&$variables) {
 			);
 
 			$rows = array();
-			$d6_link = vcn_drupal6_base_path();
+			
 			$d7_link = vcn_drupal7_base_path();
 			$vcn_user_id = (int)$GLOBALS['vcn_user_id'];
 			$is_user_logged_in = (int)$GLOBALS['is_user_logged_in'];
@@ -726,8 +728,7 @@ function vcngetqualified_preprocess_vcn_certification_detail_template(&$variable
 	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
 
 	$variables['vcn_image_path'] = vcn_image_path();
-	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
-	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();	
 
 	$variables['vcn_user'] = vcn_get_user_info();
 
@@ -757,8 +758,7 @@ function vcngetqualified_preprocess_vcn_license_detail_template(&$variables) {
 	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
 
 	$variables['vcn_image_path'] = vcn_image_path();
-	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
-	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();	
 
 	$variables['vcn_user'] = vcn_get_user_info();
 
@@ -787,10 +787,10 @@ function vcngetqualified_preprocess_vcn_program_detail_template(&$variables) {
 	// Include vcnprovider.inc file
 	module_load_include('inc', 'vcnprovider', '/includes/vcnprovider');
 	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_program_courses_details.js', 'file');
+	drupal_add_js(drupal_get_path('module', 'vcngetqualified') .'/js/vcngetqualified_program_details.js', 'file');
 
 	$variables['vcn_image_path'] = vcn_image_path();
-	$variables['vcn_d7_path'] = vcn_drupal7_base_path();
-	$variables['vcn_d6_path'] = vcn_drupal6_base_path();
+	$variables['vcn_d7_path'] = vcn_drupal7_base_path();	
 
 	$variables['cipcodeyear'] = vcn_get_cipcode_year();
 	$variables['vcn_user'] = vcn_get_user_info();

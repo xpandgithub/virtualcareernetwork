@@ -29,24 +29,32 @@ class VCN_Model_VCNRestCustomCms extends VCN_Model_Base_VCNBase {
 	
 	public function updateCareerDetails($params) {
 
+    $requiredParams = array('onetcode');
+		if (!$this->checkParams($params, $requiredParams)) {
+			return $this->result;
+		}
+    
     try {
       
       $db = Resources_PdoMysql::getConnection();
 
       $sql = "UPDATE vcn_occupation
-            SET detailed_description = :description,
-              academic_requirement = :edutraining,
-              health_requirement = :medrequirements,
-              physical_requirement = :phyrequirements,
-              day_in_life = :dayinlife
-              WHERE onetcode = :onetcode";				
-
+              SET detailed_description = :description,
+                  academic_requirement = :edutraining,
+                  physical_health_requirements = :physhealthrequirements,
+                  physical_requirement_url = :physhealthrequirementsurl,
+                  day_in_life = :dayinlife,
+                  nationwide_legal_requirement_desc = :nationwidelegalrequirementdesc,
+                  nationwide_legal_requirement_url = :nationwidelegalrequirementurl
+                  WHERE onetcode = :onetcode ";				
 
       $binds = array(
         ':description' => $params['description'], 
         ':edutraining' => $params['edutraining'],
-        ':medrequirements' => $params['medrequirements'],
-        ':phyrequirements' => $params['phyrequirements'],
+        ':physhealthrequirements' => $params['physhealthrequirements'],
+        ':physhealthrequirementsurl' => $params['physhealthrequirementsurl'],
+        ':nationwidelegalrequirementdesc' => $params['nationwidelegalrequirementdesc'],
+        ':nationwidelegalrequirementurl' => $params['nationwidelegalrequirementurl'],
         ':dayinlife' => $params['dayinlife'],
         ':onetcode' => $params['onetcode']
       );

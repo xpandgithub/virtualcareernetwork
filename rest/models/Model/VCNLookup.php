@@ -150,7 +150,7 @@ class VCN_Model_VCNLookup extends VCN_Model_Base_VCNBase {
 		try {
 			$db = Resources_PdoMysql::getConnection();
 			if (isset($params['no_less_than_hs']) && $params['no_less_than_hs'] == TRUE) {
-				$sql = "SELECT education_category_id, education_category_name from vcn_edu_category where education_category_id > 1 ";
+				$sql = "SELECT education_category_id, education_category_name from vcn_edu_category where education_category_id > 10 ";
 			} else {
 				$sql = "SELECT education_category_id, education_category_name from vcn_edu_category ";
 			}

@@ -129,22 +129,25 @@ function vcnfindwork_preprocess_vcn_findwork_results_form(&$variables) {
 	}
 
 	$variables['num_records_found'] = count($data);
+	
+	$jobs_found_text = '';
 	if ($variables['num_records_found'] >= 500) {
-		$variables['jobs_found_text'] =  "+ jobs found";
-		$variables['num_records_found'] = 500;
+		$jobs_found_text = '+ jobs found';
 	} else {
 		if ($variables['num_records_found'] == 1) {
-			$variables['jobs_found_text'] =  " job found";
+			$jobs_found_text = ' job found';
 		} else {
-			$variables['jobs_found_text'] =  " jobs found";
+			$jobs_found_text = ' jobs found';
 		}
-	}	
-		
-	/*$variables['find_job_results'] = vcn_node_text_by_urlalias('job-search-results-text');
-	if ($num_records_found <= 5) {
-		$variables['find_job_results'] = vcn_node_text_by_urlalias('job-search-low-results-text');
-	}*/
+	}
 	
+	$jobs_found_text .= ' - posted within last 60 days.';
+	
+	if ($variables['num_records_found'] == 0) {
+		$jobs_found_text .= ' Please widen your search.';
+	}
+	$variables['jobs_found_text'] = $jobs_found_text;
+		
 	$form = $variables['form'];
 	$variables['zipcode'] = render($form['zipcode']);
 	$variables['distance'] = render($form['distance']);

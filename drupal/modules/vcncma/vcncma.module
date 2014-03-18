@@ -972,6 +972,8 @@ function vcncma_preprocess_vcn_cma_employment_history_form_template(&$variables)
  */
 function vcn_cma_profile_form($form, &$form_state) {	
 	
+	global $user_info;  
+	
 	$form['#theme'][] = 'vcn_cma_profile_form_template';	 
 	$form['#attached'] = array(
 			module_load_include("inc","vcncma","includes/vcncma_profile"),
@@ -979,22 +981,22 @@ function vcn_cma_profile_form($form, &$form_state) {
 					drupal_get_path('module', 'vcncma').'/js/vcncma_profile.js',
 			),
 	);	
-	$form['#userinfo'] =  vcn_get_cma_user_info();
+	//$form['#userinfo'] =  vcn_get_cma_user_info();
 
 	$form['first_name'] = array(			
 			'#title' => t('First Name:'),
 			'#type' => 'textfield',			
 			'#size' => 50,
-			//'#default_value' => (string) $form['#userinfo']->firstname,	// (string) $form['#a']->name,
-			'#default_value' => isset($form['#userinfo']->firstname) ? vcn_custom_aes_decrypt($form['#userinfo']->firstname) : '',
+			'#default_value' => $user_info["vcn_user_first_name"],
+			//'#default_value' => isset($form['#userinfo']->firstname) ? vcn_custom_aes_decrypt($form['#userinfo']->firstname) : '',
 			'#maxlength' => 30,
 	);	
 	$form['last_name'] = array(			
 			'#title' => t('Last Name:'),
 			'#type' => 'textfield',			
 			'#size' => 50,			
-			//'#default_value' => (string) $form['#userinfo']->lastname,			
-			'#default_value' => isset($form['#userinfo']->lastname) ? vcn_custom_aes_decrypt($form['#userinfo']->lastname) : '',
+			'#default_value' => $user_info["vcn_user_last_name"],			
+			//'#default_value' => isset($form['#userinfo']->lastname) ? vcn_custom_aes_decrypt($form['#userinfo']->lastname) : '',
 			'#maxlength' => 30,
 	);
 	$form['zipcode'] = array(
@@ -1003,7 +1005,8 @@ function vcn_cma_profile_form($form, &$form_state) {
 			//'#required' => TRUE,
 			'#default_value' => '',
 			'#size' => 25,
-			'#default_value' => (string) $form['#userinfo']->zipcode,
+			'#default_value' => $user_info["logged_in_user_default_zipcode"],
+			//'#default_value' => (string) $form['#userinfo']->zipcode,
 			'#maxlength' => 10,
 	);
 	

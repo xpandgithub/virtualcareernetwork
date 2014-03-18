@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with thi
 			<?php if(strpos($_SERVER["HTTP_REFERER"], 'cma')) : ?>
 				<button class="vcn-button detail-back-buttons" id="button-back-to" onclick="location='<?php print vcn_drupal7_base_path(); ?>cma/college-credit'" title="Back to College Credits">Back to<br/> College Credits</button>
 			<?php else: ?>
-				<?php if ($page_from == 'mylearning_inventory'): ?>
+				<?php if (isset($page_from) && $page_from == 'mylearning_inventory'): ?>
 					<button class="vcn-button detail-back-buttons" id="button-back-to" onclick="location='<?php print vcn_drupal7_base_path(); ?>pla/my-learning-inventory'" title="Back to Review Inventory">Back to<br/> Review Inventory</button>
 				<?php else: ?>
 					<button class="vcn-button detail-back-buttons" id="button-back-to" onclick="location='<?php print $professional_training_link; ?>'" title="Back to Professional Training Courses">Back to Professional<br/> Training Courses</button>

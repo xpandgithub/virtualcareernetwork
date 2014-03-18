@@ -138,33 +138,27 @@ abstract class vcnCertificationDataService  {
 	
 	}
 	
-	private function getSuppressCertificationIds($onetcode) {
+	static private function getSuppressCertificationIds($onetcode) {
 	
 		// this function will be used to suppress certifications that we've 
 		// defined in VCN db to suppress
 		
 		$outputArr = array();
 	
-		$conn = vcn_connect_to_db();
-		
 		$onetcode = mysql_real_escape_string($onetcode);
 		
-		$sql = " SELECT cert_id AS id
-				     FROM vcn_blacklist_certification
-				     WHERE onetcode = '$onetcode'
-				     ORDER BY cert_id ";
-
 		try {
 			
-			$result = mysql_query($sql) or die("Error getting certifications: " . mysql_error());
-		
-			while ($row = mysql_fetch_object($result)) {
-				$outputArr[] = (string)$row->id;
-			}
-				
+			$params = array('onetcode' => $onetcode);
+      $content = vcn_rest_wrapper('vcntrainingsvc', 'vcncertification', 'get-blacklist', $params);
+
+      if ($content && $content->certifications->item) {
+        foreach ($content->certifications->item as $certification) {
+          $outputArr[] = (string)$certification->certid;
+        }
+      }
+      
 		} catch (Exception $e) {
-			
-			$outputArr = $inputArr;
 			
 		}
 		

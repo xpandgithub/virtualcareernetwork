@@ -31,7 +31,7 @@ function vcn_cma_collegecredit_list($credit_courses) {
 				$count++;
 	
 				if($c_type == "vcncourses") {
-					$course_detail_url = $base_path7.$credit_courses->$c_type->item[$i]->onlinecourseurl;
+					$course_detail_url = $base_path7.$credit_courses->$c_type->item[$i]->onlinecourseurl; // Drupal internal link, no need to check for onlinecourseurlflag
 					$course_title = "<a title='".$credit_courses->$c_type->item[$i]->coursetitle."' href='".$course_detail_url."'>".$credit_courses->$c_type->item[$i]->coursetitle."</a>";
 				} else if($c_type == "collegecourses") {
 					$course_detail_url = $base_path7."pla/".$course_detail_page[(string) $credit_courses->$c_type->item[$i]->coursetype]."/".$credit_courses->$c_type->item[$i]->usercourseid;

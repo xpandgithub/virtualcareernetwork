@@ -40,7 +40,7 @@ class VCN_Model_VCNResources extends VCN_Model_Base_VCNBase {
       $sql = " SELECT vsr.*, vlrc.*
                FROM vcn_site_resource vsr
            JOIN vcn_lookup_resource_category vlrc ON vlrc.resource_category_id = vsr.resource_category_id
-               WHERE vsr.active_yn = 'Y'  
+               WHERE vsr.active_yn = 'Y' AND vsr.resource_link_flag = 1   
            AND vsr.industry_id IN ( 9999 , :industry ) ";
 
       $binds = array();

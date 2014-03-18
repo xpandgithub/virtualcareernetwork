@@ -46,10 +46,7 @@ You should have received a copy of the GNU General Public License along with thi
 		<div id="school-profile-bottom" class="allclear"><?php
 			if (isset($programurl)) { ?>
    	  		   	<div><?php echo $programurl; ?></div><?php
-   	  		} 
-			if (isset($programdesc)) {  ?>
-				<div><?php echo $programdesc;  ?></div><?php  
-			}					
+   	  		} 								
 			if (isset($awlevel)) { ?>		   			   	
 		   	<div>
 		   	  <div class="floatleft"><b>Award Level:&nbsp;</b></div>
@@ -58,16 +55,7 @@ You should have received a copy of the GNU General Public License along with thi
 		   	  </div>
 		   	  <div class="allclear"></div>
 		   	</div><?php
-   	  		}
-			if (isset($plength)) { ?>		   			   	
-		   	<div>
-		   	  <div class="floatleft"><b>Program Length:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		<?php echo $plength; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		}
+   	  		}			
 			if (isset($totalcredits)) { ?>		   			   	
 		   	<div>
 		   	  <div class="floatleft"><b>Total Credits:&nbsp;</b></div>
@@ -77,7 +65,28 @@ You should have received a copy of the GNU General Public License along with thi
 		   	  <div class="allclear"></div>
 		   	</div><?php
    	  		}
-			if (isset($totalcourses)) { ?>		   			   	
+   	  		if (isset($plength)) { ?>
+   	  		<div>
+			  <div class="floatleft"><b>Program Length:&nbsp;</b></div>
+			  <div class="floatleft">
+				<?php echo $plength; ?>
+			  </div>
+			  <div class="allclear"></div>
+			</div><?php
+			}
+			if (isset($online)) { ?>
+   	  		<div>
+			  <div class="floatleft"><b>Online?:&nbsp;</b></div>
+			  <div class="floatleft">
+				<?php echo ($online == "Y" ? "Yes" : "No"); ?>
+			  </div>
+			  <div class="allclear"></div>
+			</div><?php
+			}
+			if (isset($programdesc)) {  ?>
+				<div><?php echo $programdesc;  ?></div><?php  
+			}
+			/* if (isset($totalcourses)) { ?>		   			   	
 		   	<div>
 		   	  <div class="floatleft"><b>Total Courses:&nbsp;</b></div>
 		   	  <div class="floatleft">
@@ -85,34 +94,7 @@ You should have received a copy of the GNU General Public License along with thi
 		   	  </div>
 		   	  <div class="allclear"></div>
 		   	</div><?php
-   	  		}
-			/*if (isset($tuitioninstate)) { ?>		   			   	
-		   	<div>
-		   	  <div class="floatleft"><b>In-state Tuition:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		$<?php echo $tuitioninstate; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		}
-			if (isset($tuitionoutstate)) { ?>		   			   	
-		   	<div>
-		   	  <div class="floatleft"><b>Out-of-state Tuition:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		$<?php echo $tuitionoutstate; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		} */
-			if (isset($othercost)) { ?>		   			   	
-		   	<div>
-		   	  <div class="floatleft"><b>Other Cost:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		<?php echo $othercost; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		}
+   	  		}   	  		
 			if (isset($paccredited)) { ?>		   			   	
 		   	<div>
 		   	  <div class="floatleft"><b>Accredited By:&nbsp;</b></div>
@@ -140,42 +122,7 @@ You should have received a copy of the GNU General Public License along with thi
 		   	  <div class="allclear"></div>
 		   	</div><?php
    	  		}
-			if (isset($programcontactname)) { ?>	   		
-	   		<div>
-		   	  <div class="floatleft"><b>Contact Name:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		<?php echo $programcontactname; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		} 
-   	  		if (isset($programcontactemail)) { ?>
-	   		<div>
-		   	  <div class="floatleft"><b>Contact Email:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		<?php echo $programcontactemail; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		} 
-   	  		if (isset($programcontactphone)) { ?>		   			   	
-		   	<div>
-		   	  <div class="floatleft"><b>Contact Phone:&nbsp;</b></div>
-		   	  <div class="floatleft">
-		   		<?php echo $programcontactphone; ?>
-		   	  </div>
-		   	  <div class="allclear"></div>
-		   	</div><?php
-   	  		}
-   	  		if (isset($admissionurl)) { ?>
-   	  		<div>
-   	  			<div class="floatleft"><b>Admission Information:&nbsp;</b></div>
-   	  				 <div class="floatleft">
-   	  				   	<?php echo $admissionurl; ?>
-   	  				</div>
-   	  			<div class="allclear"></div>
-   	  		</div><?php
-   	  		} ?>	
+			*/?>	
 		</div>
 		
 		<div class="noresize">
@@ -183,6 +130,105 @@ You should have received a copy of the GNU General Public License along with thi
 			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
 			<div class="allclear"></div>
 		</div>	
+	</div>	
+	
+	<!-- Curriculum Courses -->
+	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>currcou" class="school-profile-tabs-body tabhide">
+		<div>
+			<div class="floatleft school-profile-tabs-detail">
+				<div>
+					<?php if (!empty($curriculum_program_courses->item)): ?>
+						<table id="vcngetqualified-program-course-details" class="dttable">
+							<thead>
+								<tr><th class="dtheader sorting">Title</th><th class="dtheader sorting">Description</th><th class="dtheader sorting">Duration</th><th class="dtheader">Credits</th></tr>
+							</thead>
+							<tbody>
+								<tr><td colspan="4" class="dataTables_empty">Loading data from server</td></tr>
+							</tbody>
+						</table>
+						<?php else: ?>
+							N/A
+					<?php endif; ?>
+				</div>
+			</div>
+			<div class="allclear"></div>
+		</div>
+		<div class="noresize">
+			<br/>
+			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
+			<div class="allclear"></div>
+		</div>
+	</div>
+	
+	<!-- School Information Tab body-->
+	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>sinfo" class="school-profile-tabs-body tabhide">
+		<div>
+	   	  <!-- <div class="floatleft"><b>School Information:&nbsp;</b></div> -->
+	   	  <div class="floatleft school-profile-tabs-detail"><?php 
+	   	  	if (isset($providerdetail)) { ?>
+   	  		   	<div><?php echo $providerdetail; ?></div><?php
+   	  		}
+	   	  	if (isset($applurl)) { ?>
+	   			<div><?php echo $applurl; ?></div><?php 
+	   		}
+			if (isset($faidurl)) { ?>
+	   			<div><?php echo $faidurl; ?></div><?php
+	   		} ?>
+	   		<div><a target="_blank" href="<?php echo $vcn_d7_path; ?>get-qualified/financialaid">Financial Aid (General)</a></div>
+	   	  </div>
+	   	  <div class="allclear"></div>
+	    </div>
+	    <?php 
+	    if (isset($tuitioninstateindistrict)) { ?>	    
+	    <div><br/>
+	    	<div class="floatleft"><b>In-state in-district Tuition:&nbsp;</b></div>
+	    	<div class="floatleft">
+	    		<?php echo $tuitioninstateindistrict; ?>
+	    	</div>
+	    	<div class="allclear"></div>
+	    </div><?php
+	    }
+	    if (isset($tuitioninstateoutdistrict)) { ?>
+    	<div><br/>
+			<div class="floatleft"><b>In-state out-district Tuition:&nbsp;</b></div>
+			<div class="floatleft">
+				<?php echo $tuitioninstateoutdistrict; ?>
+			</div>
+			<div class="allclear"></div>
+		</div><?php
+		}
+		if (isset($tuitiononline)) { ?>
+		<div><br/>
+			<div class="floatleft"><b>Online Tuition:&nbsp;</b></div>
+			<div class="floatleft">
+				<?php echo $tuitiononline; ?>
+			</div>
+			<div class="allclear"></div>
+		</div><?php
+		}   
+	    if (isset($tuitionoutstate)) { ?>
+	    <div><br/>
+	    	<div class="floatleft"><b>Out-of-state Tuition:&nbsp;</b></div>
+	    	<div class="floatleft">
+	    		<?php echo $tuitionoutstate; ?>
+	    	</div>
+	    	<div class="allclear"></div>
+	    </div><?php
+	    }
+		if (isset($othercost)) { ?>		   			   	
+	   	<div><br/>
+	   	  <div class="floatleft"><b>Other Cost:&nbsp;</b></div>
+	   	  <div class="floatleft">
+	   		<?php echo $othercost; ?>
+	   	  </div>
+	   	  <div class="allclear"></div>
+	   	</div><?php
+   	  	}  ?>
+	    <div class="noresize">
+			<br/>
+			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
+			<div class="allclear"></div>
+		</div>
 	</div>	
 	
 	<!-- Program Requirements Tab body-->
@@ -260,47 +306,6 @@ You should have received a copy of the GNU General Public License along with thi
 			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
 			<div class="allclear"></div>
 		</div>
-	</div>
-	
-	<!-- How to Apply Tab body-->
-	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>pareq" class="school-profile-tabs-body tabhide">
-		<div>
-	   	  <!-- <div class="floatleft"><b>How to Apply:&nbsp;</b></div> -->
-	   	  <div class="floatleft school-profile-tabs-detail">
-	   	  	<?php echo $howtoapply; ?>
-	   	  </div>
-	   	  <div class="allclear"></div>
-	    </div>
-	    <div class="noresize">
-			<br/>
-			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
-			<div class="allclear"></div>
-		</div>
-	</div>
-	
-	<!-- School Information Tab body-->
-	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>sinfo" class="school-profile-tabs-body tabhide">
-		<div>
-	   	  <!-- <div class="floatleft"><b>School Information:&nbsp;</b></div> -->
-	   	  <div class="floatleft school-profile-tabs-detail"><?php 
-	   	  	if (isset($providerdetail)) { ?>
-   	  		   	<div><?php echo $providerdetail; ?></div><?php
-   	  		}
-	   	  	if (isset($applurl)) { ?>
-	   			<div><?php echo $applurl; ?></div><?php 
-	   		}
-			if (isset($faidurl)) { ?>
-	   			<div><?php echo $faidurl; ?></div><?php
-	   		} ?>
-	   		<div><a target="_blank" href="<?php echo $vcn_d7_path; ?>get-qualified/financialaid">Financial Aid (General)</a></div>
-	   	  </div>
-	   	  <div class="allclear"></div>
-	    </div>
-	    <div class="noresize">
-			<br/>
-			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
-			<div class="allclear"></div>
-		</div>
 	</div>	
 	
 	<!-- Entrance Tests Tab body-->
@@ -308,8 +313,34 @@ You should have received a copy of the GNU General Public License along with thi
 		<div>
 	   	  <!-- <div class="floatleft"><b>Entrance Tests:&nbsp;</b></div> -->
 	   	  <div class="floatleft school-profile-tabs-detail">
-	   	  	<div><?php if (isset($entrancetests_prog)) { echo $entrancetests_prog; } ?></div>	
-	   	  	<div><?php if (isset($entrancetests_prov)) { echo $entrancetests_prov; } ?></div>	   	  	
+	   	  	<!-- <div><?php //if (isset($entrancetests_prog)) { echo $entrancetests_prog; } ?></div> -->	   	  	
+	   	  	<div>
+				<?php if (!isset($entrancetests_prog_na)){ ?>
+				<div class="strong allclear">Program Entrance Tests:<br/></div>
+				<table id="vcngetqualified-program-entrancetests" class="dttable">
+					<thead>
+						<tr><th class="dtheader sorting"></th><th class="dtheader sorting">Minimum Score</th><th class="dtheader">Test Description</th></tr>
+					</thead>
+					<tbody>
+						<tr><td colspan="3" class="dataTables_empty">Loading data from server</td></tr>
+					</tbody>
+				</table><br/>
+				<?php } ?>
+			</div>	   	  		
+	   	  	<!-- <div><?php //if (isset($entrancetests_prov)) { echo $entrancetests_prov; } ?></div> -->
+	   	  	<div>
+				<?php if (!isset($entrancetests_prov_na)){ ?>
+				<div class="strong allclear">Provider Entrance Tests:<br/></div>
+				<table id="vcngetqualified-provider-entrancetests" class="dttable">
+					<thead>
+						<tr><th class="dtheader sorting"></th><th class="dtheader sorting">Minimum Score</th><th class="dtheader">Test Description</th></tr>
+					</thead>
+					<tbody>
+						<tr><td colspan="3" class="dataTables_empty">Loading data from server</td></tr>
+					</tbody>
+				</table>
+				<?php } ?>
+			</div>	   	  	
 			<div><?php if (isset($entrancetests_prog_na) && isset($entrancetests_prov_na)) { echo $entrancetests_prov_na; } ?></div>
 	   	  </div>
 	   	  <div class="allclear"></div>
@@ -326,8 +357,34 @@ You should have received a copy of the GNU General Public License along with thi
 	  	<div>
 	  		<!-- <div class="floatleft"><b>Prerequisite Courses for Admission :&nbsp;</b></div> -->  		
 	   	 	<div class="floatleft school-profile-tabs-detail">
-	   	 		<div><?php if (isset($requiredcourses_prog)) { echo $requiredcourses_prog; } ?></div>	
-		   	  	<div><?php if (isset($requiredcourses_prov)) { echo $requiredcourses_prov; } ?></div>	   	  	
+	   	 		<!-- <div><?php //if (isset($requiredcourses_prog)) { echo $requiredcourses_prog; } ?></div> -->
+	   	 		<div>
+					<?php if (!isset($requiredcourses_prog_na)){ ?>
+					<div class="strong allclear">Program Prerequisite Courses:<br/></div>
+					<table id="vcngetqualified-program-reqcourses" class="dttable">
+						<thead>
+							<tr><th class="dtheader sorting"></th><th class="dtheader sorting">Course Level</th><th class="dtheader sorting">Minimum GPA</th></tr>
+						</thead>
+						<tbody>
+							<tr><td colspan="3" class="dataTables_empty">Loading data from server</td></tr>
+						</tbody>
+					</table><br/>
+					<?php } ?>
+				</div>	  	
+		   	  	<!-- <div><?php //if (isset($requiredcourses_prov)) { echo $requiredcourses_prov; } ?></div> -->
+		   	  	<div>
+					<?php if (!isset($requiredcourses_prov_na)){ ?>
+					<div class="strong allclear">Provider Prerequisite Courses:<br/></div>
+					<table id="vcngetqualified-provider-reqcourses" class="dttable">
+						<thead>
+							<tr><th class="dtheader sorting"></th><th class="dtheader sorting">Course Level</th><th class="dtheader sorting">Minimum GPA</th></tr>
+						</thead>
+						<tbody>
+							<tr><td colspan="3" class="dataTables_empty">Loading data from server</td></tr>
+						</tbody>
+					</table>
+					<?php } ?>
+				</div>		   	  	
 				<div><?php if (isset($requiredcourses_prog_na) && isset($requiredcourses_prov_na)) { echo $requiredcourses_prov_na; } ?></div>
 	  		</div>
 	  		<div class="allclear"></div>
@@ -339,34 +396,66 @@ You should have received a copy of the GNU General Public License along with thi
 		</div>	  
 	</div>
 	
-	<!-- Curriculum Courses -->
-	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>currcou" class="school-profile-tabs-body tabhide">
+	<!-- Application Support + How to Apply Tab body-->
+	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>pareq" class="school-profile-tabs-body tabhide">
+		<?php  $app_support_na = true;
+		if (isset($admissionurl)) { $app_support_na = false; ?>
+   	  	<div>
+   	  		<div class="floatleft"><b>Admission Information:&nbsp;</b></div>
+   	  		<div class="floatleft">
+   	  			<?php echo $admissionurl; ?>
+   	  		</div>
+   	  		<div class="allclear"></div>
+   	  		<br/>
+   	  	</div><?php
+   	  	} 
+		if (isset($programcontactname)) { $app_support_na = false; ?>
+   		<div>
+	   	  <div class="floatleft"><b>Contact Name:&nbsp;</b></div>
+	   	  <div class="floatleft">
+	   		<?php echo $programcontactname; ?>
+	   	  </div>
+	   	  <div class="allclear"></div>
+	   	</div><?php
+   	  	}    	  	
+   	  	if (isset($programcontactphone)) { $app_support_na = false; ?>		   			   	
+	   	<div>
+	   	  <div class="floatleft"><b>Contact Phone:&nbsp;</b></div>
+	   	  <div class="floatleft">
+	   		<?php echo $programcontactphone; ?>
+	   	  </div>
+	   	  <div class="allclear"></div>
+	   	</div><?php
+   	  	}
+   	  	if (isset($programcontactemail)) { $app_support_na = false; ?>
+   	  	<div>
+   	  	  <div class="floatleft"><b>Contact Email:&nbsp;</b></div>
+   	  	  <div class="floatleft">
+   	  		<?php echo $programcontactemail; ?>
+   	  	  </div>
+   	  	  <div class="allclear"></div>
+   	  	  <br/>
+   	  	</div><?php
+   	  	}
+   	  	if (isset($howtoapply)) { $app_support_na = false; ?>
 		<div>
-			<div class="floatleft school-profile-tabs-detail">
-				<div>
-					<?php if (!empty($curriculum_program_courses->item)): ?>
-						<table id="vcngetqualified-program-course-details" class="dttable">
-							<thead>
-								<tr><th class="dtheader sorting">Title</th><th class="dtheader sorting">Description</th><th class="dtheader sorting">Duration</th><th class="dtheader">Credits</th></tr>
-							</thead>
-							<tbody>
-								<tr><td colspan="4" class="dataTables_empty">Loading data from server</td></tr>
-							</tbody>
-						</table>
-						<?php else: ?>
-							N/A
-					<?php endif; ?>
-				</div>
-			</div>
-			<div class="allclear"></div>
-		</div>
-		<div class="noresize">
+	   	  <!-- <div class="floatleft"><b>Application Support / How to Apply:&nbsp;</b></div> -->
+	   	  <div class="floatleft school-profile-tabs-detail">
+	   	  	<?php echo $howtoapply; ?>
+	   	  </div>
+	   	  <div class="allclear"></div>
+	    </div><?php
+   	  	}
+   	  	if ($app_support_na){
+			echo 'N/A';
+		}?>
+	    <div class="noresize">
 			<br/>
 			<button  title="<?php if($is_saved_or_targeted_item > 0){?>Program has already been saved<?php }else{?>Save this Program to My Wishlist<?php }?>" class="vcn-button save-target-buttons save-button <?php if($is_saved_or_targeted_item > 0){ echo 'vcn-button-disable'; }?>" id="save-to" <?php if($is_saved_or_targeted_item < 1){?>onclick="vcnSaveTarget('<?php echo $vcn_d7_path;?>cma/ajax/save-target-notebook-item/save/program/<?php echo $programid;  ?>/<?php echo $onetcode;  ?>/<?php echo $cipcode;  ?>', 'program', 'save', '<?php echo $vcn_user['vcn_user_id']; ?>', '<?php echo (int) $vcn_user['is_user_logged_in']; ?>', '<?php echo $onetcode;  ?>');"<?php }?> ><?php echo $save_button; ?></button>
 			<div class="allclear"></div>
 		</div>
 	</div>
-	
+
 	<!-- General Admission Other Requirements Tab body-->
 	<div id="<?php echo $vcn_tabs_body_id_prefix; ?>otherreq" class="school-profile-tabs-body tabhide">
 		<div>
@@ -389,7 +478,8 @@ You should have received a copy of the GNU General Public License along with thi
 	<?php echo $vcn_tabs_body_end; ?>
 	<!-- VCN Navigation bar -->
       <div class="vcn-user-navigation-bar allclear">
-      	<div class="nav-bar-left"><div><a title="Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?>" href="<?php echo vcn_drupal7_base_path(); echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? "cma" : "get-qualified";?>/programs<?php echo $back_to_wishlist_link_suffix; ?>" >Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?></a></div></div>	      	
+      	<!-- <div class="nav-bar-left"><div><a title="Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?>" href="<?php echo vcn_drupal7_base_path(); echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? "cma" : "get-qualified";?>/programs<?php echo $back_to_wishlist_link_suffix; ?>" >Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?></a></div></div> -->
+      	<div class="nav-bar-left"><div><a title="Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?>" href="<?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? "javascript:history.go(-1);" : vcn_drupal7_base_path()."get-qualified/programs";?><?php //echo $back_to_wishlist_link_suffix; ?>" >Back to <?php echo strpos($_SERVER["HTTP_REFERER"], "/cma/") ? (strpos($_SERVER["HTTP_REFERER"], "/wishlist") ? "Career Wishlist" : "Review Saved Programs") : "Get Qualified"; ?></a></div></div>	      	
       	<div class="nav-bar-right"><div>&nbsp;</div></div>		
       	<div class="allclear"></div>		      	
       </div>

@@ -42,10 +42,10 @@ You should have received a copy of the GNU General Public License along with thi
 					<div id="vcnpla-national-exams-div"">
 						<table id="vcnpla-national-exams-table" class="dttable">
 							<thead>
-								<tr><th class="dtheader sorting">Course Name</th><th class="dtheader">Action</th></tr>
+								<tr><th class="dtheader sorting">Course Name</th></tr>
 							</thead>
 							<tbody>
-								<tr><td colspan="3" class="dataTables_empty">Loading data from server</td></tr>
+								<tr><td class="dataTables_empty">Loading data from server</td></tr>
 							</tbody>
 						</table>
 					</div>

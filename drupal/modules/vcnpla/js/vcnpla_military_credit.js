@@ -43,7 +43,7 @@ You should have received a copy of the GNU General Public License along with thi
 					"sPaginationType": "full_numbers",
 					"bAutoWidth": false,
 					"aaSorting": [[ 0, "asc" ]],
-					"aoColumns": [{"sWidth": "90%", "bSortable": true, "mData": null}, {"sWidth": "10%", "bSortable": false, "mData": null}],
+					"aoColumns": [{"sWidth": "100%", "bSortable": true, "mData": null}],
 					"bLengthChange": false,
 					"bFilter" : false,
 					"bInfo": false,
@@ -52,7 +52,6 @@ You should have received a copy of the GNU General Public License along with thi
 					"bDestroy": true,
 					"bStateSave": true,
 					"fnRowCallback": function( nRow, aData, iDisplayIndex ) {
-						var save_courses_ajax_link = basepath+'pla/save-courses/'+aData.ace_id+'/'+aData.start_date_original+'/'+aData.end_date_original+'/military';
 						var link = basepath+'pla/military-credit-details/'+ aData.ace_id +'/' + aData.start_date_original + '/' + aData.end_date_original;
 						if (military_credits_branch) {
 							link += '/'+military_credits_branch;
@@ -62,9 +61,6 @@ You should have received a copy of the GNU General Public License along with thi
 						}
 						$('td:eq(0)', nRow).html('<a href="'+ link + '" title="ACE# '+ aData.ace_id +'">'+ aData.first_title + 
 												' (Course taken between ' + aData.start_date + ' and '+ aData.end_date + ' )</a>');
-						$('td:eq(1)', nRow).html('<span class="datatable-save-target">'+			            		
-	        		             '<button title=\"Save\" class="vcn-button save-target-icon" onclick="vcnSaveTarget(\''+save_courses_ajax_link+'\',\'military_course\',\'save\',\''+aData.vcn_user_id+'\',\''+aData.is_user_logged_in+'\',0); return false;" onkeypress="vcnSaveTarget(\''+save_courses_ajax_link+'\',\'military_courses\',\'save\',\''+aData.vcn_user_id+'\',\''+aData.is_user_logged_in+'\',0); return false;" ><img src="'+image_basepath+'buttons/save_icon2.png" title="Save" alt="Save Military Credit Course"></button>'+			            		
-	        		             '</span>');
 						
 						return nRow;
 					},

@@ -50,15 +50,19 @@ function vcneducationmatch_preprocess_vcn_education_match_template(&$variables) 
 	if(isset($_POST["edu_towards_select"]) && intval($_POST["edu_towards_select"]) > 0) {
 		$variables["edu_towards"] = intval($_POST["edu_towards_select"]);
 	}else {
-		$variables["edu_towards"] ='1';
+		$variables["edu_towards"] ='7';
 	}
 	
-	$params = array('industry' => $variables['industry'], 'mineducation' => $variables["edu_current"] , 'order' => 'display_title' , 'direction' => 'asc');
-	$occupation_current_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-min-education', $params);
+	//$params = array('industry' => $variables['industry'], 'mineducation' => $variables["edu_current"] , 'order' => 'display_title' , 'direction' => 'asc');
+	//$occupation_current_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-min-education', $params);
+	$params = array('industry' => $variables['industry'], 'typicaledu' => $variables["edu_current"] , 'order' => 'display_title' , 'direction' => 'asc', 'ignoreworktype' => true);
+	$occupation_current_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-typical-education', $params);
 	$variables['occupation_current_careers'] = $occupation_current_careers;
 
-	$params = array('industry' => $variables['industry'], 'mineducation' => $variables["edu_towards"] , 'order' => 'display_title' , 'direction' => 'asc');
-	$occupation_towards_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-min-education', $params);
+	//$params = array('industry' => $variables['industry'], 'mineducation' => $variables["edu_towards"] , 'order' => 'display_title' , 'direction' => 'asc');
+	//$occupation_towards_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-min-education', $params);
+	$params = array('industry' => $variables['industry'], 'typicaledu' => $variables["edu_towards"] , 'order' => 'display_title' , 'direction' => 'asc', 'ignoreworktype' => true);
+	$occupation_towards_careers = vcn_rest_wrapper('vcnoccupationsvc', 'vcncareer', 'get-career-list-by-typical-education', $params);	
 	$variables['occupation_towards_careers'] = $occupation_towards_careers;
 	
 	/* End REST Call */

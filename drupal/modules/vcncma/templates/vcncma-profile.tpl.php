@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License along with thi
 <?php print $vcn_tabs_header; ?>
 <div id="vcn-tabs-blueborder">
 	<div id="cma-profile" class="cma-main-content">		
-	 	 <fieldset><legend><b>Personal Information</b></legend>		
+	 	 <fieldset>
+       <legend>Personal Information</legend>		
 			<div id="vcncma-profile-detail">
 				<?php echo $form_first_name; ?>	
 				<?php echo $form_last_name; ?>	
@@ -28,9 +29,10 @@ You should have received a copy of the GNU General Public License along with thi
 			</div>
 	  	</fieldset>
 		<div class="allclear"></div>
-		<fieldset><legend><b>Password Reset</b></legend>
+		<fieldset>
+      <legend>Email and Password</legend>
 			<div class="description">
-				<a href="<?php echo $vcn_drupal6_base_path;?>user/<?php echo $d6userid; ?>/edit">Click here</a> to change the Password
+				<a href="<?php echo $vcn_drupal7_base_path;?>user/<?php echo $drupaluserid; ?>/edit">Click here</a> to change your email address and password
 			</div>
 		</fieldset>	
 	</div>

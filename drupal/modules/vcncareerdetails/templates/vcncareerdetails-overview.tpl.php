@@ -63,39 +63,38 @@ You should have received a copy of the GNU General Public License along with thi
 			</div>
 			<div id="career-legal-nationwide-requirements-hidden-text"  class="element-hidden">
 			  <?php if (isset($legal_nationwide_requirements_hidden_text)) { ?>
-				<?php print $legal_nationwide_requirements_hidden_text; ?>
+					<?php print $legal_nationwide_requirements_hidden_text; ?>
 			  <?php } ?>
 			  <?php if (strlen($legal_nationwide_requirement_url)) { ?>
-				<?php vcn_build_link_window_opener($legal_nationwide_requirement_url, 'Additional Information'); ?>
+					<?php vcn_build_link_window_opener($legal_nationwide_requirement_url, 'Additional Information'); ?>
 			  <?php } ?>
 			</div>
 			<?php if (!empty($legal_nationwide_requirements_hidden_text) || strlen($legal_nationwide_requirement_url)) { ?>
-			<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
+				<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
 			<?php } ?>
-        </div>	 
+    </div>	 
 		<?php } ?>		
 		<div class="allclear"></div>
 		
 		<div class="vcncareerdetails-fieldset-subtitle">State-Specific</div>		
 		<div id="career-legal-requirements">
-		
 			<div id="career-legal-requirements-regular-text">
 				<?php print $legal_state_specific_requirements_regular_text; ?>
 			</div>
 			<div id="career-legal-requirements-hidden-text" class="element-hidden">
 			  <?php if (isset($legal_state_specific_requirements_hidden_text)) { ?>
-				<?php print $legal_state_specific_requirements_hidden_text; ?>
+					<?php print $legal_state_specific_requirements_hidden_text; ?>
 			  <?php } ?>
 			  <?php if(!empty($legal_state_specific_requirements_associated_url)) { ?>
-				<p class="paragraph-formatting"><?php print vcn_build_link_window_opener($legal_state_specific_requirements_associated_url, 'Additional Information', false); ?></p>
+					<p class="paragraph-formatting"><?php print vcn_build_link_window_opener($legal_state_specific_requirements_associated_url, 'Additional Information', false); ?></p>
 			  <?php } ?>
 			</div>
 			<?php if (!empty($legal_state_specific_requirements_hidden_text) || !empty($legal_state_specific_requirements_associated_url)) { ?>
-			<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
+				<a class="morelink" href="javascript:void(0);" title="More Details">More Details</a>
 			<?php } ?> 		
-			
-        </div>
-	</fieldset>	
+		</div>
+		<div class="career-legal-requirements-disclaimer">Disclaimer: The legal requirements mentioned above may not be exhaustive or may not include special requirements of specific employers.</div>
+	</fieldset>
 	
 	<?php if ($similar_careers) { ?>
 	<fieldset>

@@ -89,6 +89,16 @@ class VCNOccupationSvc_VCNCareerController extends VCN_WebServices {
 		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
 	}
 	
+	public function getCareerListByTypicalEducationAction() {
+	
+		$model = new VCN_Model_VCNCareer();
+		$data = $model->getCareerListByTypicalEducation($this->params);
+	
+		$output = self::getOutput( $this->format, $data, 'result', 'career');
+	
+		$this->_response->setHeader('Content-Type', $this->format)->setBody($output);
+	}
+	
 	public function getCareerListByJobsAction() {
 	
 		$model = new VCN_Model_VCNCareer();

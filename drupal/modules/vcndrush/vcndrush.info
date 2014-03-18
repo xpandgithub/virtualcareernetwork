@@ -13,10 +13,9 @@ You should have received a copy of the GNU General Public License along with thi
 */ 
 
 
-name = VCN Shared User
-description = Provides access to user info from Drupal 6 to Drupal 7 for the Virtual Career Network
-package = VCN
-version = 7.x-1.0
+name = "VCN Drush"
+description = "Creating custom drush commands"
+package = "VCN"
 core = 7.x
-files[] = vcnshareduser.module
 
+files[] = vcndrush.drush.inc

@@ -81,8 +81,7 @@ function vcnpla_preprocess_vcn_pla_mylearning_inventory(&$variables) {
 	
 	// Call fucntion to access the node containing editable text by "URL Alias" of specific node.
 	$variables['my_learning_inventory'] = vcn_node_text_by_urlalias("earn-college-credits-my-learning-inventory");
-	
-	$variables['vcn_drupal6_base_path'] = vcn_drupal6_base_path();
+		
 	$variables['vcn_drupal7_base_path'] = vcn_drupal7_base_path();
 	$variables['vcn_image_path'] = vcn_image_path();	
 	

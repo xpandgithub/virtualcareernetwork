@@ -180,4 +180,50 @@ class VCN_Model_VCNCmaJobscouts extends VCN_Model_Base_VCNBase {
 		
 	}
 
+  public function getAllCmaJobscoutsForToday($params) {
+		
+    $requiredParams = array('industry');
+		if (!$this->checkParams($params, $requiredParams)) {
+			return $this->result;
+		}
+    
+		try {
+			$db = Resources_PdoMysql::getConnection();
+			
+			$sql = " SELECT job_scout_id, js.user_id, zip, distance, js.onetcode, keyword, industry_id, cu.user_session_id, o.display_title 
+               FROM vcn_cma_user_job_scout js 
+               JOIN vcn_cma_user cu ON cu.user_id = js.user_id AND js.industry_id = :industry
+               LEFT JOIN vcn_occupation o ON js.onetcode = o.onetcode
+               WHERE DAYOFWEEK(js.created_time) = DAYOFWEEK(sysdate()) 
+               AND UPPER(js.active_yn) = 'Y' ";
+			
+			$stmt = $db->prepare($sql);
+      $stmt->bindParam(':industry', $params['industry'], PDO::PARAM_INT);
+			$stmt->execute();
+			$result = $stmt->fetchAll();
+			
+			$data = array();
+			foreach ($result as $row) {
+				$data[] = array(
+          'onetcode' => $row['onetcode'], 
+          'careername' => $row['display_title'],
+          'zip' => $row['zip'], 
+          'distance' => $row['distance'], 
+          'keyword' => $row['keyword'], 
+          'vcnuserid' => $row['user_id'],
+          'drupaluserid' => $row['user_session_id'],
+          'jobscoutid' => $row['job_scout_id'],
+          'industryid' => $row['industry_id'],
+        );
+			}
+			$this->setResult($data);
+			
+		} catch (Exception $e) {
+			$this->setResult(NULL, $e->getMessage());
+		}
+		
+		return $this->result;
+		
+	}
+  
 }
